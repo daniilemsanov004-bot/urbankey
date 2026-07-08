@@ -572,6 +572,8 @@
   "registerEmail": "Электронная почта",
   "registerPassword": "Пароль",
   "login": "Авторизация",
+  "menu": "Меню",
+  "myProfile": "Профиль",
   "favorites": "Избранное",
   "noFavorites": "Вы пока ничего не добавили в избранное",
   "loginToSeeFavorites": "Войдите в аккаунт, чтобы видеть сохранённые объекты",

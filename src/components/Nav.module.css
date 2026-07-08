@@ -586,9 +586,6 @@ body {
 
 
 @media (max-width: 380px) {
-    .nav {
-        justify-content: space-between;
-    }
 
     .navAvatar {
         width: 34px;

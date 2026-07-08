@@ -32,7 +32,7 @@ const BottomNav = () => {
                 ) : (
                     <User size={22} />
                 )}
-                <span>{user ? t("myListings") : t("login")}</span>
+                <span>{user ? t("myProfile") : t("login")}</span>
             </NavLink>
 
             <button className={s.item} onClick={handleBurger}>

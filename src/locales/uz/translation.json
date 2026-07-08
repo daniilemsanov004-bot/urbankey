@@ -649,6 +649,8 @@
   "registerPassword": "Parol",
   "registerButton": "Ro'yxatdan o'tish",
   "login": "Kirish",
+  "menu": "Menyu",
+  "myProfile": "Profil",
   "favorites": "Sevimlilar",
   "noFavorites": "Siz hali sevimlilarga hech narsa qo'shmadingiz",
   "loginToSeeFavorites": "Saqlangan obyektlarni ko'rish uchun tizimga kiring",

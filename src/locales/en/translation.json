@@ -572,6 +572,8 @@
   "registerPassword": "Password",
   "registerButton": "Sign Up",
   "login": "Sign In",
+  "menu": "Menu",
+  "myProfile": "Profile",
   "favorites": "Favorites",
   "noFavorites": "You haven't added anything to favorites yet",
   "loginToSeeFavorites": "Sign in to see your saved properties",
