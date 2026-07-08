@@ -66,8 +66,13 @@ body {
        содержимого .links, и overflow-x: auto на .links никогда не
        срабатывает (классический "grid blowout"): на ширинах вроде
        1024px, где бургер ещё скрыт, а ссылки не помещаются, сетка
-       просто раздувается вместо того, чтобы дать .links скроллиться. */
-    grid-template-columns: auto minmax(0, 1fr) auto;
+       просто раздувается вместо того, чтобы дать .links скроллиться.
+       Та же проблема была у последней колонки (.right) — она была
+       "auto", то есть не сжимается меньше своего контента, и на 1024px
+       с иконками (язык/валюта/тема/избранное/аватар/выход) просто
+       вылезала за экран и обрезалась. minmax(0, max-content) решает
+       это так же, как minmax(0, 1fr) решает для .links. */
+    grid-template-columns: auto minmax(0, 1fr) minmax(0, max-content);
     align-items: center;
     gap: 20px;
 }
@@ -96,16 +101,30 @@ body {
     flex-wrap: nowrap;
     min-width: 0;
 
-    /* если не влезает — скроллим по горизонтали, а не режем и не переносим */
+    /* если не влезает — скроллим по горизонтали, а не режем и не переносим.
+       Скроллбар специально оставлен ВИДИМЫМ (тонкий, в цвет темы) —
+       раньше он был полностью скрыт, из-за чего было непонятно, что
+       ссылки вообще можно проскроллить на узких ноутбучных экранах. */
     overflow-x: auto;
     overflow-y: hidden;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
     -webkit-overflow-scrolling: touch;
+
+    scrollbar-width: thin;
+    scrollbar-color: rgba(214, 168, 58, .55) transparent;
+    padding-bottom: 4px;
 }
 
 .links::-webkit-scrollbar {
-    display: none;
+    height: 4px;
+}
+
+.links::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.links::-webkit-scrollbar-thumb {
+    background: rgba(214, 168, 58, .55);
+    border-radius: 4px;
 }
 
 
@@ -152,6 +171,12 @@ body {
        колонкой грида — без этого иконки прилипали к левому краю и
        образовывался большой пустой разрыв перед бургер-кнопкой */
     min-width: 0;
+
+    /* overflow тут намеренно НЕ трогаем (остаётся visible): внутри лежит
+       выпадающее меню языка (position: absolute, выходит за пределы
+       .right) — overflow-x: auto обрезал бы его. Вместо скролла
+       .right проактивно сжимается на брейкпоинте ниже, чтобы контент
+       физически помещался и скролл не требовался. */
 }
 
 
@@ -422,6 +447,50 @@ body {
 
     flex-shrink: 0;
     -webkit-tap-highlight-color: transparent;
+}
+
+
+/* ===== Ноутбуки (1024 и похожие): бургер ещё скрыт, но места мало.
+   Проактивно сжимаем .right (убираем текстовые подписи, урезаем отступы),
+   чтобы иконки физически помещались и не вылезали/обрезались за края
+   экрана — раньше на этой ширине .right был "auto"-колонкой без
+   возможности сжаться, и часть кнопок (аватар, выход и т.д.) могла
+   уезжать за пределы видимой области. ===== */
+@media (max-width: 1280px) {
+
+    .block {
+        gap: 12px;
+    }
+
+    .right {
+        gap: 4px;
+    }
+
+    .ctaBtn,
+    .ctaBtnOutline {
+        padding: 10px 14px;
+        font-size: 14px;
+    }
+
+    .iconBtn {
+        padding: 8px 10px;
+        gap: 4px;
+    }
+
+    .langCode,
+    .currencyCode {
+        display: none;
+    }
+
+    .navAvatar {
+        width: 40px;
+        height: 40px;
+    }
+
+    .logoutBtn {
+        width: 40px;
+        height: 40px;
+    }
 }
 
 

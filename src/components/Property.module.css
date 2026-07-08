@@ -774,6 +774,119 @@
 
 
 
+/* ===== Адаптив: планшеты ===== */
+@media (max-width: 1100px) {
+
+    .property {
+        margin: 80px auto;
+        padding: 0 16px;
+    }
+
+    .property .all {
+        flex-direction: column;
+        gap: 32px;
+    }
+
+    .property .texts {
+        width: 100%;
+    }
+
+    .property .texts h1 {
+        font-size: 34px;
+    }
+
+    .mySwiper,
+    .slide {
+        max-width: 100%;
+        height: 480px;
+    }
+
+    .property .text {
+        margin-top: 60px;
+        padding: 32px;
+    }
+
+    .property .text h1 {
+        font-size: 30px;
+    }
+}
+
+
+/* ===== Адаптив: мобильные ===== */
+@media (max-width: 600px) {
+
+    .property {
+        margin: 50px auto;
+        padding: 0 12px;
+    }
+
+    .property .texts h1 {
+        font-size: 26px;
+        margin-bottom: 18px;
+    }
+
+    .property .specifi h1 {
+        font-size: 22px;
+        margin-bottom: 18px;
+    }
+
+    .property .rooms {
+        gap: 10px;
+        margin-bottom: 26px;
+    }
+
+    .property .rooms h2 {
+        padding: 10px 16px;
+        font-size: 13px;
+    }
+
+    .property .specifi .cards {
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 14px;
+    }
+
+    .property .specifi .card {
+        padding: 18px;
+    }
+
+    .property .specifi .card h3 {
+        font-size: 20px;
+    }
+
+    .mySwiper,
+    .slide {
+        height: 300px;
+        border-radius: 20px;
+    }
+
+    .slide img {
+        border-radius: 20px;
+    }
+
+    .property .text {
+        margin-top: 40px;
+        padding: 22px;
+        border-radius: 20px;
+    }
+
+    .property .text h1 {
+        font-size: 24px;
+        margin-bottom: 16px;
+    }
+
+    .property .text p {
+        font-size: 15px;
+        line-height: 170%;
+    }
+
+    :global(.swiper-button-next),
+    :global(.swiper-button-prev) {
+        width: 42px !important;
+        height: 42px !important;
+    }
+}
+
+
 @keyframes pulse {
 
 

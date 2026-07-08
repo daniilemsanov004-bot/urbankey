@@ -135,7 +135,7 @@ const Footer = () => {
                 >
 
                     <motion.img
-                        src="/public/image (18).webp"
+                        src="/image (18).webp"
                         alt=""
                         className={s.imgg}
                         whileHover={{

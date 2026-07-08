@@ -32,7 +32,7 @@ const Value = () => {
             id: 4,
             title: t("value.items.3.title"),
             description: t("value.items.3.description"),
-            image: "/public/e3825842-d81f-415f-84fe-41b05ff4ed4f.webp",
+            image: "/e3825842-d81f-415f-84fe-41b05ff4ed4f.webp",
         },
     ];
 

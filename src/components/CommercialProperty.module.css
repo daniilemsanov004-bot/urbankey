@@ -129,3 +129,53 @@
         padding: 25px;
     }
 }
+
+@media (max-width: 600px) {
+    .property {
+        margin: 60px auto;
+        padding: 0 14px;
+    }
+
+    .texts h1 {
+        font-size: 28px;
+        margin-bottom: 20px;
+    }
+
+    .specifi h1 {
+        margin-top: 32px;
+        font-size: 22px;
+    }
+
+    .rooms h2 {
+        padding: 10px 16px;
+        font-size: 14px;
+    }
+
+    .mySwiper {
+        height: 260px;
+        border-radius: 18px;
+    }
+
+    .slide img {
+        border-radius: 18px;
+    }
+
+    .texts,
+    .text {
+        padding: 18px;
+        border-radius: 18px;
+    }
+
+    .card {
+        padding: 16px;
+    }
+
+    .card h3 {
+        font-size: 19px;
+    }
+
+    .text p {
+        font-size: 15px;
+        line-height: 1.7;
+    }
+}

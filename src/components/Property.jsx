@@ -12,7 +12,7 @@ import "swiper/css"
 import "swiper/css/navigation"
 import "swiper/css/pagination"
 
-import { useState, useEffect, } from "react"
+import { useState } from "react"
 
 
 
@@ -21,8 +21,6 @@ import { useState, useEffect, } from "react"
 import GalleryModal from "./GalleryModal"
 
 const Property = ({ data }) => {
-
-    if (!data) return null;
 
 
 
@@ -52,6 +50,8 @@ const Property = ({ data }) => {
 
 
 
+
+    if (!data) return null;
 
     const images = data.images || [];
 

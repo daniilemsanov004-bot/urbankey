@@ -42,7 +42,7 @@ const World = () => {
                 >
 
                     <img
-                        src="/public/preview.webp"
+                        src="/preview.webp"
                         alt="Владислав Емшанов"
                         className={s.realtorImg}
                     />

@@ -150,7 +150,7 @@ const Hero = () => {
 
             </motion.div>
             <motion.img
-                src="/public/c3383124-8cd3-4f72-9ab0-7fd2f40c9fcc.webp"
+                src="/c3383124-8cd3-4f72-9ab0-7fd2f40c9fcc.webp"
                 alt=""
                 className={s.imgg}
 
