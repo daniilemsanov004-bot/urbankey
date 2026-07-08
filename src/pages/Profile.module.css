@@ -1,0 +1,895 @@
+.profile {
+    min-height: 100vh;
+    padding: 120px 20px;
+    background: var(--black);
+    color: var(--white);
+}
+
+
+.profileCard {
+
+    max-width: 1100px;
+    margin: auto;
+
+    padding: 50px;
+
+    background:
+        radial-gradient(circle at top left,
+            rgba(214, 168, 58, .18),
+            transparent 35%),
+        var(--card);
+
+    border: 1px solid var(--border);
+
+    border-radius: 35px;
+
+    backdrop-filter: blur(20px);
+
+    box-shadow:
+        0 30px 90px rgba(0, 0, 0, .35);
+
+}
+
+
+
+/* TOP */
+
+.profileTop {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 35px;
+
+}
+
+
+
+.profileName {
+
+    font-size: 42px;
+
+    margin: 0;
+
+    font-weight: 800;
+
+}
+
+
+
+.email {
+
+    color: var(--gray);
+
+}
+
+
+
+/* AVATAR */
+
+
+.avatarBlock {
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    gap: 14px;
+
+}
+
+
+
+.avatar {
+
+    width: 130px;
+
+    height: 130px;
+
+    border-radius: 50%;
+
+    overflow: hidden;
+
+    position: relative;
+
+    cursor: pointer;
+
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+
+    background: var(--dark-gray);
+
+    border: 3px solid var(--violet);
+
+
+    color: var(--violet);
+
+    font-size: 50px;
+
+
+    transition: .25s;
+
+}
+
+
+
+.avatar:hover {
+
+    transform: scale(1.05);
+
+}
+
+
+
+.avatar img {
+
+    width: 100%;
+
+    height: 100%;
+
+    object-fit: cover;
+
+}
+
+
+
+.avatarOverlay {
+
+    position: absolute;
+
+    inset: 0;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+
+    background: rgba(0, 0, 0, .55);
+
+    color: white;
+
+
+    opacity: 0;
+
+    transition: .2s;
+
+}
+
+
+.avatar:hover .avatarOverlay {
+
+    opacity: 1;
+
+}
+
+
+
+
+
+/* DIVIDER */
+
+.line {
+
+    height: 1px;
+
+    background: var(--border);
+
+    margin: 40px 0;
+
+}
+
+
+
+
+
+/* CARDS */
+
+
+.stats {
+
+    display: grid;
+
+    grid-template-columns: repeat(3, 1fr);
+
+    gap: 20px;
+
+}
+
+
+
+.stat,
+.bio {
+
+    padding: 25px;
+
+    border-radius: 22px;
+
+
+    background: rgba(255, 255, 255, .04);
+
+
+    border: 1px solid var(--border);
+
+
+    transition: .25s;
+
+}
+
+
+
+.stat:hover,
+.bio:hover {
+
+    transform: translateY(-5px);
+
+    border-color: var(--violet);
+
+}
+
+
+
+.stat span,
+.bio span {
+
+    color: var(--violet);
+
+    display: block;
+
+    margin-bottom: 10px;
+
+}
+
+
+
+.stat b {
+
+    font-size: 20px;
+
+}
+
+
+
+
+.bio {
+
+    margin-top: 25px;
+
+}
+
+
+
+
+
+/* BUTTONS */
+
+
+.editBtn {
+
+    margin-top: 30px;
+
+
+    height: 48px;
+
+    padding: 0 30px;
+
+
+    border: none;
+
+    border-radius: 16px;
+
+
+    cursor: pointer;
+
+
+    font-weight: 700;
+
+
+    background:
+        linear-gradient(135deg,
+            #d6a83a,
+            #f4d06f);
+
+
+    color: #111;
+
+
+    transition: .25s;
+
+}
+
+
+
+.editBtn:hover {
+
+    transform: translateY(-3px);
+
+    box-shadow:
+        0 15px 40px rgba(214, 168, 58, .35);
+
+}
+
+
+
+
+
+.changeAvatarBtn {
+
+    height: 38px;
+
+
+    display: inline-flex;
+
+
+    align-items: center;
+
+    justify-content: center;
+
+
+    gap: 8px;
+
+
+    padding: 0 18px;
+
+
+    border-radius: 14px;
+
+
+    cursor: pointer;
+
+
+    background: var(--button-bg);
+
+    color: var(--button-text);
+
+
+    border: 1px solid var(--border);
+
+
+    font-size: 14px;
+
+
+    transition: .2s;
+
+}
+
+
+
+.changeAvatarBtn:hover {
+
+    transform: translateY(-2px);
+
+}
+
+
+
+
+
+.icon {
+
+    width: 18px;
+
+    height: 18px;
+
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+
+    line-height: 0;
+
+    flex-shrink: 0;
+
+}
+
+
+
+
+.icon svg {
+
+    display: block;
+
+}
+
+
+
+
+
+
+
+/* FORM */
+
+
+.editBox {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 15px;
+
+}
+
+
+
+
+.editBox input,
+.editBox textarea,
+.passwordInput input {
+
+
+    width: 100%;
+
+
+    padding: 14px 16px;
+
+
+    border-radius: 14px;
+
+
+    outline: none;
+
+
+    background: var(--input-bg);
+
+    color: var(--white);
+
+
+    border: 1px solid var(--border);
+
+}
+
+
+
+.editBox textarea {
+
+    min-height: 120px;
+
+    resize: none;
+
+}
+
+
+
+
+
+
+
+/* PASSWORD */
+
+
+.passwordHeader {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+}
+
+
+
+.closeBtn {
+
+    width: 35px;
+
+    height: 35px;
+
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+
+    border: none;
+
+    border-radius: 50%;
+
+
+    cursor: pointer;
+
+
+    background: rgba(255, 255, 255, .08);
+
+    color: var(--white);
+
+}
+
+
+
+.passwordInput {
+
+    position: relative;
+
+}
+
+
+
+.passwordInput input {
+
+    padding-right: 50px;
+
+}
+
+
+
+.passwordInput button {
+
+    position: absolute;
+
+
+    right: 12px;
+
+    top: 50%;
+
+
+    transform: translateY(-50%);
+
+
+    width: 32px;
+
+    height: 32px;
+
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+
+    border: none;
+
+    background: transparent;
+
+
+    color: var(--gray);
+
+
+    cursor: pointer;
+
+}
+
+
+
+
+
+.passwordInput button svg {
+
+    display: block;
+
+}
+
+
+
+.actions {
+
+    display: flex;
+
+    gap: 14px;
+
+    margin-top: 35px;
+
+    flex-wrap: wrap;
+
+}
+
+
+
+.actionBtn {
+
+    height: 46px;
+
+    padding: 0 24px;
+
+    border-radius: 14px;
+
+    border: 1px solid var(--border);
+
+    background: rgba(255, 255, 255, .06);
+
+    color: var(--white);
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 8px;
+
+    cursor: pointer;
+
+    font-weight: 600;
+
+    transition: .25s;
+
+}
+
+
+
+.actionBtn:hover {
+
+    transform: translateY(-3px);
+
+    border-color: var(--violet);
+
+    background: rgba(214, 168, 58, .15);
+
+}
+
+
+
+.logoutBtn {
+
+    background: rgba(255, 60, 60, .12);
+
+    border-color: rgba(255, 60, 60, .3);
+
+}
+
+
+
+.logoutBtn:hover {
+
+    background: rgba(255, 60, 60, .25);
+
+}
+
+.modalBg {
+
+    position: fixed;
+
+    inset: 0;
+
+    background: rgba(0, 0, 0, .65);
+
+    backdrop-filter: blur(8px);
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    z-index: 999;
+
+}
+
+
+
+.modal {
+
+
+    width: 360px;
+
+    padding: 30px;
+
+    border-radius: 25px;
+
+    background: var(--card);
+
+    border: 1px solid var(--border);
+
+    box-shadow: 0 30px 80px rgba(0, 0, 0, .5);
+
+}
+
+
+
+.modal h3 {
+
+    margin-top: 0;
+
+}
+
+
+
+.modal p {
+
+    color: var(--gray);
+
+}
+
+
+
+.modalBtns {
+
+    display: flex;
+
+    gap: 12px;
+
+    margin-top: 25px;
+
+}
+
+
+
+.cancelBtn,
+.confirmBtn {
+
+    flex: 1;
+
+    height: 42px;
+
+    border-radius: 12px;
+
+    border: none;
+
+    cursor: pointer;
+
+}
+
+
+
+.cancelBtn {
+
+    background: rgba(255, 255, 255, .08);
+
+    color: white;
+
+}
+
+
+
+.confirmBtn {
+
+    background: #ff4d4d;
+
+    color: white;
+
+}
+
+button:disabled {
+
+    opacity: .6;
+
+    cursor: not-allowed;
+
+    transform: none !important;
+
+}
+
+.deleteBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    height: 48px;
+    padding: 0 24px;
+
+    border-radius: 16px;
+
+    border: 1px solid #ff4d4d;
+
+    background: rgba(255, 60, 60, .08);
+
+    color: #ff5c5c;
+
+    cursor: pointer;
+
+    font-weight: 700;
+
+    transition: .2s;
+}
+
+
+.deleteBtn:hover {
+    background: #ff4d4d;
+    color: white;
+    transform: translateY(-3px);
+}
+
+.deleteInput {
+
+    width: 100%;
+
+    margin-top: 20px;
+
+    padding: 12px;
+
+    border-radius: 12px;
+
+    background: var(--input-bg);
+
+    color: white;
+
+    border: 1px solid var(--border);
+
+}
+
+
+
+.confirmDeleteBtn {
+
+    flex: 1;
+
+    height: 42px;
+
+    border-radius: 12px;
+
+    border: none;
+
+    cursor: pointer;
+
+    background: #e53935;
+
+    color: white;
+
+}
+
+@media(max-width:600px) {
+
+    .actions {
+
+        flex-direction: column;
+
+    }
+
+
+    .actionBtn {
+
+        width: 100%;
+
+    }
+
+}
+
+
+
+@media(max-width:800px) {
+
+
+    .profileCard {
+
+        padding: 30px;
+
+    }
+
+
+
+    .profileTop {
+
+        flex-direction: column;
+
+        align-items: center;
+
+    }
+
+
+
+    .profileName {
+
+        font-size: 32px;
+
+    }
+
+
+
+    .stats {
+
+        grid-template-columns: 1fr;
+
+    }
+
+
+
+}

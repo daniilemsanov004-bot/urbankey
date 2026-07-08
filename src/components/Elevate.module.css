@@ -1,0 +1,131 @@
+.elevate {
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+
+
+    .container {
+
+        max-width: 1440px;
+
+        margin: 150px auto;
+
+        position: relative;
+
+        padding: 20px;
+    }
+
+
+
+    &::before {
+
+        content: "";
+
+
+        position: absolute;
+
+
+
+        width: 1000px;
+
+        height: 500px;
+
+
+
+        background:
+
+            radial-gradient(circle at top left,
+                rgba(201, 168, 106, .14),
+                transparent 65%);
+
+
+
+        top: -220px;
+
+        left: -300px;
+
+
+
+        filter: blur(120px);
+
+
+
+        z-index: 0;
+    }
+
+
+
+
+
+
+    h1,
+    p {
+
+        position: relative;
+
+        z-index: 2;
+    }
+
+
+
+
+
+
+    h1 {
+
+        font-weight: 600;
+
+
+        font-size: clamp(34px, 5vw, 50px);
+
+
+        line-height: 130%;
+
+
+
+        color: var(--white);
+
+
+
+        letter-spacing: -1px;
+
+
+
+        margin-bottom: 18px;
+
+
+
+        @media(max-width:576px) {
+
+
+            font-size: 28px;
+        }
+    }
+
+
+
+
+
+
+
+    p {
+
+        font-weight: 500;
+
+
+        font-size: 16px;
+
+
+        line-height: 180%;
+
+
+
+        color: var(--gray);
+
+
+
+        max-width: 1200px;
+
+        width: 100%;
+    }
+}

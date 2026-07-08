@@ -1,0 +1,84 @@
+.button {
+
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 999;
+
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+
+    background: linear-gradient(160deg, #3fc1f0, #229ED9);
+    color: #ffffff;
+    text-decoration: none;
+
+    box-shadow:
+        0 10px 25px rgba(34, 158, 217, .45),
+        0 0 0 4px rgba(34, 158, 217, .12);
+
+    animation: float 3s ease-in-out infinite;
+    transition: transform .25s, box-shadow .25s;
+}
+
+
+.button:hover {
+    transform: translateY(-4px) scale(1.05);
+    box-shadow:
+        0 16px 32px rgba(34, 158, 217, .55),
+        0 0 0 6px rgba(34, 158, 217, .16);
+}
+
+
+.icon {
+    transform: rotate(-8deg) translateX(1px);
+}
+
+
+.label {
+
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .04em;
+    line-height: 1;
+}
+
+
+@keyframes float {
+
+    0%, 100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-6px);
+    }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+    .button {
+        animation: none;
+    }
+}
+
+
+@media (max-width: 640px) {
+
+    .button {
+        right: 16px;
+        bottom: 16px;
+        width: 56px;
+        height: 56px;
+    }
+
+    .label {
+        font-size: 9px;
+    }
+}

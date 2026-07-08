@@ -1,0 +1,790 @@
+/* ==========================================================================
+   Profile.module.css
+   ========================================================================== */
+
+.profile {
+    min-height: 100vh;
+    padding: 120px 20px;
+    background: var(--black);
+    color: var(--white);
+}
+
+.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+
+    color: var(--gray);
+    font-size: 16px;
+}
+
+.profileCard {
+    max-width: 1100px;
+    margin: auto;
+    padding: 50px;
+
+    background:
+        radial-gradient(circle at top left,
+            rgba(214, 168, 58, .18),
+            transparent 35%),
+        var(--card);
+
+    border: 1px solid var(--border);
+    border-radius: 35px;
+
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+
+    box-shadow: 0 30px 90px rgba(0, 0, 0, .35);
+}
+
+/* --------------------------------------------------------------------------
+   TOP / IDENTITY
+   -------------------------------------------------------------------------- */
+
+.profileTop {
+    display: flex;
+    align-items: center;
+    gap: 35px;
+}
+
+.profileInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.profileName {
+    font-size: 42px;
+    margin: 0;
+    font-weight: 800;
+}
+
+.email {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--gray);
+}
+
+/* --------------------------------------------------------------------------
+   AVATAR
+   -------------------------------------------------------------------------- */
+
+.avatarBlock {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+}
+
+.avatar {
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: linear-gradient(135deg, var(--violet), var(--dark-gray));
+    border: 3px solid var(--violet);
+
+    color: var(--black);
+    font-size: 50px;
+    font-weight: 700;
+
+    transition: .25s ease;
+}
+
+.avatar:hover {
+    transform: scale(1.05);
+}
+
+.avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatarOverlay {
+    position: absolute;
+    inset: 0;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(0, 0, 0, .55);
+    color: var(--white);
+
+    opacity: 0;
+    transition: .2s ease;
+}
+
+.avatar:hover .avatarOverlay {
+    opacity: 1;
+}
+
+.changeAvatarBtn {
+    height: 38px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    padding: 0 18px;
+    border-radius: 14px;
+    cursor: pointer;
+
+    background: var(--card);
+    color: var(--white);
+    border: 1px solid var(--border);
+
+    font-size: 14px;
+    transition: .25s ease;
+}
+
+.changeAvatarBtn:hover {
+    transform: translateY(-2px);
+    border-color: var(--violet);
+    color: var(--violet);
+}
+
+.icon {
+    width: 18px;
+    height: 18px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    line-height: 0;
+    flex-shrink: 0;
+}
+
+.icon svg {
+    display: block;
+}
+
+/* --------------------------------------------------------------------------
+   DIVIDER
+   -------------------------------------------------------------------------- */
+
+.line {
+    height: 1px;
+    background: var(--border);
+    margin: 40px 0;
+}
+
+/* --------------------------------------------------------------------------
+   STAT CARDS / BIO
+   -------------------------------------------------------------------------- */
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.stat,
+.bio {
+    padding: 25px;
+    border-radius: 22px;
+
+    background: rgba(255, 255, 255, .02);
+    border: 1px solid var(--border);
+
+    transition: .25s ease;
+}
+
+.stat:hover,
+.bio:hover {
+    transform: translateY(-5px);
+    border-color: var(--violet);
+    box-shadow: 0 15px 40px rgba(214, 168, 58, .12);
+}
+
+.stat span,
+.bio span {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--violet);
+    margin-bottom: 10px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.stat b {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--white);
+}
+
+.bio {
+    margin-top: 25px;
+}
+
+.bio p {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--white);
+}
+
+/* --------------------------------------------------------------------------
+   EDIT PROFILE BUTTON / FORM
+   -------------------------------------------------------------------------- */
+
+.editBtn {
+    margin-top: 30px;
+    height: 48px;
+    padding: 0 30px;
+
+    border: none;
+    border-radius: 16px;
+    cursor: pointer;
+    font-weight: 700;
+
+    background: linear-gradient(135deg, var(--violet), var(--dark-gray));
+    color: var(--black);
+
+    transition: .25s ease;
+}
+
+.editBtn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 40px rgba(214, 168, 58, .35);
+}
+
+.editBox {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.editBox input,
+.editBox textarea,
+.passwordInput input {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 14px;
+    outline: none;
+
+    background: var(--card);
+    color: var(--white);
+    border: 1px solid var(--border);
+
+    font-family: var(--font-family);
+    transition: .25s ease;
+}
+
+.editBox input:focus,
+.editBox textarea:focus,
+.passwordInput input:focus {
+    border-color: var(--violet);
+    box-shadow: 0 0 0 3px rgba(214, 168, 58, .2);
+}
+
+.editBox textarea {
+    min-height: 120px;
+    resize: none;
+}
+
+/* --------------------------------------------------------------------------
+   PASSWORD SECTION
+   -------------------------------------------------------------------------- */
+
+.passwordHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.closeBtn {
+    width: 35px;
+    height: 35px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--white);
+
+    transition: .25s ease;
+}
+
+.closeBtn:hover {
+    border-color: var(--violet);
+    color: var(--violet);
+}
+
+.passwordInput {
+    position: relative;
+}
+
+.passwordInput input {
+    padding-right: 50px;
+}
+
+.passwordInput button {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+
+    width: 32px;
+    height: 32px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+    background: transparent;
+    color: var(--gray);
+    cursor: pointer;
+}
+
+.passwordInput button svg {
+    display: block;
+}
+
+/* --------------------------------------------------------------------------
+   ACTION BUTTONS (save / logout / etc.)
+   -------------------------------------------------------------------------- */
+
+.actions {
+    display: flex;
+    gap: 14px;
+    margin-top: 35px;
+    flex-wrap: wrap;
+}
+
+.actionBtn {
+    height: 46px;
+    padding: 0 24px;
+    border-radius: 14px;
+
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--white);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    cursor: pointer;
+    font-weight: 600;
+    transition: .25s ease;
+}
+
+.actionBtn:hover {
+    transform: translateY(-3px);
+    border-color: var(--violet);
+    background: rgba(214, 168, 58, .15);
+    color: var(--violet);
+}
+
+.logoutBtn {
+    background: rgba(255, 60, 60, .1);
+    border-color: rgba(255, 60, 60, .3);
+    color: #ff5c5c;
+}
+
+.logoutBtn:hover {
+    background: rgba(255, 60, 60, .22);
+    border-color: #ff4d4d;
+    color: #ff5c5c;
+}
+
+button:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   ACCOUNT DELETE (large button + input)
+   -------------------------------------------------------------------------- */
+
+.deleteBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    height: 48px;
+    padding: 0 24px;
+    border-radius: 16px;
+
+    border: 1px solid #ff4d4d;
+    background: rgba(255, 60, 60, .08);
+    color: #ff5c5c;
+
+    cursor: pointer;
+    font-weight: 700;
+    transition: .25s ease;
+}
+
+.deleteBtn:hover {
+    background: #ff4d4d;
+    color: var(--white);
+    transform: translateY(-3px);
+}
+
+.deleteInput {
+    width: 100%;
+    margin-top: 20px;
+    padding: 12px;
+    border-radius: 12px;
+
+    background: var(--card);
+    color: var(--white);
+    border: 1px solid var(--border);
+
+    transition: .25s ease;
+}
+
+.deleteInput:focus {
+    outline: none;
+    border-color: #ff4d4d;
+}
+
+.confirmDeleteBtn {
+    flex: 1;
+    height: 42px;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+
+    background: #e53935;
+    color: var(--white);
+    font-weight: 500;
+    transition: .25s ease;
+}
+
+.confirmDeleteBtn:hover {
+    background: #c62828;
+}
+
+/* --------------------------------------------------------------------------
+   MODAL (generic — used for account delete confirm)
+   -------------------------------------------------------------------------- */
+
+.modalBg {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(0, 0, 0, .7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.modal {
+    width: 360px;
+    padding: 30px;
+    border-radius: 25px;
+
+    background: var(--card);
+    border: 1px solid var(--border);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, .5);
+}
+
+.modal h3 {
+    margin-top: 0;
+    color: var(--white);
+}
+
+.modal p {
+    color: var(--gray);
+}
+
+.modalBtns {
+    display: flex;
+    gap: 12px;
+    margin-top: 25px;
+}
+
+.cancelBtn,
+.confirmBtn {
+    flex: 1;
+    height: 42px;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    transition: .25s ease;
+}
+
+.cancelBtn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--white);
+}
+
+.cancelBtn:hover {
+    border-color: var(--violet);
+    color: var(--violet);
+}
+
+.confirmBtn {
+    background: #ff4d4d;
+    color: var(--white);
+}
+
+.confirmBtn:hover {
+    background: #e53935;
+}
+
+/* --------------------------------------------------------------------------
+   USER REVIEW (single review, with edit/delete)
+   -------------------------------------------------------------------------- */
+
+.userReviews {
+    margin-top: 40px;
+}
+
+.userReviews h2 {
+    margin-bottom: 20px;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--white);
+}
+
+.noReview {
+    padding: 26px;
+    border-radius: 16px;
+
+    background: rgba(255, 255, 255, .02);
+    border: 1px dashed var(--border);
+    text-align: center;
+}
+
+.noReview p {
+    margin: 0;
+    color: var(--gray);
+    font-size: 14px;
+}
+
+.reviewCard {
+    position: relative;
+    margin-top: 20px;
+    padding: 26px;
+    border-radius: 18px;
+
+    background: rgba(255, 255, 255, .02);
+    border: 1px solid var(--border);
+
+    transition: .3s ease;
+}
+
+.reviewCard:hover {
+    border-color: var(--violet);
+    box-shadow: 0 15px 40px rgba(214, 168, 58, .12);
+}
+
+.reviewActions {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    display: flex;
+    gap: 8px;
+}
+
+.iconBtn {
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    cursor: pointer;
+
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--gray);
+
+    transition: .25s ease;
+}
+
+.iconBtn:hover {
+    transform: scale(1.08);
+    border-color: var(--violet);
+    color: var(--violet);
+}
+
+/* Renamed to avoid clashing with the large account-delete .deleteBtn above.
+   In the JSX, use `${s.iconBtn} ${s.reviewDeleteBtn}` for the review delete icon. */
+.reviewDeleteBtn:hover {
+    border-color: #e53935;
+    color: #e53935;
+}
+
+.rating {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 14px;
+}
+
+.starActive {
+    color: var(--violet);
+}
+
+.starInactive {
+    color: var(--border);
+}
+
+.reviewText {
+    margin: 0 0 14px;
+    font-size: 15px;
+    line-height: 1.8;
+    color: var(--white);
+}
+
+.reviewDate {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--gray);
+}
+
+.editStars {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.editStars button {
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 20px;
+    color: var(--border);
+    transition: .2s ease;
+}
+
+.editStars button:hover {
+    color: var(--violet);
+}
+
+.activeStar {
+    color: var(--violet) !important;
+    transform: scale(1.12);
+}
+
+.editTextarea {
+    width: 100%;
+    min-height: 110px;
+    padding: 14px;
+    border-radius: 14px;
+    resize: vertical;
+
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--white);
+
+    font-family: var(--font-family);
+    font-size: 14px;
+    line-height: 1.6;
+
+    transition: .25s ease;
+}
+
+.editTextarea:focus {
+    outline: none;
+    border-color: var(--violet);
+    box-shadow: 0 0 0 3px rgba(214, 168, 58, .2);
+}
+
+.editBtns {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.editBtns button {
+    height: 38px;
+    padding: 0 18px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+
+    background: var(--card);
+    color: var(--white);
+    font-weight: 500;
+    font-size: 14px;
+
+    transition: .25s ease;
+}
+
+.editBtns button:hover {
+    transform: translateY(-2px);
+    border-color: var(--violet);
+}
+
+.editBtns button:last-child {
+    background: linear-gradient(135deg, var(--violet), var(--dark-gray));
+    border-color: var(--violet);
+    color: var(--black);
+}
+
+/* --------------------------------------------------------------------------
+   RESPONSIVE
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 800px) {
+    .profileCard {
+        padding: 30px;
+    }
+
+    .profileTop {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .profileName {
+        font-size: 32px;
+    }
+
+    .stats {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .actions {
+        flex-direction: column;
+    }
+
+    .actionBtn {
+        width: 100%;
+    }
+
+    .modal {
+        width: 90%;
+        padding: 24px;
+    }
+}

@@ -1,0 +1,193 @@
+.burger {
+    position: fixed;
+    inset: 0;
+
+    width: 100%;
+    min-height: 100dvh;
+
+    display: flex;
+    justify-content: flex-end;
+
+    background: transparent;
+    backdrop-filter: none;
+
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+
+    transition: .4s ease;
+
+    /* выше навбара, чтобы не залезал под него при скролле */
+    z-index: 1100;
+}
+
+
+.burger.active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+
+    background: rgba(0, 0, 0, .35);
+    backdrop-filter: blur(8px);
+}
+
+
+.burger .container {
+    position: relative;
+
+    background: var(--card);
+    border-left: 1px solid var(--border);
+
+    max-width: 340px;
+    width: 100%;
+    height: 100dvh;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    transform: translateX(100%);
+    transition: transform .45s ease;
+
+    box-shadow: -25px 0 60px rgba(0, 0, 0, .18);
+}
+
+
+.burger.active .container {
+    transform: translateX(0);
+}
+
+
+.burger .links {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+
+    gap: 14px;
+    width: 100%;
+    padding: 30px;
+}
+
+
+.burger .links .link {
+    width: 100%;
+    text-align: center;
+
+    font-size: 18px;
+    font-weight: 500;
+    font-family: var(--font-family);
+
+    color: var(--white);
+    text-decoration: none;
+
+    padding: 16px 20px;
+    border-radius: 16px;
+
+    background: transparent;
+    border: 1px solid transparent;
+
+    transition: .3s ease;
+
+    -webkit-tap-highlight-color: transparent;
+}
+
+
+.burger .links .link:hover {
+    background: rgba(201, 168, 106, .08);
+    border-color: rgba(201, 168, 106, .35);
+    color: #c9a86a;
+    transform: translateX(6px);
+}
+
+/* активное нажатие на тач-устройствах, раз hover там не работает */
+.burger .links .link:active {
+    background: rgba(201, 168, 106, .12);
+    border-color: rgba(201, 168, 106, .35);
+    color: #c9a86a;
+}
+
+
+.burger .close {
+    position: absolute;
+
+    top: 22px;
+    right: 22px;
+
+    width: clamp(1.8rem, 1.6rem + 1.2vw, 2.4rem);
+
+    cursor: pointer;
+    transition: .35s ease;
+
+    -webkit-tap-highlight-color: transparent;
+}
+
+
+.burger .close:hover {
+    transform: rotate(90deg) scale(1.08);
+}
+
+
+/* ===== Планшет / средние экраны ===== */
+@media (max-width: 700px) {
+
+    .burger .container {
+        max-width: 300px;
+    }
+
+    .burger .links {
+        gap: 10px;
+        padding: 24px;
+    }
+
+    .burger .links .link {
+        font-size: 16px;
+        padding: 14px 16px;
+        border-radius: 14px;
+    }
+
+    .burger .close {
+        top: 18px;
+        right: 18px;
+    }
+}
+
+
+/* ===== Маленькие телефоны ===== */
+@media (max-width: 400px) {
+
+    .burger .container {
+        max-width: 88vw;
+    }
+
+    .burger .links {
+        gap: 8px;
+        padding: 20px 16px;
+    }
+
+    .burger .links .link {
+        font-size: 15px;
+        padding: 13px 14px;
+    }
+
+    .burger .close {
+        top: 14px;
+        right: 14px;
+        width: clamp(1.5rem, 1.35rem + 0.8vw, 1.8rem);
+    }
+}
+
+
+/* ===== Очень узкие / low-height экраны (альбомная ориентация телефона) ===== */
+@media (max-height: 480px) {
+
+    .burger .links {
+        gap: 6px;
+        padding: 16px;
+    }
+
+    .burger .links .link {
+        font-size: 14px;
+        padding: 10px 12px;
+    }
+}

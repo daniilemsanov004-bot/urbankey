@@ -1,0 +1,277 @@
+{
+  "properties": [
+    {
+      "id": "1",
+      "title": {
+        "ru": "Seaside Serenity",
+        "en": "Seaside Serenity",
+        "uz": "Seaside Serenity"
+      },
+      "description": {
+        "ru": "Потрясающая вилла с 4 спальнями и 3 ванными комнатами в тихом районе...",
+        "en": "Stunning villa with 4 bedrooms and 3 bathrooms in a quiet neighborhood...",
+        "uz": "Sokin hududdagi 4 yotoqxonali va 3 hammomli ajoyib villa..."
+      },
+      "image": "/Image.png",
+      "bedroomIcon": "/BACKGROUND_2.svg",
+      "bathroomIcon": "/Icon.svg",
+      "typeIcon": "/Icon (1).svg",
+      "bedrooms": {
+        "ru": "4 спальни",
+        "en": "4 bedrooms",
+        "uz": "4 yotoqxona"
+      },
+      "bathrooms": {
+        "ru": "3 ванные",
+        "en": "3 bathrooms",
+        "uz": "3 hammom"
+      },
+      "type": {
+        "ru": "Вилла",
+        "en": "Villa",
+        "uz": "Villa"
+      },
+      "price": "$550,000",
+      "link": "/Seaside"
+    },
+    {
+      "id": "2",
+      "title": {
+        "ru": "Metropolitan Haven",
+        "en": "Metropolitan Haven",
+        "uz": "Metropolitan Haven"
+      },
+      "description": {
+        "ru": "Современные апартаменты с панорамным видом на город...",
+        "en": "Modern apartments with panoramic city views...",
+        "uz": "Shaharga panoramali zamonaviy apartamentlar..."
+      },
+      "image": "/Image (1).png",
+      "bedroomIcon": "/BACKGROUND_2.svg",
+      "bathroomIcon": "/Icon.svg",
+      "typeIcon": "/Icon (1).svg",
+      "bedrooms": {
+        "ru": "2 спальни",
+        "en": "2 bedrooms",
+        "uz": "2 yotoqxona"
+      },
+      "bathrooms": {
+        "ru": "2 ванные",
+        "en": "2 bathrooms",
+        "uz": "2 hammom"
+      },
+      "type": {
+        "ru": "Апартаменты",
+        "en": "Apartments",
+        "uz": "Apartament"
+      },
+      "price": "$450,000",
+      "link": "/Metropolitan"
+    },
+    {
+      "id": "3",
+      "title": {
+        "ru": "Rustic Retreat",
+        "en": "Rustic Retreat",
+        "uz": "Rustic Retreat"
+      },
+      "description": {
+        "ru": "Элегантный коттедж с 3 спальнями в закрытом комплексе...",
+        "en": "Elegant cottage with 3 bedrooms in a gated community...",
+        "uz": "Yopiq hududdagi 3 yotoqxonali elegant kottej..."
+      },
+      "image": "/public/bBFiLbINwRDkUs-u8E28OZDTd1Uf4IJrwbvB06V4aPgXEWCH-kAkW6P9gN62cYl1DzJ0Ov57oodiXDECA-_BTXEsnMeuNRt7bm_gf9KJykVo0FihhLQyNIaqYvr23GKCBgEVAbUyGDgUd38Jq1QB_JQYSgCb9dKN_HE9BaCVGM3ukP7HmGS1A0t1wBUE8m7T.jpg",
+      "bedroomIcon": "/BACKGROUND_2.svg",
+      "bathroomIcon": "/Icon.svg",
+      "typeIcon": "/Icon (1).svg",
+      "bedrooms": {
+        "ru": "3 спальни",
+        "en": "3 bedrooms",
+        "uz": "3 yotoqxona"
+      },
+      "bathrooms": {
+        "ru": "2 ванные",
+        "en": "2 bathrooms",
+        "uz": "2 hammom"
+      },
+      "type": {
+        "ru": "Коттедж",
+        "en": "Cottage",
+        "uz": "Kottej"
+      },
+      "price": "$650,000",
+      "link": "/Rustic"
+    },
+    {
+      "id": "4",
+      "title": {
+        "ru": "Aurora Heights",
+        "en": "Aurora Heights",
+        "uz": "Aurora Heights"
+      },
+      "description": {
+        "ru": "Роскошная современная резиденция с просторным интерьером и видом на город...",
+        "en": "Luxurious modern residence with spacious interiors and city views...",
+        "uz": "Keng interyer va shahar manzarasiga ega zamonaviy hashamatli rezidensiya..."
+      },
+      "image": "/public/yMCjSsKWqCrfepkcufhwjyC-2BqtxqKJLxchJuNNQ4_vbhu0xchtuUk5raUx57ynmhFS-396L93KVgvVnj4-iG6xHB9BbI3ALdyrbB3LJ0qiGpbf6HpvxPaRwI_Uc4XKfNqUwJznpbX5c6rMCbksQp0-GNMVxoHWK1DSiF-Hv9hP_dkWivx2XCraq9wWmKDa.jpg",
+      "bedroomIcon": "/BACKGROUND_2.svg",
+      "bathroomIcon": "/Icon.svg",
+      "typeIcon": "/Icon (1).svg",
+      "bedrooms": {
+        "ru": "4 спальни",
+        "en": "4 bedrooms",
+        "uz": "4 yotoqxona"
+      },
+      "bathrooms": {
+        "ru": "3 ванные",
+        "en": "3 bathrooms",
+        "uz": "3 hammom"
+      },
+      "type": {
+        "ru": "Резиденция",
+        "en": "Residence",
+        "uz": "Rezidensiya"
+      },
+      "price": "$780,000",
+      "link": "/Aurora"
+    },
+    {
+      "id": "5",
+      "title": {
+        "ru": "Golden Crest Villas",
+        "en": "Golden Crest Villas",
+        "uz": "Golden Crest Villas"
+      },
+      "description": {
+        "ru": "Премиальная вилла с частным садом и современным дизайном...",
+        "en": "Premium villa with a private garden and modern design...",
+        "uz": "Shaxsiy bog‘ va zamonaviy dizaynga ega premium villa..."
+      },
+      "image": "/public/3dwzthD7E6Tt851JMtb9FfUEQAY98jdwHpnDKUdjG3HQMlDG0BeOUAMGLssyQR3THimLepME5r-26VRaudglm3C56jD4hK8CZIQtkUL-rXX0bgeHgJ-2_EU9BYnZ1JOL02BK94UITa800n2QqzDWGOG50fOMAN3-v0qqcap6dYk.jpg",
+      "bedroomIcon": "/BACKGROUND_2.svg",
+      "bathroomIcon": "/Icon.svg",
+      "typeIcon": "/Icon (1).svg",
+      "bedrooms": {
+        "ru": "5 спален",
+        "en": "5 bedrooms",
+        "uz": "5 yotoqxona"
+      },
+      "bathrooms": {
+        "ru": "4 ванные",
+        "en": "4 bathrooms",
+        "uz": "4 hammom"
+      },
+      "type": {
+        "ru": "Вилла",
+        "en": "Villa",
+        "uz": "Villa"
+      },
+      "price": "$920,000",
+      "link": "/Golden"
+    },
+    {
+      "id": "6",
+      "title": {
+        "ru": "Velora Residence",
+        "en": "Velora Residence",
+        "uz": "Velora Residence"
+      },
+      "description": {
+        "ru": "Элегантная резиденция с системой умного дома и современным интерьером...",
+        "en": "Elegant residence with smart home system and modern interior...",
+        "uz": "Aqlli uy tizimi va zamonaviy interyerga ega elegant rezidensiya..."
+      },
+      "image": "/public/KJ1kTCKatz_MSINlpufdRx_yYyJpY7h9FKBRj1c_WoOpxmDdiluvy2Ov6guWSn94NByGUZ19q4U5TF-XOZBLiwgourkVvF2kJAmDVn817DsA8qHB1uc_NE9RN4kEkVdUA7gZNBt73msJcfnsORQGmBUxiZ6hDYMLASSPr0vLJYRDuKLxd8cG2RY-oqLRPCqI.jpg",
+      "bedroomIcon": "/BACKGROUND_2.svg",
+      "bathroomIcon": "/Icon.svg",
+      "typeIcon": "/Icon (1).svg",
+      "bedrooms": {
+        "ru": "3 спальни",
+        "en": "3 bedrooms",
+        "uz": "3 yotoqxona"
+      },
+      "bathrooms": {
+        "ru": "2 ванные",
+        "en": "2 bathrooms",
+        "uz": "2 hammom"
+      },
+      "type": {
+        "ru": "Резиденция",
+        "en": "Residence",
+        "uz": "Rezidensiya"
+      },
+      "price": "$540,000",
+      "link": "/Velora"
+    },
+    {
+      "id": "7",
+      "title": {
+        "ru": "Skyline Haven",
+        "en": "Skyline Haven",
+        "uz": "Skyline Haven"
+      },
+      "description": {
+        "ru": "Роскошный пентхаус с панорамным видом и современной архитектурой...",
+        "en": "Luxury penthouse with panoramic views and modern architecture...",
+        "uz": "Panoramali manzara va zamonaviy arxitekturaga ega hashamatli pentxaus..."
+      },
+      "image": "/public/0mY7023lnW3EflXUpktBHxeD-lAzcp8QukN_QumjVIZJ8BpF2OxpdhFu_1ks1jluOLAtdp3NnIF6gLKnBoiaQ1wuIl8up_kdXVDZwerY5fJZu_a11O2YVdy6byuO0cC0MSp_ebzofoZj50fSz_8ImYwj11Il16L7-U3UgX6PCaMiwwpHFGNVFp-opvptBtHC.jpg",
+      "bedroomIcon": "/BACKGROUND_2.svg",
+      "bathroomIcon": "/Icon.svg",
+      "typeIcon": "/Icon (1).svg",
+      "bedrooms": {
+        "ru": "4 спальни",
+        "en": "4 bedrooms",
+        "uz": "4 yotoqxona"
+      },
+      "bathrooms": {
+        "ru": "3 ванные",
+        "en": "3 bathrooms",
+        "uz": "3 hammom"
+      },
+      "type": {
+        "ru": "Пентхаус",
+        "en": "Penthouse",
+        "uz": "Pentxaus"
+      },
+      "price": "$1,050,000",
+      "link": "/Skyline"
+    },
+    {
+      "id": "8",
+      "title": {
+        "ru": "Evermont Estates",
+        "en": "Evermont Estates",
+        "uz": "Evermont Estates"
+      },
+      "description": {
+        "ru": "Стильный семейный дом в тихом премиальном районе...",
+        "en": "Stylish family home in a quiet premium neighborhood...",
+        "uz": "Tinch premium hududdagi zamonaviy oilaviy uy..."
+      },
+      "image": "/public/tKuaCyJiwpbnxLIqMvZ30nBTcGRGiDJzUBKdolLTvovmRcDZDXFSeSIJWo3IGzatFuAr-aJsTjTTg1kBH1SKJFuaJNESKsBkPp-sgKxl02N4qPng4N1t3a6_yMqu-5E2D97Lg8jEdhjydS48zydsEQRExYkosaT9ROchTrtr4AfYyswo8Aq88S_dkvG9U53Y.jpg",
+      "bedroomIcon": "/BACKGROUND_2.svg",
+      "bathroomIcon": "/Icon.svg",
+      "typeIcon": "/Icon (1).svg",
+      "bedrooms": {
+        "ru": "4 спальни",
+        "en": "4 bedrooms",
+        "uz": "4 yotoqxona"
+      },
+      "bathrooms": {
+        "ru": "3 ванные",
+        "en": "3 bathrooms",
+        "uz": "3 hammom"
+      },
+      "type": {
+        "ru": "Дом",
+        "en": "House",
+        "uz": "Uy"
+      },
+      "price": "$690,000",
+      "link": "/Evermont"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}

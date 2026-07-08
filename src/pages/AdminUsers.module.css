@@ -1,0 +1,247 @@
+.wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+    color: #f5f5f5;
+}
+
+.wrap h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 32px;
+    color: #fff;
+    letter-spacing: 0.3px;
+}
+
+.denied {
+    max-width: 600px;
+    margin: 100px auto;
+    text-align: center;
+    padding: 40px;
+    border: 1px solid rgba(212, 175, 55, 0.25);
+    border-radius: 14px;
+    background: #111111;
+}
+
+.denied p {
+    color: #d4af37;
+    font-size: 16px;
+}
+
+/* ===== SEARCH ===== */
+
+.searchBox {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #111111;
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    border-radius: 12px;
+    padding: 10px 16px;
+    margin-bottom: 28px;
+    transition: border-color 0.2s ease;
+}
+
+.searchBox:focus-within {
+    border-color: #d4af37;
+}
+
+.searchBox svg {
+    color: #d4af37;
+    flex-shrink: 0;
+}
+
+.searchBox input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #f5f5f5;
+    font-size: 15px;
+}
+
+.searchBox input::placeholder {
+    color: #777;
+}
+
+.searchBox button {
+    background: linear-gradient(135deg, #d4af37, #b8912c);
+    color: #0a0a0a;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 20px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: opacity 0.2s ease, transform 0.15s ease;
+}
+
+.searchBox button:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.searchBox button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ===== LIST ===== */
+
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.userRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    background: #111111;
+    border: 1px solid rgba(212, 175, 55, 0.15);
+    border-radius: 14px;
+    padding: 14px 18px;
+    transition: border-color 0.2s ease, transform 0.15s ease;
+}
+
+.userRow:hover {
+    border-color: rgba(212, 175, 55, 0.4);
+    transform: translateY(-1px);
+}
+
+.userInfo {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+
+.avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    flex-shrink: 0;
+}
+
+.userInfo h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    margin: 0 0 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.userInfo p {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    color: #999;
+    margin: 0;
+}
+
+/* ===== ROLE BADGE ===== */
+
+.roleBadge {
+    flex-shrink: 0;
+}
+
+.adminBadge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(212, 175, 55, 0.12);
+    color: #d4af37;
+    border: 1px solid rgba(212, 175, 55, 0.35);
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.userBadge {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.05);
+    color: #999;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+/* ===== ACTION BUTTONS ===== */
+
+.grantBtn,
+.revokeBtn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.2s ease, transform 0.15s ease;
+    flex-shrink: 0;
+}
+
+.grantBtn {
+    background: linear-gradient(135deg, #d4af37, #b8912c);
+    color: #0a0a0a;
+}
+
+.revokeBtn {
+    background: rgba(255, 80, 80, 0.12);
+    color: #ff6b6b;
+    border: 1px solid rgba(255, 80, 80, 0.3);
+}
+
+.grantBtn:hover:not(:disabled),
+.revokeBtn:hover:not(:disabled) {
+    opacity: 0.85;
+    transform: translateY(-1px);
+}
+
+.grantBtn:disabled,
+.revokeBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ===== EMPTY STATE ===== */
+
+.empty {
+    text-align: center;
+    color: #777;
+    padding: 40px 0;
+    font-size: 14px;
+}
+
+/* ===== RESPONSIVE ===== */
+
+@media (max-width: 640px) {
+    .userRow {
+        flex-wrap: wrap;
+    }
+
+    .roleBadge {
+        order: 3;
+    }
+
+    .grantBtn,
+    .revokeBtn {
+        order: 4;
+        width: 100%;
+        justify-content: center;
+    }
+}

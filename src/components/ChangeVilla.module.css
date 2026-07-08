@@ -1,0 +1,264 @@
+.change {
+    min-height: 100vh;
+    background: #111;
+    color: white;
+    padding: 120px 20px;
+}
+
+
+.container {
+    max-width: 900px;
+    margin: auto;
+    background: #1b1b1b;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 0 40px #000;
+}
+
+
+.title {
+    font-size: 40px;
+    margin-bottom: 30px;
+    color: #d9ad45;
+}
+
+
+
+select,
+input,
+textarea {
+
+    width: 100%;
+    margin-bottom: 15px;
+
+    background: #252525;
+    border: 1px solid #444;
+
+    color: white;
+
+    padding: 14px;
+
+    border-radius: 10px;
+
+    font-size: 16px;
+
+}
+
+
+textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+
+
+h3 {
+    margin-top: 30px;
+    color: #d9ad45;
+}
+
+
+
+.lang {
+
+    display: grid;
+
+    grid-template-columns: repeat(3, 1fr);
+
+    gap: 15px;
+
+}
+
+
+
+.images {
+
+    display: flex;
+
+    gap: 15px;
+
+    flex-wrap: wrap;
+
+}
+
+
+
+.imageBox {
+
+    position: relative;
+
+}
+
+
+.imageBox img {
+
+    width: 160px;
+    height: 120px;
+
+    object-fit: cover;
+
+    border-radius: 15px;
+
+}
+
+
+
+.imageBox button {
+
+    position: absolute;
+
+    top: 5px;
+    right: 5px;
+
+    background: crimson;
+    color: white;
+
+    border: none;
+
+    width: 30px;
+    height: 30px;
+
+    border-radius: 50%;
+
+    cursor: pointer;
+
+}
+
+
+
+
+
+.amenity {
+
+    background: #222;
+
+    padding: 15px;
+
+    border-radius: 15px;
+
+    margin-bottom: 15px;
+
+}
+
+
+
+.amenityGrid {
+
+    display: grid;
+
+    grid-template-columns: repeat(3, 1fr);
+
+    gap: 10px;
+
+}
+
+
+
+.buttons {
+
+    margin-top: 40px;
+
+    display: flex;
+
+    gap: 20px;
+
+}
+
+
+
+.save {
+
+    background: #d9ad45;
+
+    border: none;
+
+    padding: 15px 30px;
+
+    border-radius: 12px;
+
+    cursor: pointer;
+
+    font-size: 18px;
+
+}
+
+
+
+.delete {
+
+    background: #b32626;
+
+    border: none;
+
+    color: white;
+
+    padding: 15px 30px;
+
+    border-radius: 12px;
+
+    cursor: pointer;
+
+}
+
+
+
+.add {
+
+    background: #333;
+
+    color: white;
+
+    border: none;
+
+    padding: 12px 20px;
+
+    border-radius: 10px;
+
+    cursor: pointer;
+
+}
+
+.back {
+
+    background: #333;
+
+    color: white;
+
+    border: none;
+
+    padding: 15px 30px;
+
+    border-radius: 30px;
+
+    cursor: pointer;
+
+}
+
+
+.back:hover {
+
+    background: #555;
+
+}
+
+
+
+@media(max-width:700px) {
+
+
+    .lang,
+    .amenityGrid {
+
+        grid-template-columns: 1fr;
+
+    }
+
+
+    .container {
+
+        padding: 20px;
+
+    }
+
+
+}

@@ -1,0 +1,475 @@
+.journey {
+
+    max-width: 1440px;
+    width: 100%;
+
+    margin: 100px auto;
+
+    padding: 0 16px;
+
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    gap: 60px;
+
+
+
+
+
+
+    .image {
+
+
+        width: 100%;
+
+        max-width: 600px;
+
+
+
+        border: 1px solid var(--border);
+
+
+
+        border-radius: 20px;
+
+
+
+        overflow: hidden;
+
+
+
+        background: var(--card);
+
+
+
+        box-shadow:
+
+            0 25px 60px rgba(0, 0, 0, .18);
+
+
+
+
+
+
+        img {
+
+            width: 100%;
+
+            display: block;
+
+
+            object-fit: cover;
+
+
+
+            transition: .5s;
+
+
+
+            &:hover {
+
+                transform: scale(1.04);
+            }
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+    .text {
+
+
+        max-width: 650px;
+
+
+
+
+
+
+
+        h1 {
+
+
+            font-weight: 600;
+
+            font-size: clamp(32px, 5vw, 48px);
+
+            line-height: 130%;
+
+
+
+            color: var(--white);
+
+
+
+            margin-bottom: 14px;
+        }
+
+
+
+
+
+
+
+
+        p {
+
+
+            font-weight: 500;
+
+            font-size: 18px;
+
+
+            line-height: 170%;
+
+
+
+            color: var(--gray);
+
+
+
+            margin-bottom: 40px;
+        }
+    }
+
+
+
+
+
+
+
+
+
+    .info {
+
+
+        display: grid;
+
+
+        grid-template-columns: repeat(3, 1fr);
+
+
+
+        gap: 16px;
+    }
+
+
+
+
+
+
+
+
+
+    .card {
+
+
+        border: 1px solid var(--border);
+
+
+
+        background:
+
+            linear-gradient(180deg,
+                var(--card),
+                var(--dark-gray));
+
+
+
+
+        border-radius: 18px;
+
+
+
+        min-height: 110px;
+
+
+
+        padding: 20px 16px;
+
+
+
+        display: flex;
+
+        flex-direction: column;
+
+        justify-content: center;
+
+        align-items: center;
+
+
+
+        text-align: center;
+
+
+
+        transition: .35s;
+
+
+
+
+
+
+
+
+        &:hover {
+
+
+
+            transform: translateY(-8px);
+
+
+
+            border-color: #d6a83a;
+
+
+
+            box-shadow:
+
+                0 20px 45px rgba(214, 168, 58, .15);
+        }
+
+
+
+
+
+
+
+
+        h1 {
+
+
+
+            font-size: 34px;
+
+
+            color: var(--white);
+
+
+
+            margin-bottom: 4px;
+        }
+
+
+
+
+
+
+
+
+        p {
+
+
+            margin: 0;
+
+
+            font-size: 14px;
+
+
+            line-height: 150%;
+
+
+            color: var(--gray);
+        }
+    }
+
+
+
+
+
+
+
+
+
+    @media(max-width:992px) {
+
+
+        flex-direction: column;
+
+
+
+
+
+        .image {
+
+            max-width: 100%;
+        }
+
+
+
+
+
+
+        .text {
+
+            max-width: 100%;
+        }
+    }
+
+
+
+
+
+
+
+
+
+    @media(max-width:576px) {
+
+
+
+        margin: 70px auto;
+
+
+
+        gap: 28px;
+
+
+
+        flex-direction: column-reverse;
+
+
+
+
+
+
+
+        .text {
+
+
+
+            h1 {
+
+                font-size: 30px;
+
+                margin-bottom: 10px;
+            }
+
+
+
+
+
+
+
+
+            p {
+
+
+                font-size: 14px;
+
+
+                margin-bottom: 28px;
+            }
+        }
+
+
+
+
+
+
+
+
+
+        .info {
+
+
+            grid-template-columns: repeat(2, 1fr);
+
+
+
+            gap: 12px;
+        }
+
+
+
+
+
+
+
+
+
+        .card {
+
+
+
+            min-height: 85px;
+
+
+
+            padding: 14px 10px;
+
+
+
+
+
+
+
+            h1 {
+
+                font-size: 24px;
+            }
+
+
+
+
+
+
+
+
+            p {
+
+
+                font-size: 11px;
+            }
+        }
+
+
+
+
+
+
+
+        .card:last-child {
+
+            grid-column: span 2;
+        }
+    }
+}
+
+.urbankeyimage {
+    width: 100%;
+    max-width: 700px;
+
+    border-radius: 24px;
+
+    object-fit: cover;
+
+    filter:
+        contrast(1.05) brightness(.95) saturate(.9);
+
+    box-shadow:
+        0 25px 60px rgba(0, 0, 0, .6),
+        0 0 40px rgba(214, 168, 58, .15);
+
+    transition: .35s ease;
+}
+
+
+.urbankeyimage:hover {
+    transform: scale(1.03);
+
+    filter:
+        contrast(1.1) brightness(1) saturate(1);
+
+    box-shadow:
+        0 30px 80px rgba(0, 0, 0, .8),
+        0 0 60px rgba(214, 168, 58, .25);
+}

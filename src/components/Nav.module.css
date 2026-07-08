@@ -1,0 +1,567 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+html,
+body {
+    overflow-x: hidden;
+}
+
+
+body {
+    padding-top: 90px;
+}
+
+
+.iconBtn.favActive {
+    color: #e0475c;
+    border-color: rgba(224, 71, 92, .5);
+}
+
+.iconBtn.favActive:hover {
+    color: #e0475c;
+    border-color: rgba(224, 71, 92, .5);
+}
+
+.nav {
+    background: rgba(214, 168, 58, .08);
+    border-bottom: 1px solid rgba(214, 168, 58, .25);
+
+    padding: 18px 16px 13px;
+
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+
+    /* ниже, чем бургер-меню (1100), чтобы бургер всегда был поверх */
+    z-index: 1000;
+
+    backdrop-filter: blur(12px);
+    transition: .4s ease;
+
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .25);
+}
+
+
+.hidden {
+    transform: translateY(-120%);
+}
+
+
+.active {
+    transform: translateY(0);
+}
+
+
+.block {
+    max-width: 1300px;
+    margin: auto;
+
+    display: grid;
+    /* minmax(0, 1fr) — без этого средняя колонка не сжимается меньше
+       содержимого .links, и overflow-x: auto на .links никогда не
+       срабатывает (классический "grid blowout"): на ширинах вроде
+       1024px, где бургер ещё скрыт, а ссылки не помещаются, сетка
+       просто раздувается вместо того, чтобы дать .links скроллиться. */
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 20px;
+}
+
+
+.logoLink {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+
+.logo {
+    width: 150px;
+    height: 100px;
+    object-fit: contain;
+}
+
+
+.links {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 6px;
+
+    flex-wrap: nowrap;
+    min-width: 0;
+
+    /* если не влезает — скроллим по горизонтали, а не режем и не переносим */
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+.links::-webkit-scrollbar {
+    display: none;
+}
+
+
+.link {
+    color: var(--white);
+    text-decoration: none;
+
+    padding: 10px 12px;
+    border-radius: 10px;
+
+    font-size: 15px;
+    white-space: nowrap;
+    flex-shrink: 0;
+
+    transition: .3s;
+
+    -webkit-tap-highlight-color: transparent;
+}
+
+
+.link:hover {
+    color: #d6a83a;
+    background: rgba(0, 0, 0, .3);
+}
+
+
+.activeLink {
+    color: #d6a83a;
+    background: rgba(214, 168, 58, .08);
+    border: 1px solid rgba(214, 168, 58, .35);
+}
+
+
+.right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+
+    position: relative;
+    z-index: 5;
+
+    /* когда .links скрыт (мобильный режим), .right становится резиновой
+       колонкой грида — без этого иконки прилипали к левому краю и
+       образовывался большой пустой разрыв перед бургер-кнопкой */
+    min-width: 0;
+}
+
+
+.user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    text-decoration: none;
+    color: var(--white);
+
+    padding: 5px 10px;
+    border-radius: 18px;
+
+    transition: .3s;
+}
+
+
+.user:hover {
+    background: rgba(214, 168, 58, .12);
+}
+
+
+.navAvatar {
+    position: relative;
+    width: 44px;
+    height: 44px;
+
+    border-radius: 50%;
+    overflow: visible;
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+.navAvatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(214, 168, 58, .6);
+}
+
+
+.navAvatar span {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: linear-gradient(135deg, #d6a83a, #f4d06f);
+    color: #050505;
+
+    font-weight: 700;
+    font-size: 18px;
+
+    border: 2px solid rgba(214, 168, 58, .6);
+    box-shadow: 0 0 20px rgba(214, 168, 58, .25);
+}
+
+
+.adminDot {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+
+    background: #d6a83a;
+    color: #050505;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 2px solid #1c150c;
+}
+
+
+.ctaBtn {
+    padding: 12px 18px;
+    border-radius: 30px;
+
+    background: linear-gradient(135deg, #d6a83a, #f4d06f);
+    color: #050505;
+
+    text-decoration: none;
+    white-space: nowrap;
+    font-weight: 500;
+
+    transition: .3s;
+}
+
+
+.ctaBtn:hover {
+    opacity: .85;
+}
+
+
+.ctaBtnOutline {
+    padding: 12px 22px;
+    border-radius: 30px;
+
+    border: 1px solid rgba(214, 168, 58, .5);
+    background: transparent;
+    color: #d6a83a;
+
+    text-decoration: none;
+    white-space: nowrap;
+    font-weight: 500;
+
+    transition: .3s;
+}
+
+
+.ctaBtnOutline:hover {
+    background: rgba(214, 168, 58, .12);
+}
+
+
+.iconBtn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    padding: 10px 12px;
+    border-radius: 12px;
+
+    background: var(--dark-gray);
+    border: 1px solid var(--border);
+    color: var(--white);
+
+    cursor: pointer;
+    white-space: nowrap;
+
+    transition: .3s;
+
+    -webkit-tap-highlight-color: transparent;
+}
+
+
+.iconBtn:hover {
+    border-color: rgba(214, 168, 58, .5);
+    color: #d6a83a;
+}
+
+
+.langCode {
+    font-size: 14px;
+}
+
+
+.currencyCode {
+    font-size: 14px;
+}
+
+
+.logoutBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 44px;
+    height: 44px;
+
+    border: none;
+    border-radius: 12px;
+
+    background: rgba(220, 60, 60, .15);
+    color: #ff8080;
+
+    cursor: pointer;
+    flex-shrink: 0;
+
+    transition: .3s;
+
+    -webkit-tap-highlight-color: transparent;
+}
+
+
+.logoutBtn:hover {
+    background: rgba(220, 60, 60, .25);
+}
+
+
+.languageWrapper {
+    position: relative;
+}
+
+
+.languageMenu {
+    position: absolute;
+    top: 55px;
+    right: 0;
+
+    width: 150px;
+    /* защита от обрезки на очень узких экранах */
+    max-width: calc(100vw - 24px);
+
+    background: var(--black);
+    border: 1px solid rgba(214, 168, 58, .2);
+
+    padding: 10px;
+    border-radius: 18px;
+
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+
+    transition: .25s;
+    z-index: 10;
+}
+
+
+.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+
+.languageMenu button {
+    width: 100%;
+    padding: 12px;
+
+    border: none;
+    background: none;
+    color: var(--white);
+
+    cursor: pointer;
+    border-radius: 10px;
+    text-align: left;
+
+    transition: .2s;
+
+    -webkit-tap-highlight-color: transparent;
+}
+
+
+.languageMenu button:hover {
+    background: rgba(214, 168, 58, .1);
+}
+
+
+.langActive {
+    color: #d6a83a !important;
+    background: rgba(214, 168, 58, .1);
+}
+
+
+.menuBtn {
+    display: none;
+
+    background: transparent;
+    border: none;
+    color: #d6a83a;
+
+    cursor: pointer;
+    padding: 4px;
+
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+
+/* ===== Планшеты и меньше: прячем десктоп-меню, показываем бургер =====
+   До 900px ссылки остаются видимыми и скроллятся по горизонтали,
+   если не помещаются (см. .links). На 1024px бургер ещё НЕ показываем —
+   там должен работать горизонтальный скролл ссылок. */
+@media (max-width: 900px) {
+
+    .links,
+    .ctaBtn {
+        display: none;
+    }
+
+    .menuBtn {
+        display: flex;
+    }
+
+    .user {
+        padding: 0;
+    }
+
+    .navAvatar {
+        width: 40px;
+        height: 40px;
+    }
+
+    .logo {
+        width: 100px;
+        height: 70px;
+    }
+}
+
+
+/* ===== Мобильные ===== */
+@media (max-width: 700px) {
+
+    body {
+        padding-top: 75px;
+    }
+
+    .nav {
+        padding: 12px;
+    }
+
+    .block {
+        grid-template-columns: auto 1fr auto;
+        gap: 8px;
+    }
+
+    .logo {
+        width: 45px;
+        height: 45px;
+    }
+
+    .right {
+        gap: 8px;
+    }
+
+    .iconBtn {
+        padding: 10px;
+    }
+
+    .navAvatar span {
+        /* на мобильном свечение обрезаем, чтобы не наезжало на соседние кнопки */
+        box-shadow: 0 0 10px rgba(214, 168, 58, .25);
+    }
+
+    .langCode {
+        display: none;
+    }
+
+    /* у кнопки валюты нет иконки-заменителя текста без него кнопка была бы
+       пустой рамкой — поэтому текст оставляем, просто ужимаем */
+    .currencyCode {
+        font-size: 12px;
+    }
+
+    .ctaBtnOutline {
+        padding: 10px 16px;
+        font-size: 14px;
+    }
+
+    .logoutBtn {
+        width: 40px;
+        height: 40px;
+    }
+
+    .languageMenu {
+        width: 130px;
+        right: -10px;
+    }
+}
+
+
+@media (max-width: 380px) {
+
+    .navAvatar {
+        width: 34px;
+        height: 34px;
+    }
+
+    .iconBtn {
+        width: 34px;
+        height: 34px;
+        padding: 0;
+        justify-content: center;
+    }
+
+    .currencyCode {
+        display: none;
+    }
+
+    .menuBtn svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .right {
+        gap: 6px;
+    }
+
+    .logoutBtn {
+        width: 34px;
+        height: 34px;
+    }
+
+    .adminDot {
+        width: 14px;
+        height: 14px;
+        bottom: -1px;
+        right: -1px;
+    }
+
+    .navAvatar span {
+        box-shadow: none;
+    }
+
+    .languageMenu {
+        width: 120px;
+        right: -8px;
+    }
+}

@@ -1,0 +1,59 @@
+  :root {
+    --dark-gray: rgba(35, 35, 35, .65);
+    --black: #121212;
+    --white: #f5f5f5;
+
+    --gray: #a0a0a0;
+
+    --violet: #d6a83a;
+
+    --border: rgba(214, 168, 58, .25);
+
+    --card: rgba(30, 30, 30, .75);
+  }
+
+
+  .whiteMode {
+    --dark-gray: #f5f5f5;
+    --black: #ffffff;
+    --white: #111111;
+
+    --gray: #666666;
+
+    --violet: #b8860b;
+
+    --border: #e5d29b;
+
+    --card: #ffffff;
+  }
+
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  text-decoration: none;
+  font-family: sans-serif;
+  scroll-behavior: smooth;
+  overflow-wrap: break-word;
+}
+
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+img,
+video,
+picture,
+canvas,
+svg {
+  max-width: 100%;
+  display: block;
+}
+
+body {
+  background: var(--black);
+}

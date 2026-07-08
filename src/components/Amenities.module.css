@@ -1,0 +1,281 @@
+.amenities {
+    max-width: 1440px;
+    width: 100%;
+
+    margin: 130px auto;
+    padding: 0 24px;
+
+    position: relative;
+}
+
+
+
+.amenities h1 {
+
+    font-size: clamp(34px, 5vw, 52px);
+
+    font-weight: 600;
+
+    color: var(--white);
+
+    letter-spacing: -1px;
+
+    margin-bottom: 45px;
+}
+
+
+
+
+
+.amenities .features {
+
+    display: grid;
+
+    grid-template-columns: repeat(3, 1fr);
+
+    gap: 24px;
+}
+
+
+
+
+
+.amenities .features .feature {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 18px;
+
+
+    padding: 28px;
+
+
+
+    border-radius: 22px;
+
+
+
+    background: var(--card);
+
+
+
+    border: 1px solid var(--border);
+
+
+
+    transition:
+        transform .35s ease,
+        border-color .35s ease,
+        box-shadow .35s ease;
+
+
+
+    position: relative;
+
+    overflow: hidden;
+}
+
+
+
+
+
+.amenities .features .feature::before {
+
+    content: "";
+
+    position: absolute;
+
+    width: 160px;
+    height: 160px;
+
+
+    right: -80px;
+    top: -80px;
+
+
+    background:
+
+        radial-gradient(circle,
+            rgba(201, 168, 106, .18),
+            transparent 70%);
+
+
+    opacity: 0;
+
+
+    transition: .4s ease;
+}
+
+
+
+
+.amenities .features .feature:hover {
+
+
+    transform: translateY(-7px);
+
+
+
+    border-color: #c9a86a;
+
+
+
+    box-shadow:
+
+        0 18px 45px rgba(0, 0, 0, .12);
+}
+
+
+
+
+
+.amenities .features .feature:hover::before {
+
+    opacity: 1;
+}
+
+
+
+
+
+
+
+.amenities .features .feature span {
+
+
+    min-width: 12px;
+
+    height: 12px;
+
+
+
+    border-radius: 50%;
+
+
+
+    background: #c9a86a;
+
+
+
+    box-shadow:
+
+        0 0 18px rgba(201, 168, 106, .45);
+
+
+
+    position: relative;
+
+    z-index: 2;
+}
+
+
+
+
+
+
+
+.amenities .features .feature h3 {
+
+
+    font-size: 18px;
+
+
+    font-weight: 500;
+
+
+
+    color: var(--white);
+
+
+
+    position: relative;
+
+    z-index: 2;
+}
+
+
+
+
+
+
+@media(max-width:992px) {
+
+
+    .amenities {
+
+
+        margin: 90px auto;
+    }
+
+
+
+    .amenities .features {
+
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+
+
+
+
+
+@media(max-width:768px) {
+
+
+    .amenities {
+
+
+        padding: 0 16px;
+
+        margin: 75px auto;
+    }
+
+
+
+
+
+    .amenities h1 {
+
+
+        font-size: 34px;
+
+        margin-bottom: 30px;
+    }
+
+
+
+
+
+    .amenities .features {
+
+
+        grid-template-columns: 1fr;
+
+        gap: 16px;
+    }
+
+
+
+
+
+    .amenities .features .feature {
+
+
+        padding: 22px;
+
+        border-radius: 18px;
+    }
+
+
+
+
+
+    .amenities .features .feature h3 {
+
+
+        font-size: 16px;
+    }
+}

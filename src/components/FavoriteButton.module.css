@@ -1,0 +1,30 @@
+.favBtn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 5;
+
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(0, 0, 0, 0.35);
+    border: none;
+    border-radius: 50%;
+    color: #ffffff;
+    cursor: pointer;
+
+    transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.favBtn:hover {
+    transform: scale(1.1);
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.favBtn.active {
+    color: #ff4d6d;
+}

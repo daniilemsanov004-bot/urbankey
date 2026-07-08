@@ -1,0 +1,239 @@
+.create {
+    min-height: 100vh;
+    background: #111;
+    padding: 120px 30px;
+    color: white;
+    display: flex;
+    justify-content: center;
+}
+
+
+.container {
+    width: 100%;
+    max-width: 900px;
+    background: rgba(255, 255, 255, .05);
+    border: 1px solid rgba(255, 215, 100, .2);
+    border-radius: 25px;
+    padding: 40px;
+    backdrop-filter: blur(15px);
+}
+
+
+.title {
+    text-align: center;
+    color: #e7b84b;
+    margin-bottom: 40px;
+    font-size: 40px;
+}
+
+
+.section {
+    margin-bottom: 30px;
+}
+
+
+.section h3 {
+    color: #e7b84b;
+    margin-bottom: 15px;
+}
+
+
+.inputs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+
+
+.container input,
+.container textarea {
+
+    width: 100%;
+
+    background: #1b1b1b;
+
+    border: 1px solid #333;
+
+    color: white;
+
+    padding: 15px;
+
+    border-radius: 12px;
+
+    outline: none;
+
+}
+
+
+
+.container textarea {
+
+    min-height: 120px;
+
+    resize: none;
+
+}
+
+
+
+.container button {
+
+    width: 100%;
+
+    padding: 16px;
+
+    border: none;
+
+    border-radius: 15px;
+
+    background: linear-gradient(90deg,
+            #c99424,
+            #f5d06a);
+
+    cursor: pointer;
+
+    font-size: 18px;
+
+    font-weight: bold;
+
+}
+
+
+
+.container button:hover {
+
+    transform: translateY(-3px);
+
+}
+
+.preview {
+
+    display: flex;
+
+    gap: 15px;
+
+    flex-wrap: wrap;
+
+    margin-top: 20px;
+
+}
+
+
+
+.imageBox {
+
+    position: relative;
+
+}
+
+
+
+.imageBox img {
+
+    border-radius: 15px;
+
+    object-fit: cover;
+
+}
+
+
+
+.imageBox button {
+
+    position: absolute;
+
+    top: 5px;
+
+    right: 5px;
+
+    width: 30px;
+
+    height: 30px;
+
+    padding: 0;
+
+    border-radius: 50%;
+
+    background: #ff3b3b;
+
+    color: white;
+
+    font-size: 16px;
+
+}
+
+.amenitiesList {
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 12px;
+
+    margin-top: 20px;
+
+}
+
+
+
+.amenity {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    background: rgba(255, 255, 255, .08);
+
+    padding: 10px 15px;
+
+    border-radius: 20px;
+
+}
+
+
+
+.amenity button {
+
+    width: 25px;
+
+    height: 25px;
+
+    padding: 0;
+
+    border-radius: 50%;
+
+    background: #ff3b3b;
+
+    color: white;
+
+    font-size: 14px;
+
+}
+
+
+@media(max-width:700px) {
+
+    .inputs {
+
+        grid-template-columns: 1fr;
+
+    }
+
+
+    .container {
+
+        padding: 20px;
+
+    }
+
+
+    .title {
+
+        font-size: 30px;
+
+    }
+
+}

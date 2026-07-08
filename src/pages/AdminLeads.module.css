@@ -1,0 +1,165 @@
+.wrap {
+  max-width: 900px;
+  margin: 120px auto 60px;
+  padding: 0 20px;
+}
+
+.wrap h1 {
+  margin-bottom: 24px;
+  color: var(--white);
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.filterBtn,
+.filterActive {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--white);
+  padding: 7px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: 0.25s;
+}
+
+.filterBtn:hover {
+  border-color: #d4af37;
+}
+
+.filterActive {
+  background: #d4af37;
+  color: #0a0a0a;
+  font-weight: 600;
+  border-color: transparent;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.card {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  background: var(--card);
+  backdrop-filter: blur(10px);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.typeBadge {
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  color: #d4af37;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 12px;
+  border-radius: 12px;
+}
+
+.date {
+  font-size: 12px;
+  color: var(--gray);
+}
+
+.contactRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.contactLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--white);
+  text-decoration: none;
+  transition: 0.2s;
+}
+
+.contactLink:hover {
+  color: #d4af37;
+}
+
+.message {
+  font-size: 14px;
+  color: var(--gray);
+  margin-bottom: 12px;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.propertyLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: #d4af37;
+  margin-bottom: 12px;
+  text-decoration: none;
+}
+
+.propertyLink:hover {
+  opacity: 0.8;
+}
+
+.statusRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.statusBtn,
+.statusActive {
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--white);
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.statusBtn:hover {
+  border-color: #d4af37;
+}
+
+.statusActive {
+  background: #d4af37;
+  color: #0a0a0a;
+  border-color: transparent;
+  font-weight: 600;
+}
+
+.status,
+.empty {
+  color: var(--gray);
+  padding: 20px 0;
+}
+
+.denied {
+  max-width: 600px;
+  margin: 140px auto;
+  text-align: center;
+  color: var(--gray);
+}

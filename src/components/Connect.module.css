@@ -1,0 +1,605 @@
+.connect {
+    max-width: 1440px;
+    width: 100%;
+
+    margin: 130px auto;
+    padding: 0 24px;
+}
+
+
+
+.connect .text {
+    margin-bottom: 65px;
+}
+
+
+
+.connect .text h1 {
+
+    font-weight: 600;
+
+    font-size: clamp(34px, 5vw, 52px);
+
+    line-height: 130%;
+
+    color: var(--white);
+
+
+    letter-spacing: -1px;
+
+    margin-top: 10px;
+
+
+    animation: title 1s cubic-bezier(.22, 1, .36, 1);
+}
+
+
+
+
+.connect .text p {
+
+    max-width: 1000px;
+
+    width: 100%;
+
+
+    font-size: 16px;
+
+    line-height: 180%;
+
+
+    color: var(--gray);
+
+
+    margin-top: 14px;
+
+
+    animation: text 1.3s cubic-bezier(.22, 1, .36, 1);
+}
+
+
+
+
+
+
+.connect .requestForm {
+
+
+    border:
+        1px solid var(--border);
+
+
+
+    border-radius: 26px;
+
+
+
+    padding: 50px;
+
+
+
+    background: var(--card);
+
+
+
+    display: flex;
+
+    flex-direction: column;
+
+
+    gap: 26px;
+
+
+
+    animation: form 1.2s cubic-bezier(.22, 1, .36, 1);
+
+
+
+    transition: .35s ease;
+}
+
+
+
+
+
+
+
+.connect .requestForm:hover {
+
+
+    border-color:
+        rgba(201, 168, 106, .35);
+
+
+    box-shadow:
+        0 25px 60px rgba(0, 0, 0, .12);
+}
+
+
+
+
+
+
+
+.connect .requestForm .block {
+
+
+    display: grid;
+
+
+    grid-template-columns: repeat(3, 1fr);
+
+
+    gap: 20px;
+}
+
+
+
+
+
+
+
+.connect .requestForm h1 {
+
+
+    font-weight: 600;
+
+
+    font-size: 20px;
+
+
+    color: var(--white);
+
+
+    margin-bottom: 14px;
+}
+
+
+
+
+
+
+
+
+.connect .requestForm .select {
+
+
+    width: 100%;
+
+
+    background: var(--dark-gray);
+
+
+    border: 1px solid var(--border);
+
+
+
+    border-radius: 14px;
+
+
+
+    padding: 18px 20px;
+
+
+
+    color: var(--white);
+
+
+    font-size: 15px;
+
+
+    outline: none;
+
+
+
+    transition: .3s;
+
+
+
+    appearance: none;
+
+
+
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='white'%3e%3cpath d='M5 7l5 5 5-5'/%3e%3c/svg%3e");
+
+    background-repeat: no-repeat;
+
+    background-position: right 20px center;
+}
+
+
+
+
+
+.connect .requestForm .select:hover {
+
+    border-color: #c9a86a;
+}
+
+
+
+
+
+.connect .requestForm .select:focus {
+
+
+    border-color: #c9a86a;
+
+
+    box-shadow:
+        0 0 0 4px rgba(201, 168, 106, .12);
+
+
+    transform: translateY(-2px);
+}
+
+
+
+
+
+
+
+.connect .requestForm .inp {
+
+
+    width: 100%;
+
+
+
+    background: var(--dark-gray);
+
+
+
+    border: 1px solid var(--border);
+
+
+
+    border-radius: 14px;
+
+
+
+    padding: 18px 20px;
+
+
+
+    color: var(--white);
+
+
+
+    font-size: 15px;
+
+
+
+    outline: none;
+
+
+
+    transition: .3s;
+}
+
+
+
+
+
+
+.connect .requestForm .inp:hover {
+
+
+    border-color: #c9a86a;
+}
+
+
+
+
+
+.connect .requestForm .inp::placeholder {
+
+    color: var(--gray);
+}
+
+
+
+
+
+
+
+.connect .requestForm .inp:focus {
+
+
+    border-color: #c9a86a;
+
+
+
+    box-shadow:
+        0 0 0 4px rgba(201, 168, 106, .12);
+
+
+
+    transform: translateY(-2px);
+}
+
+
+
+
+
+
+.connect .requestForm textarea.inp {
+
+    resize: none;
+
+    min-height: 160px;
+}
+
+
+
+
+
+
+
+.connect .requestForm .btn {
+
+
+    width: 220px;
+
+
+    padding: 18px;
+
+
+
+    border: none;
+
+
+
+    border-radius: 14px;
+
+
+
+    background: #c9a86a;
+
+
+
+    color: #111;
+
+
+
+    font-size: 15px;
+
+
+    font-weight: 600;
+
+
+    cursor: pointer;
+
+
+
+    align-self: flex-end;
+
+
+
+    transition: .35s;
+}
+
+
+
+
+
+
+.connect .requestForm .btn:hover {
+
+
+    transform:
+        translateY(-4px);
+
+
+    box-shadow:
+
+        0 15px 35px rgba(201, 168, 106, .35);
+}
+
+
+
+
+
+.connect .requestForm .btn:active {
+
+    transform: scale(.96);
+}
+
+
+
+
+
+
+
+.connect .requestForm .error {
+
+    color: #ff4d4d;
+
+    font-size: 14px;
+
+    margin-top: 8px;
+
+    animation: shake .4s ease;
+}
+
+/* ===================== 1200px ===================== */
+
+@media (max-width:1200px) {
+
+    .connect .requestForm {
+
+        padding: 40px;
+    }
+
+    .connect .requestForm .block {
+
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* ===================== 992px ===================== */
+
+@media (max-width:992px) {
+
+    .connect {
+
+        margin: 100px auto;
+    }
+
+    .connect .text {
+
+        margin-bottom: 50px;
+    }
+
+    .connect .requestForm {
+
+        padding: 35px;
+    }
+}
+
+/* ===================== 768px ===================== */
+
+@media (max-width:768px) {
+
+    .connect {
+
+        padding: 0 16px;
+        margin: 90px auto;
+    }
+
+    .connect .text h1 {
+
+        font-size: 36px;
+    }
+
+    .connect .text p {
+
+        font-size: 15px;
+        line-height: 170%;
+    }
+
+    .connect .requestForm {
+
+        padding: 30px;
+    }
+
+    .connect .requestForm .block {
+
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+
+    .connect .requestForm .btn {
+
+        width: 100%;
+    }
+}
+
+/* ===================== 576px ===================== */
+
+@media (max-width:576px) {
+
+    .connect {
+
+        padding: 0 14px;
+    }
+
+    .connect .text {
+
+        margin-bottom: 35px;
+    }
+
+    .connect .text h1 {
+
+        font-size: 30px;
+        line-height: 135%;
+    }
+
+    .connect .text p {
+
+        font-size: 14px;
+    }
+
+    .connect .requestForm {
+
+        padding: 24px;
+        border-radius: 20px;
+        gap: 20px;
+    }
+
+    .connect .requestForm h1 {
+
+        font-size: 18px;
+    }
+
+    .connect .requestForm .select,
+    .connect .requestForm .inp {
+
+        padding: 16px;
+        font-size: 14px;
+    }
+
+    .connect .requestForm textarea.inp {
+
+        min-height: 140px;
+    }
+
+    .connect .requestForm .btn {
+
+        padding: 16px;
+        font-size: 14px;
+    }
+}
+
+/* ===================== 400px ===================== */
+
+@media (max-width:400px) {
+
+    .connect {
+
+        margin: 70px auto;
+        padding: 0 10px;
+    }
+
+    .connect .requestForm {
+
+        padding: 18px;
+    }
+
+    .connect .text h1 {
+
+        font-size: 26px;
+    }
+
+    .connect .requestForm .select,
+    .connect .requestForm .inp {
+
+        padding: 14px;
+        font-size: 13px;
+    }
+
+    .connect .requestForm .btn {
+
+        padding: 15px;
+        font-size: 13px;
+    }
+}
+
+.honeypot {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+
+.captcha {
+    margin: 10px auto 0;
+    display: flex;
+    justify-content: center;
+}
