@@ -500,6 +500,10 @@ body {
    там должен работать горизонтальный скролл ссылок. */
 @media (max-width: 900px) {
 
+    body {
+        padding-bottom: calc(58px + env(safe-area-inset-bottom));
+    }
+
     .links,
     .ctaBtn,
     .right {
@@ -522,6 +526,9 @@ body {
 
     body {
         padding-top: 75px;
+        /* место под нижнюю мобильную панель (BottomNav), чтобы контент
+           и футер не оказывались под ней */
+        padding-bottom: calc(58px + env(safe-area-inset-bottom));
     }
 
     .nav {

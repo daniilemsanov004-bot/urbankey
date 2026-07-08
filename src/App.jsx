@@ -1,4 +1,5 @@
 import Nav from "./components/Nav";
+import BottomNav from "./components/BottomNav";
 import { Route, Routes } from "react-router-dom";
 import Home from "./pages/Home";
 import Error from "./pages/Error";
@@ -69,6 +70,7 @@ const App = () => {
 
       <Nav />
       <Burger />
+      <BottomNav />
       <TelegramFloatButton />
 
       <ToastContainer

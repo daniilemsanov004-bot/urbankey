@@ -1,0 +1,58 @@
+.bar {
+    display: none;
+}
+
+@media (max-width: 900px) {
+    .bar {
+        position: fixed;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        z-index: 999;
+
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+
+        padding: 8px 4px calc(8px + env(safe-area-inset-bottom));
+
+        background: rgba(20, 15, 8, .92);
+        backdrop-filter: blur(14px);
+        border-top: 1px solid rgba(214, 168, 58, .25);
+        box-shadow: 0 -10px 30px rgba(0, 0, 0, .25);
+    }
+
+    .item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+
+        flex: 1;
+        padding: 4px;
+
+        background: none;
+        border: none;
+        color: rgba(255, 255, 255, .6);
+        text-decoration: none;
+
+        font-size: 11px;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .active {
+        color: #d6a83a;
+    }
+
+    .avatar {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+}
+
+@media (max-width: 380px) {
+    .item { font-size: 10px; }
+}

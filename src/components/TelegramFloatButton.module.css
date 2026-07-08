@@ -73,7 +73,8 @@
 
     .button {
         right: 16px;
-        bottom: 16px;
+        /* поднимаем над нижней мобильной панелью (BottomNav), чтобы кнопки не перекрывались */
+        bottom: calc(16px + 58px + env(safe-area-inset-bottom));
         width: 56px;
         height: 56px;
     }
