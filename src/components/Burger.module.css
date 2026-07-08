@@ -191,3 +191,128 @@
         padding: 10px 12px;
     }
 }
+/* ===== Доп. блоки: язык / валюта / тема / профиль (перенесены из Nav,
+   чтобы на мобильных не было каши из иконок рядом с гамбургером) ===== */
+
+.burger .scroll {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    padding: 10px 0;
+}
+
+.divider {
+    height: 1px;
+    margin: 4px 30px 14px;
+    background: var(--border);
+}
+
+.langRow {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 30px 14px;
+}
+
+.langBtn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--white);
+    cursor: pointer;
+}
+
+.langActive {
+    color: #c9a86a;
+    border-color: rgba(201, 168, 106, .5);
+    background: rgba(201, 168, 106, .1);
+}
+
+.actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 0 30px 14px;
+}
+
+.actionBtn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 16px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--white);
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+.actionBtn:hover {
+    border-color: rgba(201, 168, 106, .5);
+    color: #c9a86a;
+}
+
+.profileRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-radius: 14px;
+    text-decoration: none;
+    color: var(--white);
+}
+
+.avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #d6a83a, #f4d06f);
+    color: #050505;
+    font-weight: 700;
+}
+
+.avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.logoutBtn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 16px;
+    border-radius: 14px;
+    border: none;
+    background: rgba(220, 60, 60, .15);
+    color: #ff8080;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+.loginBtn {
+    display: block;
+    margin: 0 30px 14px;
+    padding: 13px;
+    text-align: center;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #d6a83a, #f4d06f);
+    color: #050505;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+@media (max-width: 400px) {
+    .divider { margin: 4px 16px 10px; }
+    .langRow, .actions { padding: 0 16px 10px; }
+    .loginBtn { margin: 0 16px 10px; }
+}
