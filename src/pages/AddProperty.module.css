@@ -527,3 +527,23 @@
     padding: 14px;
   }
 }
+
+/* ===== Пейволл: лимит бесплатных объявлений исчерпан ===== */
+.limitCard {
+    max-width: 480px;
+    margin: 60px auto;
+    padding: 32px;
+    border-radius: 20px;
+    border: 1px solid var(--border, rgba(255,255,255,.1));
+    text-align: center;
+}
+
+.limitCard h1 {
+    margin-bottom: 12px;
+}
+
+.limitCard .submitBtn {
+    display: inline-block;
+    margin-top: 20px;
+    text-decoration: none;
+}

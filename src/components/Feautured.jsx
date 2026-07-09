@@ -170,7 +170,7 @@ const Feautured = () => {
                                         alt=""
                                     />
 
-                                    {item.bedrooms?.[i18n.language]}
+                                    {item.bedrooms?.[i18n.language] || "—"}
 
                                 </span>
 
@@ -194,7 +194,7 @@ const Feautured = () => {
                                         <path d="M13 16h1" />
                                     </svg>
 
-                                    {item.bathrooms?.[i18n.language]}
+                                    {item.bathrooms?.[i18n.language] || "—"}
 
                                 </span>
 
@@ -205,7 +205,7 @@ const Feautured = () => {
                                         alt=""
                                     />
 
-                                    {item.type?.[i18n.language]}
+                                    {item.type?.[i18n.language] || "—"}
 
                                 </span>
 

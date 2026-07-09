@@ -1,10 +1,11 @@
 import s from './Footer.module.css';
 import { useForm } from "react-hook-form";
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { toast } from 'react-toastify';
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import Gray from './Gray';
+import { MyContext } from "../Context";
 import { useTranslation } from 'react-i18next';
 import { sendLead } from "../utils/sendLead";
 import TurnstileWidget from "./TurnstileWidget";
@@ -12,6 +13,7 @@ import TurnstileWidget from "./TurnstileWidget";
 const Footer = () => {
 
     const { t } = useTranslation();
+    const { profile } = useContext(MyContext);
 
     const navigate = useNavigate();
 
@@ -63,7 +65,8 @@ const Footer = () => {
                 source: "Footer newsletter",
                 data,
                 captchaToken,
-                honeypot: data.company
+                honeypot: data.company,
+                skipCrm: profile?.role === "admin"
             });
 
             toast.success(t("success"));

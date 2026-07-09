@@ -28,6 +28,11 @@
 //                          на этот адрес шлётся POST с её данными (для
 //                          внешней CRM — amoCRM/Bitrix24/др., когда решите
 //                          какую подключать)
+//   CRM_TYPE             — опционально: "bitrix24" — форматирует запрос под
+//                          REST-метод crm.lead.add Bitrix24. Без этой
+//                          переменной (или с любым другим значением) шлётся
+//                          обычный JSON — подходит для Zapier/Make/amoCRM
+//                          inbound webhook и большинства других сервисов.
 //
 // ЧЕСТНО О ГРАНИЦАХ ЭТОЙ ЗАЩИТЫ:
 //   - rate-limit ниже хранится в памяти процесса. На serverless это
@@ -58,19 +63,62 @@ const getSupabaseAdmin = () => {
 
 };
 
-const notifyCrmWebhook = async (payload) => {
+// ===== Форматы вебхука под разные CRM =====
+//
+// У большинства CRM (Zapier, Make, amoCRM inbound webhook) можно просто
+// прислать произвольный JSON — это и есть "generic" формат ниже.
+//
+// У Bitrix24 так не работает: там нужен запрос конкретного вида к
+// REST-методу crm.lead.add с полями в спец-формате (PHONE — массив
+// объектов, а не строка, и т.п.). Чтобы потом просто вставить готовую
+// ссылку вебхука из Bitrix24 и не трогать код — форматируем под него,
+// когда явно указано CRM_TYPE=bitrix24.
+//
+// Как получить CRM_WEBHOOK_URL для Bitrix24:
+//   Bitrix24 -> Разработчикам -> Другое -> Входящий вебхук
+//   -> выдать право на CRM -> скопировать ссылку вида
+//   https://ваш-портал.bitrix24.ru/rest/1/xxxxxxxxxxxxxxxx/
+//   В Vercel добавить:
+//     CRM_WEBHOOK_URL = <эта ссылка> + "crm.lead.add.json"
+//     CRM_TYPE = bitrix24
+
+const buildBitrix24Payload = (source, leadRow) => ({
+    fields: {
+        TITLE: `Заявка с сайта (${source})`,
+        NAME: leadRow.name || "",
+        PHONE: leadRow.phone ? [{ VALUE: leadRow.phone, VALUE_TYPE: "WORK" }] : undefined,
+        COMMENTS: [
+            leadRow.telegram ? `Telegram: ${leadRow.telegram}` : null,
+            leadRow.message ? `Сообщение: ${leadRow.message}` : null
+        ].filter(Boolean).join("\n"),
+        SOURCE_DESCRIPTION: source
+    },
+    params: { REGISTER_SONET_EVENT: "Y" }
+});
+
+const notifyCrmWebhook = async (source, leadRow) => {
 
     const url = process.env.CRM_WEBHOOK_URL;
 
     if (!url) return;
 
+    const crmType = (process.env.CRM_TYPE || "generic").toLowerCase();
+
+    const payload = crmType === "bitrix24"
+        ? buildBitrix24Payload(source, leadRow)
+        : { source, ...leadRow };
+
     try {
 
-        await fetch(url, {
+        const res = await fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
         });
+
+        if (!res.ok) {
+            console.error("CRM webhook responded with error status:", res.status, await res.text());
+        }
 
     } catch (err) {
         console.error("CRM webhook error:", err);
@@ -106,7 +154,9 @@ const saveLead = async (source, data) => {
             return;
         }
 
-        await notifyCrmWebhook({ source, ...leadRow });
+        if (!skipCrm) {
+            await notifyCrmWebhook(source, leadRow);
+        }
 
     } catch (err) {
         console.error("saveLead unexpected error:", err);
@@ -261,7 +311,7 @@ export default async function handler(req, res) {
         return res.status(429).json({ error: "Too many requests, try again later" });
     }
 
-    const { source, data, captchaToken, company } = req.body || {};
+    const { source, data, captchaToken, company, skipCrm } = req.body || {};
 
     // honeypot: настоящие пользователи это поле не видят и не заполняют
     if (company) {

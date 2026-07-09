@@ -272,7 +272,7 @@ const Feautured = ({ data, commercial, items }) => {
                                         alt=""
                                     />
 
-                                    {item.bedrooms?.[i18n.language]}
+                                    {item.bedrooms?.[i18n.language] || "—"}
 
                                 </span>
 
@@ -288,7 +288,7 @@ const Feautured = ({ data, commercial, items }) => {
                                     />
 
 
-                                    {item.bathrooms?.[i18n.language]}
+                                    {item.bathrooms?.[i18n.language] || "—"}
 
 
                                 </span>
@@ -305,7 +305,7 @@ const Feautured = ({ data, commercial, items }) => {
                                     />
 
 
-                                    {item.type?.[i18n.language]}
+                                    {item.type?.[i18n.language] || "—"}
 
 
                                 </span>

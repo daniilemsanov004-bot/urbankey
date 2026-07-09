@@ -7,7 +7,7 @@ import s from "./MyListings.module.css";
 
 const MyListings = () => {
 
-    const { user, getMyListings, deleteCard, deleteCommercial } = useContext(MyContext);
+    const { user, profile, getMyListings, deleteCard, deleteCommercial } = useContext(MyContext);
     const { t, i18n } = useTranslation();
 
     const [listings, setListings] = useState([]);
@@ -60,6 +60,10 @@ const MyListings = () => {
                     {t("addListing")}
                 </Link>
             </div>
+
+            {!loading && profile?.role !== "admin" && (
+                <p className={s.note}>{t("listingLimitCounter", { count: listings.length, limit: 7 })}</p>
+            )}
 
             {loading && <p className={s.note}>{t("loading")}</p>}
 

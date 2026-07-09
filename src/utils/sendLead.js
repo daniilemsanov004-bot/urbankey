@@ -1,4 +1,4 @@
-export const sendLead = async ({ source, data, captchaToken, honeypot }) => {
+export const sendLead = async ({ source, data, captchaToken, honeypot, skipCrm }) => {
 
     const response = await fetch("/api/lead", {
         method: "POST",
@@ -7,7 +7,8 @@ export const sendLead = async ({ source, data, captchaToken, honeypot }) => {
             source,
             data,
             captchaToken,
-            company: honeypot || ""
+            company: honeypot || "",
+            skipCrm: Boolean(skipCrm)
         })
     });
 

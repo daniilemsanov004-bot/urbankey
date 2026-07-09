@@ -1,6 +1,6 @@
 import { useContext, useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { X, Star, ImagePlus, Languages, RefreshCw } from "lucide-react";
 import { MyContext } from "../Context";
@@ -17,13 +17,29 @@ const emptyLang = () => ({ ru: "", en: "", uz: "" });
 
 const AddProperty = () => {
 
-    const { user, uploadImage, createUserProperty, updateUserProperty, getMyListingFull } = useContext(MyContext);
+    const { user, profile, uploadImage, createUserProperty, updateUserProperty, getMyListingFull, getMyListings } = useContext(MyContext);
     const { t, i18n } = useTranslation();
     const { isOnline } = useOnlineStatus();
     const navigate = useNavigate();
     const { kind: kindParam, id } = useParams();
 
     const isEditing = Boolean(id);
+
+    const FREE_LISTING_LIMIT = 7;
+    const [activeCount, setActiveCount] = useState(null);
+
+    const isAdmin = profile?.role === "admin";
+
+    useEffect(() => {
+        if (isEditing || !user || isAdmin) return;
+        let cancelled = false;
+        getMyListings().then((data) => {
+            if (!cancelled) setActiveCount(Array.isArray(data) ? data.length : 0);
+        }).catch(() => { if (!cancelled) setActiveCount(0); });
+        return () => { cancelled = true; };
+    }, [isEditing, user, isAdmin, getMyListings]);
+
+    const limitReached = !isAdmin && !isEditing && activeCount !== null && activeCount >= FREE_LISTING_LIMIT;
 
     const { register, handleSubmit, reset } = useForm();
 
@@ -198,6 +214,10 @@ const AddProperty = () => {
 
     const onSubmit = async (data) => {
 
+        if (limitReached) {
+            return;
+        }
+
         if (!photos.length) {
             setPhotosError(true);
             return;
@@ -324,6 +344,18 @@ const AddProperty = () => {
         return (
             <main className={s.wrap}>
                 <p className={s.loadingNote}>{t("listingLoadingListing")}</p>
+            </main>
+        );
+    }
+
+    if (limitReached) {
+        return (
+            <main className={s.wrap}>
+                <div className={s.limitCard}>
+                    <h1>{t("listingLimitTitle")}</h1>
+                    <p className={s.subtitle}>{t("listingLimitDesc", { limit: FREE_LISTING_LIMIT })}</p>
+                    <Link className={s.submitBtn} to="/ContactUs">{t("listingLimitCta")}</Link>
+                </div>
             </main>
         );
     }

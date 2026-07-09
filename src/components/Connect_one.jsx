@@ -1,15 +1,17 @@
 import s from './Connect.module.css'
 import { useForm } from "react-hook-form"
-import { useState } from "react"
+import { useState, useContext } from "react"
 import { toast } from "react-toastify"
 import { motion } from "framer-motion"
 import { useTranslation } from "react-i18next"
 import { sendLead } from "../utils/sendLead"
 import TurnstileWidget from "./TurnstileWidget"
+import { MyContext } from "../Context"
 
 const Connect = () => {
 
     const { t } = useTranslation()
+    const { profile } = useContext(MyContext)
 
     const {
         register,
@@ -31,7 +33,8 @@ const Connect = () => {
                 source: "Connect_one",
                 data,
                 captchaToken,
-                honeypot: data.company
+                honeypot: data.company,
+                skipCrm: profile?.role === "admin"
             });
 
             toast.success(t("messageSent"));

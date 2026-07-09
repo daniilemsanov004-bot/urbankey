@@ -1,17 +1,19 @@
 import s from './Connect.module.css'
 import { useForm } from "react-hook-form"
-import { useState } from "react"
+import { useState, useContext } from "react"
 import { toast } from "react-toastify"
 import { motion } from "framer-motion"
 import { useTranslation } from "react-i18next"
 import { sendLead } from "../utils/sendLead"
 import TurnstileWidget from "./TurnstileWidget"
 import { useOnlineStatus } from "../hooks/useOnlineStatus"
+import { MyContext } from "../Context"
 
 const Connect = () => {
 
     const { t } = useTranslation()
     const { isOnline } = useOnlineStatus()
+    const { profile } = useContext(MyContext)
 
     const {
         register,
@@ -33,7 +35,8 @@ const Connect = () => {
                 source: "Connect",
                 data,
                 captchaToken,
-                honeypot: data.company
+                honeypot: data.company,
+                skipCrm: profile?.role === "admin"
             });
 
             toast.success(t("messageSent"));
@@ -43,7 +46,7 @@ const Connect = () => {
         } catch (error) {
 
             console.error(error);
-            toast.error(t("messageError"));
+            toast.error(error?.message ? `${t("messageError")}: ${error.message}` : t("messageError"));
 
         } finally {
             setSubmitting(false);
