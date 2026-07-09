@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { Home, Search, ArrowLeft } from "lucide-react";
 import s from "./Error.module.css";
+import Seo from "../components/Seo";
 
 const Error = () => {
 
@@ -10,6 +11,7 @@ const Error = () => {
 
   return (
     <section className={s.wrap}>
+      <Seo title="Страница не найдена" noIndex />
 
       <div className={s.skyline} aria-hidden="true">
         <img src="/city-skyline.svg" alt="" />
