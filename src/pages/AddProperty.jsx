@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { X, Star, ImagePlus, Languages, RefreshCw } from "lucide-react";
 import { MyContext } from "../Context";
 import { translateFields, pickLangValue, SUPPORTED_LISTING_LANGS } from "../utils/autoTranslate";
+import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import s from "./AddProperty.module.css";
 
 const FIELDS_BY_KIND = {
@@ -18,6 +19,7 @@ const AddProperty = () => {
 
     const { user, uploadImage, createUserProperty, updateUserProperty, getMyListingFull } = useContext(MyContext);
     const { t, i18n } = useTranslation();
+    const { isOnline } = useOnlineStatus();
     const navigate = useNavigate();
     const { kind: kindParam, id } = useParams();
 
@@ -676,8 +678,8 @@ const AddProperty = () => {
 
                 </div>
 
-                <button type="submit" className={s.submitBtn} disabled={submitting}>
-                    {translating ? t("listingTranslating") : submitting ? t("sending") : isEditing ? t("listingSaveButton") : t("listingSubmitButton")}
+                <button type="submit" className={s.submitBtn} disabled={submitting || !isOnline}>
+                    {!isOnline ? t("offlineWarning") : translating ? t("listingTranslating") : submitting ? t("sending") : isEditing ? t("listingSaveButton") : t("listingSubmitButton")}
                 </button>
 
             </form>

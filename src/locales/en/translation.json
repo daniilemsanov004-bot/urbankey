@@ -574,6 +574,8 @@
   "login": "Sign In",
   "menu": "Menu",
   "myProfile": "Profile",
+  "offlineWarning": "No internet connection. Your changes may not be saved",
+  "backOnline": "Connection restored",
   "favorites": "Favorites",
   "noFavorites": "You haven't added anything to favorites yet",
   "loginToSeeFavorites": "Sign in to see your saved properties",

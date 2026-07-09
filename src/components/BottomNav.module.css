@@ -137,6 +137,13 @@
 
     transform: translateY(100%);
     transition: transform .35s ease;
+
+    /* если контент (ссылки + язык + валюта/тема + выход) не помещается
+       по высоте (маленький экран, landscape) — скроллим вертикально,
+       а не обрезаем и не ломаем layout */
+    max-height: 80vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .drawerOverlay.drawerOpen .drawer {

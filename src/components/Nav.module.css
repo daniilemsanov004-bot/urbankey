@@ -447,6 +447,13 @@ body {
 
     flex-shrink: 0;
     -webkit-tap-highlight-color: transparent;
+
+    /* без явной колонки бургер через auto-placement грида попадал в
+       ту же ячейку, что и .links (колонка 2), потому что .links и .right
+       скрыты (display: none) на мобильных — из-за этого он "прилипал"
+       к лого слева, вместо того чтобы стоять у правого края */
+    grid-column: 3;
+    justify-self: end;
 }
 
 

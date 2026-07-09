@@ -651,6 +651,8 @@
   "login": "Kirish",
   "menu": "Menyu",
   "myProfile": "Profil",
+  "offlineWarning": "Internet aloqasi yo'q. O'zgarishlar saqlanmasligi mumkin",
+  "backOnline": "Aloqa tiklandi",
   "favorites": "Sevimlilar",
   "noFavorites": "Siz hali sevimlilarga hech narsa qo'shmadingiz",
   "loginToSeeFavorites": "Saqlangan obyektlarni ko'rish uchun tizimga kiring",

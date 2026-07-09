@@ -6,10 +6,12 @@ import { motion } from "framer-motion"
 import { useTranslation } from "react-i18next"
 import { sendLead } from "../utils/sendLead"
 import TurnstileWidget from "./TurnstileWidget"
+import { useOnlineStatus } from "../hooks/useOnlineStatus"
 
 const Connect = () => {
 
     const { t } = useTranslation()
+    const { isOnline } = useOnlineStatus()
 
     const {
         register,
@@ -375,7 +377,7 @@ const Connect = () => {
                 <motion.button
                     className={s.btn}
                     type="submit"
-                    disabled={submitting}
+                    disabled={submitting || !isOnline}
 
                     initial={{
                         opacity: 0,
@@ -405,7 +407,7 @@ const Connect = () => {
                         once: true
                     }}
                 >
-                    {submitting ? t("sending") : t("sendMessage")}
+                    {!isOnline ? t("offlineWarning") : submitting ? t("sending") : t("sendMessage")}
                 </motion.button>
 
             </motion.form>
