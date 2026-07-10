@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Eye, EyeOff } from "lucide-react";
 import { supabase } from "../supabase";
+import { toast } from "react-toastify";
 import TurnstileWidget from "../components/TurnstileWidget";
 
 
@@ -69,7 +70,7 @@ const Login = () => {
         e.preventDefault();
 
         if (captchaRequired && !captchaToken) {
-            alert(t("errors.captchaRequired"));
+            toast.error(t("errors.captchaRequired"));
             return;
         }
 
@@ -194,7 +195,7 @@ const Login = () => {
                     className={s.captcha}
                 />
 
-                <button type="submit">
+                <button type="submit" disabled={captchaRequired && !captchaToken}>
                     {t("login")}
                 </button>
 

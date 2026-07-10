@@ -3,6 +3,7 @@ import { supabase } from "../supabase";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import { Mail } from "lucide-react";
+import TurnstileWidget from "../components/TurnstileWidget";
 import s from "./ForgotPassword.module.css";
 
 
@@ -15,6 +16,9 @@ export default function ForgotPassword() {
     const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
 
+    const [captchaToken, setCaptchaToken] = useState(null);
+    const captchaRequired = Boolean(import.meta.env.VITE_TURNSTILE_SITE_KEY);
+
 
 
     const sendReset = async () => {
@@ -24,6 +28,15 @@ export default function ForgotPassword() {
 
             toast.error(
                 t("enterEmail")
+            );
+
+            return;
+        }
+
+        if (captchaRequired && !captchaToken) {
+
+            toast.error(
+                t("errors.captchaRequired")
             );
 
             return;
@@ -40,13 +53,16 @@ export default function ForgotPassword() {
             await supabase.auth.resetPasswordForEmail(
                 email,
                 {
-                    redirectTo: `${window.location.origin}/reset-password`
+                    redirectTo: `${window.location.origin}/reset-password`,
+                    captchaToken: captchaToken || undefined
                 }
             );
 
 
 
         setLoading(false);
+
+        setCaptchaToken(null);
 
 
 
@@ -112,9 +128,17 @@ export default function ForgotPassword() {
 
 
 
+                <TurnstileWidget
+                    className={s.captcha}
+                    onVerify={setCaptchaToken}
+                    onExpire={() => setCaptchaToken(null)}
+                />
+
+
+
                 <button
                     onClick={sendReset}
-                    disabled={loading}
+                    disabled={loading || (captchaRequired && !captchaToken)}
                 >
 
                     {

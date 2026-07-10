@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next"
 import { motion } from "framer-motion"
 import { Eye, EyeOff } from "lucide-react"
 import { supabase } from "../supabase";
+import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import TurnstileWidget from "../components/TurnstileWidget";
 
@@ -80,7 +81,7 @@ const Register = () => {
         e.preventDefault();
 
         if (captchaRequired && !captchaToken) {
-            alert(t("errors.captchaRequired"));
+            toast.error(t("errors.captchaRequired"));
             return;
         }
 
@@ -212,7 +213,7 @@ const Register = () => {
                     className={s.captcha}
                 />
 
-                <button type="submit">
+                <button type="submit" disabled={captchaRequired && !captchaToken}>
                     {t("registerButton")}
                 </button>
                 <button
