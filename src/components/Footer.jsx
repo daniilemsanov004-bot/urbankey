@@ -151,58 +151,9 @@ const Footer = () => {
                         }}
                     />
 
-                    <form
-                        className={s.form}
-                        onSubmit={handleSubmit(onSubmit)}
-                    >
+                    
 
-                        <img src="/Vector.svg" alt="" />
-
-                        <input
-                            type="email"
-                            className={s.inp}
-                            placeholder={t("enterEmail")}
-
-                            {...register("email", {
-                                required: t("enterEmail")
-                            })}
-                        />
-
-                        <input
-                            type="text"
-                            tabIndex={-1}
-                            autoComplete="off"
-                            className={s.honeypot}
-                            aria-hidden="true"
-                            {...register("company")}
-                        />
-
-                        <motion.button
-                            type="submit"
-                            disabled={submitting}
-
-                            whileHover={{
-                                scale: 1.06
-                            }}
-
-                            whileTap={{
-                                scale: 0.95
-                            }}
-                        >
-                            {t("send")}
-                        </motion.button>
-
-                    </form>
-
-                    <TurnstileWidget
-                        className={s.captcha}
-                        onVerify={setCaptchaToken}
-                        onExpire={() => setCaptchaToken(null)}
-                    />
-
-                    {errors.email && (
-                        <p>{errors.email.message}</p>
-                    )}
+                   
 
                 </motion.div>
 
