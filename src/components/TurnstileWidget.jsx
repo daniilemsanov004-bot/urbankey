@@ -42,6 +42,17 @@ const TurnstileWidget = ({ onVerify, onExpire, className }) => {
 
     const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
+    // Храним последние колбэки в ref, чтобы не пересоздавать виджет
+    // из-за новых инлайн-функций onVerify/onExpire на каждый ре-рендер
+    // родителя (иначе виджет удалялся бы и рендерился заново постоянно).
+    const onVerifyRef = useRef(onVerify);
+    const onExpireRef = useRef(onExpire);
+
+    useEffect(() => {
+        onVerifyRef.current = onVerify;
+        onExpireRef.current = onExpire;
+    });
+
     useEffect(() => {
 
         if (!siteKey) {
@@ -60,11 +71,11 @@ const TurnstileWidget = ({ onVerify, onExpire, className }) => {
                     sitekey: siteKey,
 
                     callback: (token) => {
-                        onVerify?.(token);
+                        onVerifyRef.current?.(token);
                     },
 
                     "expired-callback": () => {
-                        onExpire?.();
+                        onExpireRef.current?.();
                     },
 
                     "error-callback": () => {
@@ -86,7 +97,7 @@ const TurnstileWidget = ({ onVerify, onExpire, className }) => {
 
         };
 
-    }, [siteKey, onVerify, onExpire]);
+    }, [siteKey]);
 
     if (!siteKey) {
         return null;
