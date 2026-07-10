@@ -40,7 +40,7 @@ export default function ForgotPassword() {
             await supabase.auth.resetPasswordForEmail(
                 email,
                 {
-                    redirectTo: "http://localhost:5173/reset-password"
+                    redirectTo: `${window.location.origin}/reset-password`
                 }
             );
 
