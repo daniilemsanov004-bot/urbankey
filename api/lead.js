@@ -126,7 +126,7 @@ const notifyCrmWebhook = async (source, leadRow) => {
 
 };
 
-const saveLead = async (source, data) => {
+const saveLead = async (source, data, skipCrm) => {
 
     const supabaseAdmin = getSupabaseAdmin();
 
@@ -367,7 +367,7 @@ export default async function handler(req, res) {
 
         // best-effort: не блокируем ответ пользователю, если это упадёт —
         // Telegram-сообщение уже точно ушло
-        saveLead(safeSource, safeData).catch((err) =>
+        saveLead(safeSource, safeData, skipCrm).catch((err) =>
             console.error("saveLead call failed:", err)
         );
 
