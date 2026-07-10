@@ -14,7 +14,7 @@ import { useCurrency } from '../context/CurrencyContext';
 import { formatPriceIn } from '../utils/currency';
 import FavoriteButton from './FavoriteButton';
 
-const Feautured = () => {
+const Feautured = ({ excludeId } = {}) => {
 
     const {
         properties,
@@ -98,7 +98,9 @@ const Feautured = () => {
                 className={s.cards}
             >
 
-                {properties.map((item) => (
+                {properties
+                    .filter((item) => item.id !== excludeId)
+                    .map((item) => (
 
                     <SwiperSlide
                         key={item.id}

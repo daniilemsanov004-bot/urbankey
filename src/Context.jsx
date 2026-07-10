@@ -18,14 +18,14 @@ export const MyContext = createContext();
 const CARD_PUBLIC_COLUMNS =
     "id, title_ru, title_en, title_uz, description_ru, description_en, description_uz, " +
     "bedrooms_ru, bedrooms_en, bedrooms_uz, bathrooms_ru, bathrooms_en, bathrooms_uz, " +
-    "type_ru, type_en, type_uz, price, image, link, created_by";
+    "type_ru, type_en, type_uz, price, image, link, created_by, boosted_until";
 
 const COMMERCIAL_PUBLIC_COLUMNS =
     "id, title_ru, title_en, title_uz, description_ru, description_en, description_uz, " +
     "district_ru, district_en, district_uz, address_ru, address_en, address_uz, " +
     "class_ru, class_en, class_uz, landmark_ru, landmark_en, landmark_uz, " +
     "floor, ceiling, area, price, discount_price, discount, " +
-    "status_ru, status_en, status_uz, delivery_date, image, created_by";
+    "status_ru, status_en, status_uz, delivery_date, image, created_by, boosted_until";
 
 // true, если ошибка supabase означает "такой таблицы/view не существует"
 // (PostgREST/Postgres 42P01) — то есть SQL-миграция ещё не накатана
@@ -206,7 +206,9 @@ export const MyProvider = ({ children }) => {
 
                 price: item.price,
 
-                link: item.link
+                link: item.link,
+
+                boostedUntil: item.boosted_until
 
 
             }));
@@ -282,7 +284,9 @@ export const MyProvider = ({ children }) => {
 
                 price: item.price,
 
-                link: item.link
+                link: item.link,
+
+                boostedUntil: item.boosted_until
 
 
             }));
@@ -431,8 +435,9 @@ export const MyProvider = ({ children }) => {
                     delivery_date: item.delivery_date,
 
 
-                    image: item.image
+                    image: item.image,
 
+                    boostedUntil: item.boosted_until
 
                 }))
 
@@ -2349,6 +2354,36 @@ export const MyProvider = ({ children }) => {
 
     };
 
+    // Ручная активация буста ("объявление в топе") — вызывается админом
+    // после того как оплата подтверждена вне сайта (Payme/Click/перевод).
+    // kind: "residential" | "commercial", days: сколько дней держать в топе.
+    const setBoost = async (kind, id, days) => {
+
+        const table = kind === "commercial" ? "commercials" : "cardss";
+
+        const boosted_until = days
+            ? new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString()
+            : null; // null — снять буст досрочно
+
+        const { error } = await supabase
+            .from(table)
+            .update({ boosted_until })
+            .eq("id", id);
+
+        if (error) {
+            console.error("SET BOOST ERROR:", error);
+            toast.error(error.message);
+            return false;
+        }
+
+        toast.success(
+            days ? `Объявление в топе на ${days} дн.` : "Буст снят"
+        );
+
+        return true;
+
+    };
+
     const setUserRole = async (targetUserId, role) => {
 
         if (!["user", "admin"].includes(role)) {
@@ -2527,6 +2562,7 @@ export const MyProvider = ({ children }) => {
 
 
             setUserRole,
+            setBoost,
             searchUsers,
 
             properties,

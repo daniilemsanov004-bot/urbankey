@@ -1,7 +1,7 @@
 import Villa from "../components/Villa";
 import Property from "../components/Property";
 import Amenities from "../components/Amenities";
-import Feautured from "../components/Feautured";
+import Feautured from "../components/Feautured_one";
 import Footer from "../components/Footer";
 import Seo from "../components/Seo";
 
@@ -55,7 +55,7 @@ const PropertyPage = () => {
             <Amenities data={villa} />
 
 
-            <Feautured />
+            <Feautured data={villa} />
 
 
             <Footer />

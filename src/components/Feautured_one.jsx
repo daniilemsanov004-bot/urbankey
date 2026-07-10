@@ -19,18 +19,34 @@ const Feautured = ({ data, commercial, items }) => {
 
     const {
         properties,
+        commercials,
+        profile,
         getCards,
-        isAdmin,
-        deleteCard
+        getCommercials,
+        deleteCard,
+        deleteCommercial
     } = useContext(MyContext);
+
+    // isAdmin в контексте никогда не существовал (всегда был undefined) —
+    // из-за этого кнопка "Удалить" тут не отображалась вообще никогда.
+    // Считаем так же, как в Catalog.jsx/CommercialSection.jsx.
+    const isAdmin = profile?.role === "admin";
 
 
 
     useEffect(() => {
 
-        getCards();
+        // Раньше здесь всегда грузились ЖИЛЫЕ объекты (getCards/properties),
+        // даже на странице коммерческой недвижимости — из-за этого "похожие
+        // объекты" под коммерческим объявлением на самом деле были виллами.
+        // Теперь берём правильный источник в зависимости от типа страницы.
+        if (commercial) {
+            getCommercials();
+        } else {
+            getCards();
+        }
 
-    }, []);
+    }, [commercial]);
 
 
 
@@ -44,7 +60,7 @@ const Feautured = ({ data, commercial, items }) => {
 
 
 
-    const list = items || properties;
+    const list = items || (commercial ? commercials : properties);
 
 
     const similar = list
@@ -55,12 +71,23 @@ const Feautured = ({ data, commercial, items }) => {
 
 
             if (
-                item.type?.ru === data?.type?.ru
+                item.type?.ru &&
+                data?.type?.ru &&
+                item.type.ru === data.type.ru
             ) score += 5;
 
 
             if (
-                item.class?.ru === data?.class?.ru
+                item.class?.ru &&
+                data?.class?.ru &&
+                item.class.ru === data.class.ru
+            ) score += 3;
+
+
+            if (
+                item.district?.ru &&
+                data?.district?.ru &&
+                item.district.ru === data.district.ru
             ) score += 3;
 
 
@@ -344,7 +371,7 @@ const Feautured = ({ data, commercial, items }) => {
 
                                 <Link
 
-                                    to={item.link}
+                                    to={commercial ? `/commercial/${item.id}` : item.link}
 
                                     className={s.linkk}
 
@@ -370,7 +397,7 @@ const Feautured = ({ data, commercial, items }) => {
                                     className={s.btn}
 
                                     onClick={() =>
-                                        deleteCard(item.id)
+                                        commercial ? deleteCommercial(item.id) : deleteCard(item.id)
                                     }
 
                                 >

@@ -128,6 +128,7 @@ const Catalog = () => {
             bedroomsValue: parseFirstNumber(item.bedrooms?.ru),
             bathroomsLabel: item.bathrooms?.[lang] || item.bathrooms?.ru || "",
             link: `/property/${item.id}`,
+            boostedUntil: item.boostedUntil || item.boosted_until,
             raw: item
         }));
 
@@ -146,6 +147,7 @@ const Catalog = () => {
             area: item.area || "",
             floor: item.floor || "",
             link: `/commercial/${item.id}`,
+            boostedUntil: item.boostedUntil || item.boosted_until,
             raw: item
         }));
 
@@ -225,6 +227,15 @@ const Catalog = () => {
         } else {
             result = [...result].sort((a, b) => Number(b.id) - Number(a.id));
         }
+
+        // Платные объявления "в топе" — поднимаем над остальными, не ломая
+        // при этом выбранную сортировку внутри каждой группы (Array.sort
+        // стабильна, поэтому относительный порядок сохраняется)
+        const isBoosted = (item) => {
+            const until = item.boostedUntil || item.boosted_until;
+            return Boolean(until) && new Date(until).getTime() > Date.now();
+        };
+        result = [...result].sort((a, b) => Number(isBoosted(b)) - Number(isBoosted(a)));
 
         return result;
 
@@ -485,6 +496,11 @@ const Catalog = () => {
                             >
 
                                 <div className={s.imageBox}>
+
+                                    {Boolean(item.boostedUntil || item.boosted_until) &&
+                                        new Date(item.boostedUntil || item.boosted_until).getTime() > Date.now() && (
+                                        <span className={s.boostBadge}>{t("boostBadge")}</span>
+                                    )}
 
                                     <img
                                         src={item.image}

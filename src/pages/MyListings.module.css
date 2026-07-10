@@ -169,3 +169,35 @@
     font-size: 22px;
   }
 }
+
+/* ===== Буст объявления в топ ===== */
+.boostRow {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.boostBtn {
+    flex: 1;
+    padding: 10px 12px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #d6a83a, #f4d06f);
+    color: #050505;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.boostBtnOutline {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid rgba(224, 71, 92, .4);
+    border-radius: 12px;
+    background: transparent;
+    color: #e0475c;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+}
