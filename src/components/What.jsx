@@ -2,6 +2,7 @@ import s from './What.module.css'
 
 import { motion } from "framer-motion"
 import { useTranslation } from 'react-i18next'
+import { toast } from 'react-toastify'
 import { useEffect, useState } from 'react'
 
 import { supabase } from "../supabase"
@@ -93,7 +94,7 @@ const What = () => {
 
         if (error) {
             console.error(error);
-            alert(error.message);
+            toast.error(error.message);
             return;
         }
 

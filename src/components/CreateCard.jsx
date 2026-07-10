@@ -1,4 +1,6 @@
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
+import { toast } from "react-toastify";
 import s from "./CreateCard.module.css";
 import { useContext } from "react";
 import { MyContext } from "../Context";
@@ -19,7 +21,7 @@ const CreateCard = () => {
   const onSubmit = async (data) => {
 
     if (!data.image || !data.image.length) {
-      alert("Выбери картинку");
+      toast.error(t("imageFileMissing"));
       return;
     }
 

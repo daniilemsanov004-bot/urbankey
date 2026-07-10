@@ -2,6 +2,7 @@ import { useContext, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
+import { toast } from "react-toastify";
 import { MapPin, Building2, Ruler, BedDouble, Bath, SlidersHorizontal, X, Trash2 } from "lucide-react";
 
 import { MyContext } from "../Context";
@@ -51,11 +52,11 @@ const Catalog = () => {
 
     const [deletingId, setDeletingId] = useState(null);
 
+    const { t, i18n } = useTranslation();
+
     const handleDelete = async (item) => {
 
-        const confirmed = window.confirm(
-            "Удалить эту карточку из каталога? Действие необратимо."
-        );
+        const confirmed = window.confirm(t("catalogDeleteConfirm"));
 
         if (!confirmed) return;
 
@@ -68,10 +69,10 @@ const Catalog = () => {
         }
 
         setDeletingId(null);
+        toast.success(t("cardDeleted"));
 
     };
 
-    const { t, i18n } = useTranslation();
     const { currency } = useCurrency();
     const lang = i18n.language;
 

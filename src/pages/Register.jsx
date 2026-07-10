@@ -42,7 +42,7 @@ const Register = () => {
         });
 
         if (error) {
-            alert(getErrorMessage(error));
+            toast.error(getErrorMessage(error));
         }
 
     };
@@ -106,7 +106,7 @@ const Register = () => {
 
         if (error) {
 
-            alert(getErrorMessage(error));
+            toast.error(getErrorMessage(error));
             setCaptchaToken(null);
             return;
 
@@ -116,7 +116,7 @@ const Register = () => {
 
         if (!data.user) {
 
-            alert(t("errors.generic"));
+            toast.error(t("errors.generic"));
 
             return;
 
@@ -124,7 +124,7 @@ const Register = () => {
 
 
 
-        alert(t("register.confirmEmailSent"));
+        toast.success(t("errors.confirmEmailSent"));
         navigate("/login");
 
     }

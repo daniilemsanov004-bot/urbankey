@@ -69,6 +69,7 @@ const MyListings = () => {
             setListings((prev) =>
                 prev.filter((l) => !(l.id === item.id && l.kind === item.kind))
             );
+            toast.success(t("cardDeleted"));
         }
 
     };

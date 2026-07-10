@@ -1,11 +1,14 @@
 import { useContext, useEffect } from "react";
 import { MyContext } from "../Context";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { toast } from "react-toastify";
 import s from "./ChangeCommercialPage.module.css";
 
 
 const ChangeCommercialPage = () => {
 
+    const { t } = useTranslation();
 
     const {
         commercialPages,
@@ -30,7 +33,7 @@ const ChangeCommercialPage = () => {
 
 
             <h1>
-                Изменение коммерции
+                {t("changeCommercialPageTitle")}
             </h1>
 
 
@@ -76,7 +79,7 @@ const ChangeCommercialPage = () => {
                                 <Link
                                     to={`/commercial/edit/${item.id}`}
                                 >
-                                    Изменить
+                                    {t("edit")}
                                 </Link>
 
 
@@ -87,15 +90,16 @@ const ChangeCommercialPage = () => {
 
                                     onClick={() => {
 
-                                        if (confirm("Удалить?")) {
-                                            deleteCommercialPage(item.id)
+                                        if (confirm(t("deleteCommercialConfirm"))) {
+                                            deleteCommercialPage(item.id);
+                                            toast.success(t("commercialDeleted"));
                                         }
 
                                     }}
 
                                 >
 
-                                    Удалить
+                                    {t("delete")}
 
                                 </button>
 

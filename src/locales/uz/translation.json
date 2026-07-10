@@ -1052,5 +1052,9 @@
         "description": "WhatsApp, Telegram va telefon orqali istalgan vaqtda tezkor javob"
       }
     }
-  }
+  },
+  "changeCommercialPageTitle": "Tijorat obyektlarini o'zgartirish",
+  "deleteCommercialConfirm": "O'chirilsinmi?",
+  "commercialDeleted": "Tijorat obyekti o'chirildi",
+  "catalogDeleteConfirm": "Ushbu obyektni katalogdan o'chirasizmi? Bu amalni bekor qilib bo'lmaydi."
 }

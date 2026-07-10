@@ -58,7 +58,7 @@ const Login = () => {
         });
 
         if (error) {
-            alert(getErrorMessage(error));
+            toast.error(getErrorMessage(error));
         }
 
     };
@@ -94,7 +94,7 @@ const Login = () => {
 
             console.error(error);
 
-            alert(getErrorMessage(error));
+            toast.error(getErrorMessage(error));
 
             setCaptchaToken(null);
 

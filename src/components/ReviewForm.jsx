@@ -4,6 +4,7 @@ import { Star, Send, Loader2, MessageSquarePlus } from "lucide-react";
 import { supabase } from "../supabase";
 import { MyContext } from "../Context";
 import s from "./ReviewForm.module.css";
+import { toast } from "react-toastify";
 
 export default function ReviewForm({ onAdd }) {
     const { user } = useContext(MyContext);
@@ -16,7 +17,7 @@ export default function ReviewForm({ onAdd }) {
 
     async function sendReview() {
         if (!user) {
-            alert(t("reviewForm.needLogin"));
+            toast.warning(t("reviewForm.needLogin"));
             return;
         }
 
@@ -38,7 +39,7 @@ export default function ReviewForm({ onAdd }) {
 
         if (error) {
             console.error(error);
-            alert(error.message);
+            toast.error(error.message);
             return;
         }
 

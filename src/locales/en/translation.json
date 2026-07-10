@@ -978,5 +978,9 @@
         "description": "Quick response on WhatsApp,Telegram and by phone anytime"
       }
     }
-  }
+  },
+  "changeCommercialPageTitle": "Edit commercial listings",
+  "deleteCommercialConfirm": "Delete?",
+  "commercialDeleted": "Commercial listing deleted",
+  "catalogDeleteConfirm": "Delete this listing from the catalog? This action cannot be undone."
 }
