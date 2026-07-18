@@ -1,0 +1,399 @@
+// Чистая логика разбора поста и перевода — без Telegram/Supabase.
+// Используется и в server/bot.js (long-polling, для запуска на своём
+// сервере/VPS), и в api/telegram-webhook.js (serverless на Vercel).
+// Логика в одном месте, чтобы не расходилась между двумя способами
+// запуска бота.
+
+
+// ---------------------------------------------------------------------
+// Словарь типов жилья.
+// ---------------------------------------------------------------------
+const TYPE_DICT = [
+    { test: /вилл|villa/i, ru: "Вилла", en: "Villa", uz: "Villa" },
+    { test: /коттедж|cottage|kottej/i, ru: "Коттедж", en: "Cottage", uz: "Kottej" },
+    { test: /резиденци|residence|rezidensiya/i, ru: "Резиденция", en: "Residence", uz: "Rezidensiya" },
+    { test: /пентхаус|penthouse|pentxaus/i, ru: "Пентхаус", en: "Penthouse", uz: "Pentxaus" },
+    { test: /\bдом\b|\bhouse\b|\buy\b/i, ru: "Дом", en: "House", uz: "Uy" },
+    { test: /апартамент|apartment|kvartira|квартир/i, ru: "Апартаменты", en: "Apartments", uz: "Apartament" }
+];
+
+export function detectType(text) {
+
+    for (const t of TYPE_DICT) {
+        if (t.test.test(text)) {
+            return { ru: t.ru, en: t.en, uz: t.uz };
+        }
+    }
+
+    return { ru: "Квартира", en: "Apartment", uz: "Kvartira" };
+}
+
+
+
+
+// ---------------------------------------------------------------------
+// Комнатность: "2-комнатная", "3х комнатная", "двухкомнатная".
+// ---------------------------------------------------------------------
+const ROOM_WORDS = {
+    "одно": 1, "одна": 1,
+    "двух": 2, "две": 2,
+    "трёх": 3, "трех": 3, "три": 3,
+    "четырёх": 4, "четырех": 4, "четыре": 4,
+    "пяти": 5, "пять": 5,
+    "шести": 6, "шесть": 6
+};
+
+export function extractRooms(text) {
+
+    let m = text.match(/(\d+)[-\s]?(?:х|x)?[-\s]?комнат/i);
+    if (m) return m[1];
+
+    m = text.match(/(одно|одна|двух|две|трёх|трех|три|четырёх|четырех|четыре|пяти|пять|шести|шесть)[-\s]?комнат/i);
+    if (m) return String(ROOM_WORDS[m[1].toLowerCase()] || "");
+
+    return "";
+}
+
+
+
+
+// ---------------------------------------------------------------------
+// Площадь: работает без слова "площадь" рядом, с "м2" вместо "м²",
+// с запятой в дробной части. Без \b на конце — JS \w не видит кириллицу
+// без флага /u, поэтому граница слова после "м²" ненадёжна.
+// ---------------------------------------------------------------------
+export function extractArea(text) {
+
+    let m = text.match(/площадь\D{0,20}?(\d+(?:[.,]\d+)?)\s*(?:м²|м2)/i);
+    if (m) return m[1].replace(",", ".");
+
+    m = text.match(/(\d+(?:[.,]\d+)?)\s*(?:м²|м2)/i);
+    if (m) return m[1].replace(",", ".");
+
+    return "";
+}
+
+
+
+
+// ---------------------------------------------------------------------
+// Этаж/этажность: "5 этаж из 9", "Этаж: 12"+"Этажность: 14" отдельно,
+// "1 этаж 4-этажного дома".
+// ---------------------------------------------------------------------
+export function extractFloorInfo(text) {
+
+    let m = text.match(/(\d+)\s*этаж\w*\s*из\s*(\d+)/i);
+    if (m) return { floor: m[1], totalFloors: m[2] };
+
+    m = text.match(/(\d+)\s*этаж\w*\s+(\d+)-этажн/i);
+    if (m) return { floor: m[1], totalFloors: m[2] };
+
+    const floorM = text.match(/Этаж\s*:\s*(\d+)/i);
+    const totalM = text.match(/Этажность\s*:\s*(\d+)/i);
+
+    if (floorM || totalM) {
+        return { floor: floorM?.[1] || "", totalFloors: totalM?.[1] || "" };
+    }
+
+    m = text.match(/(\d+)\s*этаж\b/i);
+    if (m) return { floor: m[1], totalFloors: "" };
+
+    return { floor: "", totalFloors: "" };
+}
+
+
+
+
+// ---------------------------------------------------------------------
+// Строка адреса/района/ориентира — идёт после 📍.
+// ---------------------------------------------------------------------
+export function extractLocationLine(text) {
+
+    const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+    const line = lines.find(l => l.includes("📍"));
+
+    if (!line) return "";
+
+    return line
+        .replace(/📍/g, "")
+        .replace(/^Адрес\s*:\s*/i, "")
+        .trim();
+}
+
+
+
+
+// ---------------------------------------------------------------------
+// Цена: любой разделитель после метки ("Цена:", "Стоимость;", "Цена —"),
+// актуальная цена вместо зачёркнутой старой.
+// ---------------------------------------------------------------------
+export function extractPrice(text) {
+
+    if (/~~/.test(text)) {
+        const m = text.match(/Новая[^\d\n]*([\d][\d\s.,]*\$?)/i);
+        if (m) return m[1].trim();
+    }
+
+    const m = text.match(/(?:Цена|Стоимость|Price|Narxi)[^\d\n]*([\d][\d\s.,]*\$?)/i);
+    if (m) return m[1].trim();
+
+    return "";
+}
+
+
+// Числовая версия цены для полей villas/commercial_pages (там price —
+// number). Понимает "83.000" (точка как разделитель тысяч), "99 500 $",
+// "1400$ за 1м²" (берёт ведущее число).
+export function priceToNumber(raw) {
+
+    if (!raw) return null;
+
+    const leading = raw.match(/^[\d\s.,]+/);
+    if (!leading) return null;
+
+    let s = leading[0].replace(/\s+/g, "");
+
+    let prev;
+    do {
+        prev = s;
+        s = s.replace(/[.,](\d{3})(?!\d)/g, "$1");
+    } while (s !== prev);
+
+    const num = parseFloat(s.replace(",", "."));
+    return Number.isFinite(num) ? num : null;
+}
+
+
+
+
+// ---------------------------------------------------------------------
+// Коммерция или жильё.
+// ---------------------------------------------------------------------
+const COMMERCIAL_KEYWORDS =
+    /коммерц|коммерч|помещени|склад\b|витрин|арендатор|фудкорт|бизнес|цоколь/i;
+
+export function isCommercialPost(text) {
+    return COMMERCIAL_KEYWORDS.test(text);
+}
+
+
+
+
+// ---------------------------------------------------------------------
+// Автоперевод. Бесплатный публичный эндпоинт Google Translate — тот же,
+// что уже используется в /api/translate на сайте. Без ключа, без ИИ.
+// ---------------------------------------------------------------------
+export async function translateText(text, source, target) {
+
+    if (!text || !text.trim()) return "";
+    if (source === target) return text;
+
+    try {
+
+        const url =
+            "https://translate.googleapis.com/translate_a/single" +
+            `?client=gtx&sl=${source}&tl=${target}&dt=t&q=${encodeURIComponent(text)}`;
+
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`translate upstream status ${res.status}`);
+
+        const data = await res.json();
+
+        const translated = Array.isArray(data?.[0])
+            ? data[0].map((chunk) => chunk?.[0] || "").join("")
+            : "";
+
+        return translated || text;
+
+    } catch (e) {
+
+        console.log("TRANSLATE ERROR:", source, "->", target, e.message);
+        return text;
+    }
+}
+
+
+// fieldsObj: объект с полями `${base}_ru` / `${base}_en` / `${base}_uz`.
+// Переводит на en/uz только то, что ещё не заполнено.
+export async function fillMissingTranslations(fieldsObj, bases) {
+
+    const jobs = [];
+
+    for (const base of bases) {
+
+        const ru = fieldsObj[`${base}_ru`];
+        if (!ru) continue;
+
+        if (!fieldsObj[`${base}_en`]) {
+            jobs.push(
+                translateText(ru, "ru", "en").then((v) => { fieldsObj[`${base}_en`] = v; })
+            );
+        }
+
+        if (!fieldsObj[`${base}_uz`]) {
+            jobs.push(
+                translateText(ru, "ru", "uz").then((v) => { fieldsObj[`${base}_uz`] = v; })
+            );
+        }
+    }
+
+    await Promise.all(jobs);
+}
+
+
+
+
+// ---------------------------------------------------------------------
+// Транслитерация + slug.
+// ---------------------------------------------------------------------
+const CYR_TO_LAT = {
+    а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ё: "e", ж: "zh", з: "z",
+    и: "i", й: "y", к: "k", л: "l", м: "m", н: "n", о: "o", п: "p", р: "r",
+    с: "s", т: "t", у: "u", ф: "f", х: "h", ц: "ts", ч: "ch", ш: "sh",
+    щ: "sch", ъ: "", ы: "y", ь: "", э: "e", ю: "yu", я: "ya"
+};
+
+function transliterate(str) {
+    return str
+        .toLowerCase()
+        .split("")
+        .map((ch) => CYR_TO_LAT[ch] ?? ch)
+        .join("");
+}
+
+export function slugify(str) {
+    return (
+        transliterate(str || "listing")
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "")
+            .slice(0, 60)
+    ) || "listing";
+}
+
+
+
+
+// ---------------------------------------------------------------------
+// Разбор текста поста в поля карточки/коммерции.
+// ---------------------------------------------------------------------
+export function parseListing(text) {
+
+    const lines =
+        text
+            .split("\n")
+            .map(x => x.trim())
+            .filter(Boolean);
+
+
+    const isServiceLine = (line) =>
+        /^#/.test(line) ||
+        /^(EN|UZ|RU_DESC|EN_DESC|UZ_DESC)\s*:/i.test(line) ||
+        /^(Цена|Стоимость|Price|Narxi|Ориентир|Landmark|Mo'ljal|Высота потолков|Площадь|Этаж|Этажность|Новая)\s*:?/i.test(line) ||
+        line.includes("📍");
+
+
+    const title_ru =
+        lines.find(line => !isServiceLine(line)) || "Квартира";
+
+
+    const title_en =
+        text.match(/EN:\s*(.*)/)?.[1]?.trim() || "";
+
+    const title_uz =
+        text.match(/UZ:\s*(.*)/)?.[1]?.trim() || "";
+
+
+    const description_ru =
+        text.match(/RU_DESC:\s*([\s\S]*?)EN_DESC:/)?.[1]?.trim() || "";
+
+    const description_en =
+        text.match(/EN_DESC:\s*([\s\S]*?)UZ_DESC:/)?.[1]?.trim() || "";
+
+    const description_uz =
+        text.match(/UZ_DESC:\s*([\s\S]*)/)?.[1]?.trim() || "";
+
+
+    const price = extractPrice(text);
+
+    const bedrooms = extractRooms(text);
+
+    const bathrooms =
+        text.match(/(\d+)\s*(?:санузл\w*|ванн\w*|bathroom\w*|hammom\w*)/i)?.[1] || "";
+
+    const area = extractArea(text);
+
+    const { floor, totalFloors } = extractFloorInfo(text);
+
+    const locationLine = extractLocationLine(text);
+
+    const isCommercial = isCommercialPost(text);
+
+    const isSold = /продан[оаы]|снят[оаы]? с продажи/i.test(text);
+
+    const type = detectType(text);
+
+
+    const commercialFields = {
+
+        district_ru:
+            text.match(/([А-Яа-яёЁ\-]+\s+район\w*)/i)?.[1]
+            || text.match(/Ориентир:\s*(.*)/i)?.[1]
+            || locationLine
+            || "",
+
+        district_en: "",
+        district_uz: "",
+
+        address_ru:
+            text.match(/район\w*,\s*(.*?)\./i)?.[1] || locationLine || "",
+
+        address_en: "",
+        address_uz: "",
+
+        landmark_ru:
+            text.match(/Ориентир:\s*(.*)/i)?.[1] || "",
+
+        landmark_en: "",
+        landmark_uz: "",
+
+        floor,
+        ceiling:
+            text.match(/Высота потолков\s*:?\s*([\d.]+)/i)?.[1] || "",
+
+        area
+    };
+
+
+    const missing = [];
+
+    if (title_ru === "Квартира" && !/квартир/i.test(text)) missing.push("название");
+    if (!price) missing.push("цена");
+
+    if (isCommercial) {
+        if (!commercialFields.area) missing.push("площадь");
+    } else {
+        if (!bedrooms) missing.push("кол-во комнат");
+    }
+
+
+    return {
+        isCommercial,
+        isSold,
+        missing,
+        title_ru,
+        title_en,
+        title_uz,
+        description_ru,
+        description_en,
+        description_uz,
+        price,
+        bedrooms,
+        bathrooms,
+        area,
+        floor,
+        totalFloors,
+        locationLine,
+        type,
+        commercialFields
+    };
+}
