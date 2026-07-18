@@ -804,8 +804,6 @@ export default async function handler(req, res) {
 
     const update = req.body || {};
 
-    res.status(200).json({ ok: true });
-
     try {
 
         const msg = update.channel_post;
@@ -813,27 +811,32 @@ export default async function handler(req, res) {
 
         if (editedMsg) {
             await processEditedPost(editedMsg);
-            return;
+            return res.status(200).json({ ok: true });
         }
 
-        if (!msg) return;
+        if (!msg) return res.status(200).json({ ok: true });
 
         const text = msg.caption || msg.text || "";
 
         if (!text.trim() && !msg.photo) {
-            return;
+            return res.status(200).json({ ok: true });
         }
 
         if (msg.media_group_id) {
             await handleAlbumMessage(msg);
-            return;
+            return res.status(200).json({ ok: true });
         }
 
         const image = msg.photo ? await uploadPhoto(msg.photo) : "";
         await processPost(msg, image, Boolean(msg.video));
 
+        return res.status(200).json({ ok: true });
+
     } catch (e) {
 
         console.log("WEBHOOK HANDLER EXCEPTION:", e);
+        // всё равно отвечаем 200, чтобы Telegram не долбил повторно
+        // одним и тем же апдейтом до бесконечности
+        return res.status(200).json({ ok: true });
     }
 }
