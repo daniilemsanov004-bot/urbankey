@@ -125,9 +125,13 @@ async function createDraftPage(table, linkIdField, cardId, parsed, image) {
                 location_ru: parsed.commercialFields.district_ru || parsed.locationLine,
                 location_en: "",
                 location_uz: "",
-                type_ru: parsed.type.ru,
-                type_en: parsed.type.en,
-                type_uz: parsed.type.uz,
+                // Категория/тип коммерции (Помещение/Здание/Офис и т.п.) — не
+                // используем словарь типов жилья (Квартира/Вилла/Дом), он тут
+                // не подходит по смыслу. Оставляем пустым, как about/class/
+                // purpose — дозаполняете в админке.
+                type_ru: "",
+                type_en: "",
+                type_uz: "",
                 class_ru: "",
                 class_en: "",
                 class_uz: "",

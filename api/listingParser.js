@@ -13,11 +13,18 @@ const TYPE_DICT = [
     { test: /коттедж|cottage|kottej/i, ru: "Коттедж", en: "Cottage", uz: "Kottej" },
     { test: /резиденци|residence|rezidensiya/i, ru: "Резиденция", en: "Residence", uz: "Rezidensiya" },
     { test: /пентхаус|penthouse|pentxaus/i, ru: "Пентхаус", en: "Penthouse", uz: "Pentxaus" },
-    { test: /\bдом\b|\bhouse\b|\buy\b/i, ru: "Дом", en: "House", uz: "Uy" },
-    { test: /апартамент|apartment|kvartira|квартир/i, ru: "Апартаменты", en: "Apartments", uz: "Apartament" }
+    { test: /\bдом\b|\bhouse\b|\buy\b/i, ru: "Дом", en: "House", uz: "Uy" }
 ];
 
 export function detectType(text) {
+
+    // явное слово "квартира" в русском тексте — самый надёжный сигнал.
+    // Проверяем его ДО словаря ниже: иначе название ЖК вроде "Dream
+    // House" или "Sunny Villas" по ошибке определяло тип как "Дом"/
+    // "Вилла", хотя в тексте прямым текстом написано "квартира".
+    if (/квартир|kvartira|apartment/i.test(text)) {
+        return { ru: "Квартира", en: "Apartment", uz: "Kvartira" };
+    }
 
     for (const t of TYPE_DICT) {
         if (t.test.test(text)) {
@@ -64,10 +71,10 @@ export function extractRooms(text) {
 // ---------------------------------------------------------------------
 export function extractArea(text) {
 
-    let m = text.match(/площадь\D{0,20}?(\d+(?:[.,]\d+)?)\s*(?:м²|м2)/i);
+    let m = text.match(/площадь\D{0,20}?(\d+(?:[.,]\d+)?)\s*(?:м²|м2|кв\.?\s*м)/i);
     if (m) return m[1].replace(",", ".");
 
-    m = text.match(/(\d+(?:[.,]\d+)?)\s*(?:м²|м2)/i);
+    m = text.match(/(\d+(?:[.,]\d+)?)\s*(?:м²|м2|кв\.?\s*м)/i);
     if (m) return m[1].replace(",", ".");
 
     return "";
@@ -124,8 +131,15 @@ export function extractLocationLine(text) {
 
 
 // ---------------------------------------------------------------------
-// Цена: любой разделитель после метки ("Цена:", "Стоимость;", "Цена —"),
+// Цена. Любой разделитель после метки ("Цена:", "Стоимость;", "Цена —"),
 // актуальная цена вместо зачёркнутой старой.
+//
+// Отдельная сложность: посты часто дают цену в сумах с курсом и итогом
+// в $ на отдельной строке ("8 659 000 000 сум/12000=722.000$"), а рядом
+// может быть "Цена при 100% оплате" — где "100" это процент, а не цена.
+// Поэтому сначала ищем явную сумму в $ где угодно в тексте (это почти
+// всегда и есть актуальная цена), и только если её нет — ищем по метке,
+// предварительно вырезав упоминания процентов.
 // ---------------------------------------------------------------------
 export function extractPrice(text) {
 
@@ -134,7 +148,14 @@ export function extractPrice(text) {
         if (m) return m[1].trim();
     }
 
-    const m = text.match(/(?:Цена|Стоимость|Price|Narxi)[^\d\n]*([\d][\d\s.,]*\$?)/i);
+    const dollarMatches = [...text.matchAll(/([\d][\d\s.,]*)\s*\$/g)];
+    if (dollarMatches.length) {
+        return dollarMatches[dollarMatches.length - 1][1].trim() + "$";
+    }
+
+    const textNoPercent = text.replace(/\d+(?:[.,]\d+)?\s*%/g, "");
+
+    const m = textNoPercent.match(/(?:Цена|Стоимость|Price|Narxi)[^\d\n]*([\d][\d\s.,]*\$?)/i);
     if (m) return m[1].trim();
 
     return "";
@@ -274,6 +295,34 @@ export function slugify(str) {
 
 
 // ---------------------------------------------------------------------
+// Описание по умолчанию — когда в посте нет ручных маркеров RU_DESC:/
+// EN_DESC:/UZ_DESC:. Раньше без маркеров description_ru всегда оставался
+// пустым, хотя в самом посте есть нормальный связный текст — просто
+// берём все содержательные строки (кроме заголовка и служебных строк
+// вроде "Цена:"/"Этаж:") и убираем строки-контакты (телефон/имя).
+// ---------------------------------------------------------------------
+function isPhoneLine(line) {
+    const digits = line.replace(/\D/g, "");
+    return digits.length >= 7 && /\+?\d[\d\s\-()]{5,}\d/.test(line);
+}
+
+function buildDescriptionFallback(text, titleLine, isServiceLine) {
+
+    const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+
+    const contentLines = lines.filter(line =>
+        line !== titleLine &&
+        !isServiceLine(line) &&
+        !isPhoneLine(line)
+    );
+
+    return contentLines.join("\n").trim();
+}
+
+
+
+
+// ---------------------------------------------------------------------
 // Разбор текста поста в поля карточки/коммерции.
 // ---------------------------------------------------------------------
 export function parseListing(text) {
@@ -304,7 +353,8 @@ export function parseListing(text) {
 
 
     const description_ru =
-        text.match(/RU_DESC:\s*([\s\S]*?)EN_DESC:/)?.[1]?.trim() || "";
+        text.match(/RU_DESC:\s*([\s\S]*?)EN_DESC:/)?.[1]?.trim() ||
+        buildDescriptionFallback(text, title_ru, isServiceLine);
 
     const description_en =
         text.match(/EN_DESC:\s*([\s\S]*?)UZ_DESC:/)?.[1]?.trim() || "";
@@ -358,7 +408,7 @@ export function parseListing(text) {
 
         floor,
         ceiling:
-            text.match(/Высота потолков\s*:?\s*([\d.]+)/i)?.[1] || "",
+            text.match(/Высота потолков\s*:?\s*([\d.,]+)/i)?.[1]?.replace(",", ".") || "",
 
         area
     };
