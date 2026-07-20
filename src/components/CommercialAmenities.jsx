@@ -20,6 +20,8 @@ const CommercialAmenities = ({ data }) => {
 
     const amenities = data.amenities || [];
 
+    if (!amenities.length) return null;
+
 
 
     const getText = (item) => {

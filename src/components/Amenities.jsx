@@ -10,25 +10,9 @@ const Amenities = ({ data }) => {
     const { i18n, t } = useTranslation();
 
 
-    const amenities = data?.amenities?.length
-        ? data.amenities
-        : [
-            {
-                ru: t("amenityEighth1"),
-                en: t("amenityEighth1"),
-                uz: t("amenityEighth1")
-            },
-            {
-                ru: t("amenityEighth2"),
-                en: t("amenityEighth2"),
-                uz: t("amenityEighth2")
-            },
-            {
-                ru: t("amenityEighth3"),
-                en: t("amenityEighth3"),
-                uz: t("amenityEighth3")
-            }
-        ];
+    const amenities = data?.amenities?.length ? data.amenities : [];
+
+    if (!amenities.length) return null;
 
 
 

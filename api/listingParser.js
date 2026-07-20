@@ -39,6 +39,55 @@ export function detectType(text) {
 
 
 // ---------------------------------------------------------------------
+// Удобства/оснащение — по ключевым словам в тексте поста. Без ИИ, чисто
+// по словарю: находим упоминание — добавляем готовый пункт сразу на
+// трёх языках (перевод тут не нужен, т.к. формулировки фиксированные).
+// Список не претендует на полноту — расширяйте по мере встречающихся
+// в постах формулировок.
+// ---------------------------------------------------------------------
+const AMENITY_DICT = [
+    { test: /парковк|паркинг/i, ru: "Парковка", en: "Parking", uz: "Parking" },
+    { test: /мебел/i, ru: "Мебель", en: "Furniture", uz: "Mebel" },
+    { test: /техник/i, ru: "Бытовая техника", en: "Appliances", uz: "Maishiy texnika" },
+    { test: /кондиционер/i, ru: "Кондиционер", en: "Air conditioning", uz: "Konditsioner" },
+    { test: /лифт/i, ru: "Лифт", en: "Elevator", uz: "Lift" },
+    { test: /детск\w*\s+площад/i, ru: "Детская площадка", en: "Playground", uz: "Bolalar maydonchasi" },
+    { test: /тихий двор|зелен\w*\s+двор|зелён\w*\s+двор|ухожен\w*\s+двор/i, ru: "Тихий двор", en: "Quiet courtyard", uz: "Tinch hovli" },
+    { test: /гардеробн/i, ru: "Гардеробная", en: "Walk-in closet", uz: "Kiyim xonasi" },
+    { test: /раздельн\w*\s+санузел/i, ru: "Раздельный санузел", en: "Separate bathroom", uz: "Alohida hammom" },
+    { test: /панорамн\w*\s+(вид|окна)/i, ru: "Панорамный вид", en: "Panoramic view", uz: "Panorama manzara" },
+    { test: /вид на город|вид на море/i, ru: "Вид на город", en: "City view", uz: "Shahar manzarasi" },
+    { test: /\bохран/i, ru: "Охрана", en: "Security", uz: "Xavfsizlik" },
+    { test: /консьерж/i, ru: "Консьерж", en: "Concierge", uz: "Konsyerj" },
+    { test: /бассейн/i, ru: "Бассейн", en: "Pool", uz: "Basseyn" },
+    { test: /террас/i, ru: "Терраса", en: "Terrace", uz: "Terrasa" },
+    { test: /балкон/i, ru: "Балкон", en: "Balcony", uz: "Balkon" },
+    { test: /стиральн\w*\s+машин/i, ru: "Стиральная машина", en: "Washing machine", uz: "Kir yuvish mashinasi" },
+    { test: /холодильник/i, ru: "Холодильник", en: "Refrigerator", uz: "Muzlatgich" },
+    { test: /телевизор/i, ru: "Телевизор", en: "TV", uz: "Televizor" },
+    { test: /дизайнерск\w*\s+ремонт|евро.?ремонт|качественн\w*\s+ремонт|нов\w*\s+ремонт/i, ru: "Свежий ремонт", en: "Fresh renovation", uz: "Yangi ta'mir" },
+    { test: /новостройк/i, ru: "Новостройка", en: "New building", uz: "Yangi qurilgan" },
+    { test: /панорамн\w*\s+окна|четыре окна|больш\w*\s+окна/i, ru: "Панорамные окна", en: "Panoramic windows", uz: "Panorama derazalar" },
+    { test: /пожарн\w*\s+безопасн|вентиляц/i, ru: "Система вентиляции и пожарной безопасности", en: "Ventilation & fire safety system", uz: "Ventilyatsiya va yong'in xavfsizligi tizimi" }
+];
+
+export function extractAmenities(text) {
+
+    const found = [];
+
+    for (const item of AMENITY_DICT) {
+        if (item.test.test(text)) {
+            found.push({ ru: item.ru, en: item.en, uz: item.uz });
+        }
+    }
+
+    return found;
+}
+
+
+
+
+// ---------------------------------------------------------------------
 // Комнатность: "2-комнатная", "3х комнатная", "двухкомнатная".
 // ---------------------------------------------------------------------
 const ROOM_WORDS = {
@@ -426,6 +475,9 @@ export function parseListing(text) {
     }
 
 
+    const amenities = extractAmenities(text);
+
+
     return {
         isCommercial,
         isSold,
@@ -444,6 +496,7 @@ export function parseListing(text) {
         totalFloors,
         locationLine,
         type,
+        amenities,
         commercialFields
     };
 }

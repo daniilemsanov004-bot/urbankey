@@ -54,12 +54,31 @@ bot.on("polling_error", (err) => {
 
 
 
-async function uploadPhoto(photoSizes) {
+// Telegram сам сжимает любое фото, отправленное как обычное "Photo"
+// (уменьшает и переупаковывает JPEG с потерей качества) — это
+// ограничение самого Telegram, бот тут ничего не решает. Если фото
+// отправлено как файл ("Отправить как файл", без сжатия) — оно приходит
+// как msg.document с mime_type вида image/*, без потери качества.
+// Предпочитаем такой вариант, если он есть.
+function getBestImageFileId(msg) {
+
+    if (msg.document?.mime_type?.startsWith("image/")) {
+        return msg.document.file_id;
+    }
+
+    if (msg.photo?.length) {
+        return msg.photo[msg.photo.length - 1].file_id;
+    }
+
+    return null;
+}
+
+
+async function uploadPhoto(fileId) {
 
     try {
 
-        const photo = photoSizes[photoSizes.length - 1];
-        const file = await bot.getFile(photo.file_id);
+        const file = await bot.getFile(fileId);
 
         const url =
             `https://api.telegram.org/file/bot${process.env.PARSER_BOT_TOKEN}/${file.file_path}`;
@@ -112,7 +131,7 @@ async function createDraftPage(table, linkIdField, cardId, parsed, image) {
             about_uz: "",
             price: priceToNumber(parsed.price),
             images: image ? [image] : [],
-            amenities: [],
+            amenities: parsed.amenities || [],
             is_draft: true
         };
 
@@ -239,7 +258,7 @@ async function processPost(mainMsg, allMsgs) {
 
         const text = mainMsg.caption || mainMsg.text || "";
 
-        if (!text.trim() && !allMsgs.some(m => m.photo)) {
+        if (!text.trim() && !allMsgs.some(m => getBestImageFileId(m))) {
             return;
         }
 
@@ -256,9 +275,9 @@ async function processPost(mainMsg, allMsgs) {
             await fillMissingTranslations(parsed.commercialFields, ["district", "address", "landmark"]);
         }
 
-        const photoMsg = allMsgs.find(m => m.photo) || null;
+        const photoFileId = allMsgs.map(getBestImageFileId).find(Boolean) || null;
         const hasVideo = allMsgs.some(m => m.video);
-        const image = photoMsg ? await uploadPhoto(photoMsg.photo) : "";
+        const image = photoFileId ? await uploadPhoto(photoFileId) : "";
 
         if (!image && !hasVideo) parsed.missing.push("фото");
 
@@ -388,8 +407,8 @@ bot.on("edited_channel_post", async (msg) => {
                 type_ru: parsed.type.ru, type_en: parsed.type.en, type_uz: parsed.type.uz
             };
 
-        if (msg.photo) {
-            updateData.image = await uploadPhoto(msg.photo);
+        if (getBestImageFileId(msg)) {
+            updateData.image = await uploadPhoto(getBestImageFileId(msg));
         }
 
         const { error } =

@@ -75,6 +75,48 @@ function detectType(text) {
 
 
 
+const AMENITY_DICT = [
+    { test: /парковк|паркинг/i, ru: "Парковка", en: "Parking", uz: "Parking" },
+    { test: /мебел/i, ru: "Мебель", en: "Furniture", uz: "Mebel" },
+    { test: /техник/i, ru: "Бытовая техника", en: "Appliances", uz: "Maishiy texnika" },
+    { test: /кондиционер/i, ru: "Кондиционер", en: "Air conditioning", uz: "Konditsioner" },
+    { test: /лифт/i, ru: "Лифт", en: "Elevator", uz: "Lift" },
+    { test: /детск\w*\s+площад/i, ru: "Детская площадка", en: "Playground", uz: "Bolalar maydonchasi" },
+    { test: /тихий двор|зелен\w*\s+двор|зелён\w*\s+двор|ухожен\w*\s+двор/i, ru: "Тихий двор", en: "Quiet courtyard", uz: "Tinch hovli" },
+    { test: /гардеробн/i, ru: "Гардеробная", en: "Walk-in closet", uz: "Kiyim xonasi" },
+    { test: /раздельн\w*\s+санузел/i, ru: "Раздельный санузел", en: "Separate bathroom", uz: "Alohida hammom" },
+    { test: /панорамн\w*\s+(вид|окна)/i, ru: "Панорамный вид", en: "Panoramic view", uz: "Panorama manzara" },
+    { test: /вид на город|вид на море/i, ru: "Вид на город", en: "City view", uz: "Shahar manzarasi" },
+    { test: /\bохран/i, ru: "Охрана", en: "Security", uz: "Xavfsizlik" },
+    { test: /консьерж/i, ru: "Консьерж", en: "Concierge", uz: "Konsyerj" },
+    { test: /бассейн/i, ru: "Бассейн", en: "Pool", uz: "Basseyn" },
+    { test: /террас/i, ru: "Терраса", en: "Terrace", uz: "Terrasa" },
+    { test: /балкон/i, ru: "Балкон", en: "Balcony", uz: "Balkon" },
+    { test: /стиральн\w*\s+машин/i, ru: "Стиральная машина", en: "Washing machine", uz: "Kir yuvish mashinasi" },
+    { test: /холодильник/i, ru: "Холодильник", en: "Refrigerator", uz: "Muzlatgich" },
+    { test: /телевизор/i, ru: "Телевизор", en: "TV", uz: "Televizor" },
+    { test: /дизайнерск\w*\s+ремонт|евро.?ремонт|качественн\w*\s+ремонт|нов\w*\s+ремонт/i, ru: "Свежий ремонт", en: "Fresh renovation", uz: "Yangi ta'mir" },
+    { test: /новостройк/i, ru: "Новостройка", en: "New building", uz: "Yangi qurilgan" },
+    { test: /панорамн\w*\s+окна|четыре окна|больш\w*\s+окна/i, ru: "Панорамные окна", en: "Panoramic windows", uz: "Panorama derazalar" },
+    { test: /пожарн\w*\s+безопасн|вентиляц/i, ru: "Система вентиляции и пожарной безопасности", en: "Ventilation & fire safety system", uz: "Ventilyatsiya va yong'in xavfsizligi tizimi" }
+];
+
+function extractAmenities(text) {
+
+    const found = [];
+
+    for (const item of AMENITY_DICT) {
+        if (item.test.test(text)) {
+            found.push({ ru: item.ru, en: item.en, uz: item.uz });
+        }
+    }
+
+    return found;
+}
+
+
+
+
 // ---------------------------------------------------------------------
 // Комнатность: "2-комнатная", "3х комнатная", "двухкомнатная".
 // ---------------------------------------------------------------------
@@ -453,6 +495,9 @@ function parseListing(text) {
     }
 
 
+    const amenities = extractAmenities(text);
+
+
     return {
         isCommercial,
         isSold,
@@ -471,6 +516,7 @@ function parseListing(text) {
         totalFloors,
         locationLine,
         type,
+        amenities,
         commercialFields
     };
 }
@@ -516,13 +562,30 @@ async function replyToChannel(msg, text) {
 }
 
 
-async function uploadPhoto(photoSizes) {
+// Telegram сам сжимает любое фото, отправленное как обычное "Photo" —
+// это ограничение самого Telegram, а не бота. Если фото отправлено как
+// файл ("Отправить как файл", без сжатия) — оно приходит как
+// msg.document с mime_type вида image/*, без потери качества.
+// Предпочитаем такой вариант, если он есть.
+function getBestImageFileId(msg) {
+
+    if (msg.document?.mime_type?.startsWith("image/")) {
+        return msg.document.file_id;
+    }
+
+    if (msg.photo?.length) {
+        return msg.photo[msg.photo.length - 1].file_id;
+    }
+
+    return null;
+}
+
+
+async function uploadPhoto(fileId) {
 
     try {
 
-        const photo = photoSizes[photoSizes.length - 1];
-
-        const fileResp = await telegramApi("getFile", { file_id: photo.file_id });
+        const fileResp = await telegramApi("getFile", { file_id: fileId });
         if (!fileResp.ok) return "";
 
         const url = `https://api.telegram.org/file/bot${BOT_TOKEN}/${fileResp.result.file_path}`;
@@ -578,7 +641,7 @@ async function createDraftPage(table, linkIdField, cardId, parsed, image) {
             price: priceToNumber(parsed.price),
 
             images: image ? [image] : [],
-            amenities: [],
+            amenities: parsed.amenities || [],
 
             is_draft: true
         };
@@ -777,8 +840,9 @@ async function processEditedPost(msg) {
             type_ru: parsed.type.ru, type_en: parsed.type.en, type_uz: parsed.type.uz
         };
 
-    if (msg.photo) {
-        updateData.image = await uploadPhoto(msg.photo);
+    const editFileId = getBestImageFileId(msg);
+    if (editFileId) {
+        updateData.image = await uploadPhoto(editFileId);
     }
 
     const { error } = await supabase.from(table).update(updateData).eq("id", id);
@@ -796,7 +860,7 @@ async function handleAlbumMessage(msg) {
 
     const groupId = String(msg.media_group_id);
     const text = msg.caption || msg.text || "";
-    const hasOwnPhoto = Boolean(msg.photo);
+    const ownFileId = getBestImageFileId(msg);
 
     const { data: existing } = await supabase
         .from("bot_pending_albums")
@@ -809,8 +873,8 @@ async function handleAlbumMessage(msg) {
     }
 
     let image = existing?.image || "";
-    if (!image && hasOwnPhoto) {
-        image = await uploadPhoto(msg.photo);
+    if (!image && ownFileId) {
+        image = await uploadPhoto(ownFileId);
     }
 
     if (!text.trim()) {
@@ -862,7 +926,7 @@ export default async function handler(req, res) {
 
         const text = msg.caption || msg.text || "";
 
-        if (!text.trim() && !msg.photo) {
+        if (!text.trim() && !getBestImageFileId(msg)) {
             return res.status(200).json({ ok: true });
         }
 
@@ -871,7 +935,8 @@ export default async function handler(req, res) {
             return res.status(200).json({ ok: true });
         }
 
-        const image = msg.photo ? await uploadPhoto(msg.photo) : "";
+        const mainFileId = getBestImageFileId(msg);
+        const image = mainFileId ? await uploadPhoto(mainFileId) : "";
         await processPost(msg, image, Boolean(msg.video));
 
         return res.status(200).json({ ok: true });
