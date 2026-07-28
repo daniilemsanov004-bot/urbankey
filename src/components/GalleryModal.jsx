@@ -1,9 +1,8 @@
 import s from "./GalleryModal.module.css"
-import { useEffect, useRef } from "react"
 
 import { Swiper, SwiperSlide } from "swiper/react"
 import { Navigation, Pagination } from "swiper/modules"
-
+import { useEffect, useLayoutEffect, useRef } from "react";
 import "swiper/css"
 import "swiper/css/navigation"
 import "swiper/css/pagination"
@@ -11,6 +10,19 @@ import "swiper/css/pagination"
 const GalleryModal = ({ images, activeIndex, onClose }) => {
 
     const swiperRef = useRef(null)
+    useLayoutEffect(() => {
+        if (!swiperRef.current) return;
+
+        requestAnimationFrame(() => {
+            swiperRef.current.update();
+
+            if (images.length > 1) {
+                swiperRef.current.slideToLoop(activeIndex, 0, false);
+            } else {
+                swiperRef.current.slideTo(activeIndex, 0, false);
+            }
+        });
+    }, [activeIndex, images.length]);
 
     useEffect(() => {
         document.body.style.overflow = "hidden"
@@ -54,15 +66,8 @@ const GalleryModal = ({ images, activeIndex, onClose }) => {
                 </button>
 
                 <Swiper
-                    modules={[Navigation, Pagination]}
-                    navigation
-                    pagination={{ clickable: true }}
-                    loop={true}
                     initialSlide={activeIndex}
                     className={s.swiper}
-                    onSwiper={(swiper) => {
-                        swiperRef.current = swiper
-                    }}
                 >
 
                     {images.map((img, i) => (

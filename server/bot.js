@@ -84,7 +84,27 @@ async function uploadPhoto(fileId) {
             `https://api.telegram.org/file/bot${process.env.PARSER_BOT_TOKEN}/${file.file_path}`;
 
         const response = await fetch(url);
+
+        if (!response.ok) {
+            console.log("DOWNLOAD FROM TELEGRAM FAILED:", response.status);
+            return "";
+        }
+
         const buffer = Buffer.from(await response.arrayBuffer());
+
+        // подстраховка: если это всё-таки не картинка (например, Telegram
+        // отдал HTML-страницу с ошибкой вместо файла, а response.ok был
+        // true из-за редиректа) — не льём мусор в Storage под видом jpeg.
+        // JPEG всегда начинается с байтов FF D8, PNG — 89 50 4E 47.
+        const looksLikeImage =
+            buffer.length > 100 &&
+            ((buffer[0] === 0xff && buffer[1] === 0xd8) ||
+             (buffer[0] === 0x89 && buffer[1] === 0x50));
+
+        if (!looksLikeImage) {
+            console.log("DOWNLOADED FILE DOES NOT LOOK LIKE AN IMAGE, size:", buffer.length);
+            return "";
+        }
 
         const fileName = `${Date.now()}.jpg`;
 

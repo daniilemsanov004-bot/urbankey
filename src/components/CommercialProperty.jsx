@@ -86,7 +86,7 @@ const CommercialProperty = ({ data }) => {
                         opacity: 0
                     }}
 
-                    whileInView={{
+                    animate={{
                         opacity: 1
                     }}
 
@@ -176,7 +176,7 @@ const CommercialProperty = ({ data }) => {
                         opacity: 0
                     }}
 
-                    whileInView={{
+                    animate={{
                         opacity: 1
                     }}
                 >

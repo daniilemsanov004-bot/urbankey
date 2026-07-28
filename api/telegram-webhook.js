@@ -591,7 +591,23 @@ async function uploadPhoto(fileId) {
         const url = `https://api.telegram.org/file/bot${BOT_TOKEN}/${fileResp.result.file_path}`;
 
         const response = await fetch(url);
+
+        if (!response.ok) {
+            console.log("DOWNLOAD FROM TELEGRAM FAILED:", response.status);
+            return "";
+        }
+
         const buffer = Buffer.from(await response.arrayBuffer());
+
+        const looksLikeImage =
+            buffer.length > 100 &&
+            ((buffer[0] === 0xff && buffer[1] === 0xd8) ||
+             (buffer[0] === 0x89 && buffer[1] === 0x50));
+
+        if (!looksLikeImage) {
+            console.log("DOWNLOADED FILE DOES NOT LOOK LIKE AN IMAGE, size:", buffer.length);
+            return "";
+        }
 
         const fileName = `${Date.now()}.jpg`;
 

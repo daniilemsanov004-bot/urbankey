@@ -64,25 +64,10 @@ const Property = ({ data }) => {
 
 
                 <motion.div
-
                     className={s.swiperWrapper}
-
-                    initial={{
-                        opacity: 0
-                    }}
-
-                    whileInView={{
-                        opacity: 1
-                    }}
-
-                    transition={{
-                        duration: 1
-                    }}
-
-                    viewport={{
-                        once: true
-                    }}
-
+                    initial={false}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 1 }}
                 >
 
 
@@ -113,6 +98,21 @@ const Property = ({ data }) => {
                         autoplay={{
                             delay: 3000,
                             disableOnInteraction: false
+                        }}
+
+
+                        // Swiper иногда меряет ширину контейнера ДО того, как
+                        // раскладка страницы окончательно посчиталась (особенно
+                        // рядом с анимациями/условным рендером), и получает 0
+                        // или мусорное значение — тогда слайды разъезжаются на
+                        // огромную ширину. observer/observeParents заставляют
+                        // Swiper пересчитаться при любом изменении размеров
+                        // родителей, а onSwiper — досчитать ещё раз сразу после
+                        // монтирования, когда реальные размеры уже точно есть.
+                        observer
+                        observeParents
+                        onSwiper={(swiper) => {
+                            requestAnimationFrame(() => swiper.update());
                         }}
 
 
@@ -187,18 +187,13 @@ const Property = ({ data }) => {
                     }}
 
 
-                    whileInView={{
+                    animate={{
                         opacity: 1
                     }}
 
 
                     transition={{
                         duration: 1
-                    }}
-
-
-                    viewport={{
-                        once: true
                     }}
 
 
@@ -221,7 +216,7 @@ const Property = ({ data }) => {
 
 
                         <h2>
-                            {data.bedrooms} {t("bedrooms")}
+                            {data.bedrooms} {t("bedroomsShort")}
                         </h2>
 
 
