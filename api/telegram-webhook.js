@@ -1103,15 +1103,13 @@ async function handleAlbumMessage(msg) {
     // проверяем, не обработана ли уже эта группа (чтобы не создать вторую карточку)
     const { data: existing } = await supabase
         .from("bot_pending_albums")
-        .select("processed, images")
+        .select("processed")
         .eq("media_group_id", groupId)
         .maybeSingle();
 
     if (existing?.processed) {
         return;
     }
-
-    let images = existing?.images || [];
 
     if (ownFileId) {
 
@@ -1122,15 +1120,13 @@ async function handleAlbumMessage(msg) {
             // стороне базы — это защищает от гонки, когда несколько фото
             // альбома прилетают почти одновременно отдельными вызовами
             // функции (см. sql/add_album_gallery.sql)
-            const { data: rpcResult, error: rpcError } = await supabase.rpc(
+            const { error: rpcError } = await supabase.rpc(
                 "append_album_image",
                 { p_media_group_id: groupId, p_image: uploaded }
             );
 
             if (rpcError) {
                 console.log("APPEND ALBUM IMAGE ERROR:", rpcError);
-            } else if (rpcResult) {
-                images = rpcResult;
             }
         }
     }
@@ -1141,14 +1137,31 @@ async function handleAlbumMessage(msg) {
         return;
     }
 
-    // это сообщение с текстом — помечаем группу обработанной и создаём объект
-    await supabase.from("bot_pending_albums").upsert({
-        media_group_id: groupId,
-        images,
-        processed: true
-    });
+    // Telegram НЕ гарантирует, что подпись (текст) придёт последней среди
+    // фото альбома — она может прийти раньше остальных. Если создать
+    // объект сразу же, часть фото, которые ещё в пути, будет потеряна.
+    // Поэтому ждём немного, чтобы остальные фото успели долететь и
+    // записаться в базу (см. append_album_image выше).
+    await new Promise((resolve) => setTimeout(resolve, 2500));
 
-    await processPost(msg, images, Boolean(msg.video));
+    // атомарно "забираем" группу: помечаем processed=true только если она
+    // ещё не была обработана — если два сообщения в альбоме одновременно
+    // содержат текст (редкий случай), второй вызов просто ничего не
+    // получит и не создаст дубль
+    const { data: claimed } = await supabase
+        .from("bot_pending_albums")
+        .update({ processed: true })
+        .eq("media_group_id", groupId)
+        .eq("processed", false)
+        .select("images")
+        .maybeSingle();
+
+    if (!claimed) {
+        // группу уже забрал другой вызов
+        return;
+    }
+
+    await processPost(msg, claimed.images || [], Boolean(msg.video));
 }
 
 

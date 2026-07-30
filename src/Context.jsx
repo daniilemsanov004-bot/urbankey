@@ -37,6 +37,38 @@ const isMissingRelation = (error) =>
     );
 
 
+// Достаём имя файла из публичной ссылки Supabase Storage, чтобы можно
+// было удалить сам файл, а не только запись о нём в базе. Ссылки имеют
+// вид https://<project>.supabase.co/storage/v1/object/public/images/<file>
+const extractStorageFileName = (url) => {
+
+    if (!url || typeof url !== "string") return null;
+
+    const match = url.match(/\/storage\/v1\/object\/public\/images\/(.+)$/);
+
+    return match ? decodeURIComponent(match[1]) : null;
+};
+
+// Удаляет файлы из бакета "images" по списку публичных ссылок. Не
+// бросает исключение при ошибке — отсутствие файла или сбой в Storage не
+// должны мешать удалению самого объявления, просто логируем.
+const deleteImagesFromStorage = async (urls) => {
+
+    const fileNames = (urls || [])
+        .filter(Boolean)
+        .map(extractStorageFileName)
+        .filter(Boolean);
+
+    if (!fileNames.length) return;
+
+    const { error } = await supabase.storage.from("images").remove(fileNames);
+
+    if (error) {
+        console.error("Не удалось удалить файл(ы) из Storage:", error);
+    }
+};
+
+
 export const MyProvider = ({ children }) => {
 
     const { t } = useTranslation();
@@ -280,27 +312,6 @@ export const MyProvider = ({ children }) => {
                 },
 
 
-                bedrooms: {
-                    ru: item.bedrooms_ru,
-                    en: item.bedrooms_en,
-                    uz: item.bedrooms_uz
-                },
-
-
-                bathrooms: {
-                    ru: item.bathrooms_ru,
-                    en: item.bathrooms_en,
-                    uz: item.bathrooms_uz
-                },
-
-
-                type: {
-                    ru: item.type_ru,
-                    en: item.type_en,
-                    uz: item.type_uz
-                },
-
-
                 image: item.image,
 
                 price: item.price,
@@ -480,6 +491,12 @@ export const MyProvider = ({ children }) => {
 
     const deleteCommercial = async (id) => {
 
+        const { data: commercialRow } = await supabase
+            .from("commercials")
+            .select("image")
+            .eq("id", id)
+            .maybeSingle();
+
         const { error, count } = await supabase
             .from("commercials")
             .delete({ count: "exact" })
@@ -498,6 +515,8 @@ export const MyProvider = ({ children }) => {
             return false;
         }
 
+
+        await deleteImagesFromStorage([commercialRow?.image]);
 
         await getCommercials();
 
@@ -1154,6 +1173,16 @@ export const MyProvider = ({ children }) => {
     const deleteCard = async (id) => {
 
 
+        // сначала узнаём, какое фото было у карточки — чтобы удалить сам
+        // файл из Storage, а не оставить его висеть мусором после удаления
+        // записи из базы
+        const { data: cardRow } = await supabase
+            .from("cardss")
+            .select("image")
+            .eq("id", id)
+            .maybeSingle();
+
+
         const { error, count } = await supabase
             .from("cardss")
             .delete({ count: "exact" })
@@ -1180,6 +1209,9 @@ export const MyProvider = ({ children }) => {
             return false;
 
         }
+
+
+        await deleteImagesFromStorage([cardRow?.image]);
 
 
         await getCards();
@@ -1990,6 +2022,13 @@ export const MyProvider = ({ children }) => {
     const deleteVilla = async (id) => {
 
 
+        const { data: villaRow } = await supabase
+            .from("villas")
+            .select("images")
+            .eq("id", id)
+            .maybeSingle();
+
+
         const { error } = await supabase
             .from("villas")
             .delete()
@@ -2003,6 +2042,9 @@ export const MyProvider = ({ children }) => {
             return;
 
         }
+
+
+        await deleteImagesFromStorage(villaRow?.images);
 
 
         setVilla(null);
@@ -2162,6 +2204,13 @@ export const MyProvider = ({ children }) => {
     const deleteCommercialPage = async (id) => {
 
 
+        const { data: pageRow } = await supabase
+            .from("commercial_pages")
+            .select("images")
+            .eq("id", id)
+            .maybeSingle();
+
+
         const { error } = await supabase
             .from("commercial_pages")
             .delete()
@@ -2174,6 +2223,9 @@ export const MyProvider = ({ children }) => {
             return;
 
         }
+
+
+        await deleteImagesFromStorage(pageRow?.images);
 
 
         toast.success("Удалено");
