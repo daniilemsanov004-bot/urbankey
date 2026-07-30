@@ -748,8 +748,6 @@
   "listingLimitDesc": "The free plan includes up to {{limit}} active listings. Contact us to list more.",
   "listingLimitCta": "Contact us",
   "boostBadge": "Top",
-  "boostRequest": "Boost to top",
-  "boostRequestSent": "Request sent, we'll contact you",
   "boostAdmin7": "Top 7 days",
   "boostAdmin14": "Top 14 days",
   "boostAdminClear": "Remove boost",

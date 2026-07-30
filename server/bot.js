@@ -13,7 +13,7 @@ import TelegramBot from "node-telegram-bot-api";
 import { createClient } from "@supabase/supabase-js";
 
 import {
-    parseListing,
+    getParsedListing,
     fillMissingTranslations,
     priceToNumber,
     slugify
@@ -99,7 +99,7 @@ async function uploadPhoto(fileId) {
         const looksLikeImage =
             buffer.length > 100 &&
             ((buffer[0] === 0xff && buffer[1] === 0xd8) ||
-             (buffer[0] === 0x89 && buffer[1] === 0x50));
+                (buffer[0] === 0x89 && buffer[1] === 0x50));
 
         if (!looksLikeImage) {
             console.log("DOWNLOADED FILE DOES NOT LOOK LIKE AN IMAGE, size:", buffer.length);
@@ -131,7 +131,7 @@ async function uploadPhoto(fileId) {
 
 
 
-async function createDraftPage(table, linkIdField, cardId, parsed, image) {
+async function createDraftPage(table, linkIdField, cardId, parsed, images) {
 
     try {
 
@@ -149,8 +149,8 @@ async function createDraftPage(table, linkIdField, cardId, parsed, image) {
             about_ru: "",
             about_en: "",
             about_uz: "",
-            price: priceToNumber(parsed.price),
-            images: image ? [image] : [],
+            price: parsed.priceNumber != null ? parsed.priceNumber : priceToNumber(parsed.price),
+            images: images || [],
             amenities: parsed.amenities || [],
             is_draft: true
         };
@@ -282,7 +282,7 @@ async function processPost(mainMsg, allMsgs) {
             return;
         }
 
-        const parsed = parseListing(text);
+        const parsed = await getParsedListing(text);
 
         if (parsed.isSold) {
             await replyToChannel(mainMsg, "ℹ️ Похоже, объект уже продан/снят — пост не публикую на сайт. Если это не так, добавьте объект вручную в админке.");
@@ -295,9 +295,19 @@ async function processPost(mainMsg, allMsgs) {
             await fillMissingTranslations(parsed.commercialFields, ["district", "address", "landmark"]);
         }
 
-        const photoFileId = allMsgs.map(getBestImageFileId).find(Boolean) || null;
+        // собираем и грузим ВСЕ фото альбома (не только первое) — они пойдут
+        // в галерею детальной страницы; для самой карточки (image) по-прежнему
+        // используется только первое, как и раньше
+        const fileIds = allMsgs.map(getBestImageFileId).filter(Boolean);
         const hasVideo = allMsgs.some(m => m.video);
-        const image = photoFileId ? await uploadPhoto(photoFileId) : "";
+
+        const uploaded = [];
+        for (const fileId of fileIds) {
+            const url = await uploadPhoto(fileId);
+            if (url) uploaded.push(url);
+        }
+
+        const image = uploaded[0] || "";
 
         if (!image && !hasVideo) parsed.missing.push("фото");
 
@@ -348,7 +358,7 @@ async function processPost(mainMsg, allMsgs) {
 
         const draftTable = parsed.isCommercial ? "commercial_pages" : "villas";
         const draftLinkField = parsed.isCommercial ? "commercial_id" : "card_id";
-        const draftOk = await createDraftPage(draftTable, draftLinkField, data.id, parsed, image);
+        const draftOk = await createDraftPage(draftTable, draftLinkField, data.id, parsed, uploaded);
 
         const label = parsed.isCommercial ? "коммерция" : "жильё";
 
@@ -357,7 +367,7 @@ async function processPost(mainMsg, allMsgs) {
             : `✅ Добавлено (${label}): «${parsed.title_ru}» — ${parsed.price || "цена не указана"}`;
 
         statusLine += draftOk
-            ? "\n📝 Черновик страницы объекта создан — откройте её в админке и дозаполните описание/удобства/доп. фото."
+            ? "\n📝 Черновик страницы объекта создан — откройте её в админке и дозаполните описание/удобства при необходимости."
             : "\n⚠️ Карточка создана, но черновик страницы объекта создать не удалось — заведите её вручную.";
 
         await replyToChannel(mainMsg, statusLine);
@@ -400,7 +410,7 @@ bot.on("edited_channel_post", async (msg) => {
         }
 
         const text = msg.caption || msg.text || "";
-        const parsed = parseListing(text);
+        const parsed = await getParsedListing(text);
 
         await fillMissingTranslations(parsed, ["title", "description"]);
         if (parsed.isCommercial) {

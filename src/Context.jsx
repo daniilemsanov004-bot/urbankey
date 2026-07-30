@@ -69,13 +69,13 @@ export const MyProvider = ({ children }) => {
         setIsBurger(prev => !prev);
 
 
-    
 
 
-  
 
 
-    
+
+
+
     const logout = async () => {
 
 
@@ -277,6 +277,27 @@ export const MyProvider = ({ children }) => {
                     ru: item.description_ru,
                     en: item.description_en,
                     uz: item.description_uz
+                },
+
+
+                bedrooms: {
+                    ru: item.bedrooms_ru,
+                    en: item.bedrooms_en,
+                    uz: item.bedrooms_uz
+                },
+
+
+                bathrooms: {
+                    ru: item.bathrooms_ru,
+                    en: item.bathrooms_en,
+                    uz: item.bathrooms_uz
+                },
+
+
+                type: {
+                    ru: item.type_ru,
+                    en: item.type_en,
+                    uz: item.type_uz
                 },
 
 
@@ -2606,7 +2627,7 @@ export const MyProvider = ({ children }) => {
             updateVilla,
 
 
-          
+
 
 
             user,

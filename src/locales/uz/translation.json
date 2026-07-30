@@ -822,8 +822,6 @@
   "listingLimitDesc": "Bepul rejada {{limit}} tagacha faol e'lon mavjud. Ko'proq joylashtirish uchun biz bilan bog'laning.",
   "listingLimitCta": "Bog'lanish",
   "boostBadge": "Top",
-  "boostRequest": "Yuqoriga ko'tarish",
-  "boostRequestSent": "So'rov yuborildi, siz bilan bog'lanishadi",
   "boostAdmin7": "Top 7 kun",
   "boostAdmin14": "Top 14 kun",
   "boostAdminClear": "Bustni olib tashlash",

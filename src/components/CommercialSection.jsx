@@ -1,4 +1,4 @@
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState, useRef, useLayoutEffect } from "react";
 import { MyContext } from "../Context";
 import { useCurrency } from "../context/CurrencyContext";
 import { formatPriceIn } from "../utils/currency";
@@ -32,6 +32,12 @@ import "swiper/css/navigation";
 import s from "./CommercialSection.module.css";
 import FavoriteButton from "./FavoriteButton";
 
+const readMoreLabels = {
+    ru: { more: "Подробнее", less: "Скрыть" },
+    en: { more: "Show more", less: "Show less" },
+    uz: { more: "Batafsil", less: "Yopish" },
+};
+
 
 
 const CommercialSection = () => {
@@ -48,6 +54,20 @@ const CommercialSection = () => {
     const { i18n, t } = useTranslation();
     const { currency } = useCurrency();
 
+    const [expanded, setExpanded] = useState({});
+    const [overflowing, setOverflowing] = useState({});
+    const descRefs = useRef({});
+
+    const toggleExpanded = (id) => {
+        setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
+    };
+
+    const setDescRef = (id) => (el) => {
+        descRefs.current[id] = el;
+    };
+
+    const labels = readMoreLabels[i18n.language] || readMoreLabels.ru;
+
 
 
 
@@ -62,6 +82,22 @@ const CommercialSection = () => {
 
     const latestCommercials =
         commercials.slice(0, 7);
+
+    useLayoutEffect(() => {
+        const next = {};
+        Object.entries(descRefs.current).forEach(([id, el]) => {
+            if (!el) return;
+            next[id] = el.scrollHeight - el.clientHeight > 1;
+        });
+        setOverflowing((prev) => {
+            const prevKeys = Object.keys(prev);
+            const nextKeys = Object.keys(next);
+            const same =
+                prevKeys.length === nextKeys.length &&
+                nextKeys.every((k) => prev[k] === next[k]);
+            return same ? prev : next;
+        });
+    }, [latestCommercials, i18n.language]);
 
 
     const isAdmin = profile?.role === "admin";
@@ -270,10 +306,10 @@ const CommercialSection = () => {
 
 
 
-                                        <div className={s.info}>
+                                        <div className={s.meta}>
 
 
-                                            <span>
+                                            <span className={s.metaItem}>
 
                                                 <Building2 size={15} />
 
@@ -291,14 +327,13 @@ const CommercialSection = () => {
 
 
 
-                                            <span>
+                                            <span className={s.metaItem}>
 
                                                 <Ruler size={15} />
 
-                                                {item.area}
+                                                {item.area} m²
 
                                             </span>
-
 
 
 
@@ -306,7 +341,7 @@ const CommercialSection = () => {
                                             {
                                                 item.ceiling_height &&
 
-                                                <span>
+                                                <span className={s.metaItem}>
 
                                                     <ArrowUp size={15} />
 
@@ -321,10 +356,7 @@ const CommercialSection = () => {
 
 
 
-
-
-
-                                        <div className={s.more}>
+                                        <div className={s.tags}>
 
 
                                             {
@@ -332,7 +364,7 @@ const CommercialSection = () => {
 
                                                 <span>
 
-                                                    <Tag size={14} />
+                                                    <Tag size={13} />
 
                                                     {item.class[i18n.language]}
 
@@ -347,7 +379,7 @@ const CommercialSection = () => {
 
                                                 <span>
 
-                                                    <Star size={14} />
+                                                    <Star size={13} />
 
                                                     {item.landmark[i18n.language]}
 
@@ -361,23 +393,39 @@ const CommercialSection = () => {
 
 
 
+                                        <div className={s.descriptionWrap}>
+
+                                            <p
+                                                ref={setDescRef(item.id)}
+                                                className={`${s.desc} ${expanded[item.id] ? s.expanded : ''}`}
+                                            >
+
+                                                {
+                                                    item.description?.[i18n.language]
+                                                    ||
+                                                    item.description?.en
+                                                    ||
+                                                    item.description?.ru
+                                                }
+
+                                            </p>
+
+                                            {(overflowing[item.id] || expanded[item.id]) && (
+                                                <button
+                                                    type="button"
+                                                    className={s.readMore}
+                                                    onClick={() => toggleExpanded(item.id)}
+                                                >
+                                                    {expanded[item.id] ? labels.less : labels.more}
+                                                </button>
+                                            )}
+
+                                        </div>
 
 
-                                        <p className={s.desc}>
-
-                                            {
-                                                item.description?.[i18n.language]
-                                                ||
-                                                item.description?.en
-                                                ||
-                                                item.description?.ru
-                                            }
-
-                                        </p>
 
 
-
-
+                                        <div className={s.divider} />
 
 
 
@@ -397,6 +445,11 @@ const CommercialSection = () => {
                                             className={s.moreBtn}
                                         >
                                             {t("viewDetails")}
+
+                                            <svg className={s.moreBtnArrow} xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M5 12h14" />
+                                                <path d="m13 6 6 6-6 6" />
+                                            </svg>
                                         </Link>
                                         {
                                             isAdmin && (

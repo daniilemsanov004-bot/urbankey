@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Trash2 } from "lucide-react";
 import { MyContext } from "../Context";
-import { sendLead } from "../utils/sendLead";
 import { toast } from "react-toastify";
 import s from "./MyListings.module.css";
 
@@ -30,26 +29,6 @@ const MyListings = () => {
     }, [user]);
 
     const isAdmin = profile?.role === "admin";
-
-    const requestBoost = async (item) => {
-        try {
-            await sendLead({
-                source: "BoostRequest",
-                data: {
-                    name: profile?.name || user?.email || "",
-                    phone: "",
-                    telegram: "",
-                    message: `Поднять в топ: ${item[`title_${lang}`] || item.title_ru} (id ${item.id}, ${item.kind})`
-                },
-                captchaToken: null,
-                skipCrm: isAdmin
-            });
-            toast.success(t("boostRequestSent"));
-        } catch (err) {
-            console.error(err);
-            toast.error(t("messageError"));
-        }
-    };
 
     const handleAdminBoost = async (item, days) => {
         await setBoost(item.kind, item.id, days);
@@ -140,7 +119,7 @@ const MyListings = () => {
                                 {t("edit")}
                             </Link>
 
-                            {isAdmin ? (
+                            {isAdmin && (
                                 <div className={s.boostRow}>
                                     <button className={s.boostBtn} onClick={() => handleAdminBoost(item, 7)}>
                                         {t("boostAdmin7")}
@@ -154,10 +133,6 @@ const MyListings = () => {
                                         </button>
                                     )}
                                 </div>
-                            ) : (
-                                <button className={s.boostBtn} onClick={() => requestBoost(item)}>
-                                    {t("boostRequest")}
-                                </button>
                             )}
 
                             <button

@@ -18,6 +18,12 @@
 //                                    что в VITE_SUPABASE_KEY на фронте!)
 //        VITE_SUPABASE_URL        — уже должен быть настроен
 //        TELEGRAM_WEBHOOK_SECRET  — придумайте любую случайную строку
+//        OPENAI_API_KEY           — необязательно. Если задан, разбор
+//                                    поста идёт через OpenAI (умнее и
+//                                    гибче под любой формат текста). Если
+//                                    не задан или запрос не удался —
+//                                    автоматически используется старый
+//                                    regex-парсер, работа не остановится.
 //   2. Выполните sql/add_draft_flag.sql и sql/add_webhook_support.sql
 //      в Supabase (один раз).
 //   3. Скажите Telegram, куда слать посты (тоже один раз, с вашего
@@ -509,6 +515,7 @@ function parseListing(text) {
         description_en,
         description_uz,
         price,
+        priceNumber: null,
         bedrooms,
         bathrooms,
         area,
@@ -519,6 +526,219 @@ function parseListing(text) {
         amenities,
         commercialFields
     };
+}
+
+
+
+
+// =======================================================================
+// РАЗБОР ЧЕРЕЗ OPENAI (опционально, если задан OPENAI_API_KEY)
+//
+// Один запрос на пост, строгий JSON-ответ по схеме. Модель обязана
+// извлекать ТОЛЬКО то, что реально есть в тексте — никаких выдуманных
+// удобств, дополненных описаний или "правдоподобных" цифр. Если что-то
+// не упомянуто — соответствующее поле должно быть null/пустым, а не
+// заполнено похожим на правду значением. Если запрос падает по любой
+// причине (нет ключа, лимит, таймаут, невалидный JSON) — возвращаем null,
+// и вызывающий код сам откатывается на regex-парсер (parseListing выше).
+// =======================================================================
+
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+
+const AI_SYSTEM_PROMPT = `Ты — парсер объявлений о недвижимости. Тебе присылают сырой текст поста из Telegram-канала о продаже/аренде недвижимости в Узбекистане (обычно на русском, иногда со вставками на узбекском/английском). Извлеки структурированные данные СТРОГО по правилам ниже и верни JSON по заданной схеме.
+
+КРИТИЧЕСКИ ВАЖНЫЕ ПРАВИЛА:
+1. Извлекай ТОЛЬКО то, что явно написано в тексте. Никогда не выдумывай, не додумывай и не предполагай информацию, которой нет в исходном тексте.
+2. Если какого-то поля нет в тексте — верни null (для чисел/строк) или пустой массив (для списков). НЕ заполняй поле "правдоподобным" значением, даже если оно кажется типичным для такого объекта.
+3. "amenities" (удобства) — ТОЛЬКО пункты, явно упомянутые в тексте (например, если написано "есть парковка" — добавь пункт про парковку; если про удобства вообще ничего не сказано — верни пустой массив). НИКОГДА не добавляй "стандартные" удобства, которых нет в тексте.
+4. "description_ru" — краткий пересказ ОСТАЛЬНОГО текста поста (без заголовка, без цены/этажа/площади, которые уже вынесены в отдельные поля, без телефона и имени агента) СВОИМИ словами читателя объявления, но без добавления фактов, которых не было в оригинале. Если после вычитания заголовка и служебных полей ничего содержательного не остаётся — верни пустую строку.
+5. "description_en" и "description_uz" — точные переводы description_ru, без художественных приукрашиваний и без добавления деталей.
+6. "title_en" и "title_uz" — точные переводы title_ru.
+7. Если пост вообще не про объект недвижимости (нет ни одной характеристики) — можешь оставить большинство полей null/пустыми.
+8. "is_sold" = true ТОЛЬКО если в тексте явно сказано, что объект уже продан/сдан/снят с продажи (например: "ПРОДАНО", "уже сдано", "неактуально").
+9. "price_raw" — цена ровно как в тексте (например "124 000 $", "83.000", "1400$ за 1м²"). "price_number" — то же самое, но как число в долларах, если валюта явно $ или это очевидно итоговая цена продажи. Если в тексте есть упоминание процента оплаты (например "при 100% оплате") — это НЕ цена, не перепутай это с суммой сделки. Если цена дана в сумах с курсом и отдельно указан итог в $ — используй именно итог в $.
+10. "is_commercial" = true, если это коммерческая недвижимость (офис, склад, магазин, помещение под бизнес, отдельно стоящее здание и т.п.), false — если жильё (квартира/вилла/дом/коттедж).
+11. "type_ru"/"type_en"/"type_uz" — категория ЖИЛЬЯ (Квартира/Apartment/Kvartira, Вилла/Villa/Villa, Дом/House/Uy, Коттедж/Cottage/Kottej, Резиденция/Residence/Rezidensiya, Пентхаус/Penthouse/Pentxaus) — только если это жильё. Внимание: название ЖК может само содержать слово вроде "House" или "Villas" — ориентируйся на реальный смысл текста (например, слово "квартира" явно в тексте важнее названия ЖК). Если is_commercial=true, оставь эти поля null.
+12. Никогда не копируй в description номер телефона, имя агента или ссылки на инстаграм/телеграм.`;
+
+const AI_JSON_SCHEMA = {
+    name: "real_estate_listing",
+    strict: true,
+    schema: {
+        type: "object",
+        properties: {
+            title_ru: { type: "string" },
+            title_en: { type: "string" },
+            title_uz: { type: "string" },
+            description_ru: { type: "string" },
+            description_en: { type: "string" },
+            description_uz: { type: "string" },
+            is_commercial: { type: "boolean" },
+            is_sold: { type: "boolean" },
+            type_ru: { type: ["string", "null"] },
+            type_en: { type: ["string", "null"] },
+            type_uz: { type: ["string", "null"] },
+            price_raw: { type: ["string", "null"] },
+            price_number: { type: ["number", "null"] },
+            bedrooms: { type: ["integer", "null"] },
+            bathrooms: { type: ["integer", "null"] },
+            area: { type: ["number", "null"] },
+            floor: { type: ["integer", "null"] },
+            total_floors: { type: ["integer", "null"] },
+            ceiling_height: { type: ["number", "null"] },
+            district: { type: ["string", "null"] },
+            address: { type: ["string", "null"] },
+            landmark: { type: ["string", "null"] },
+            amenities: {
+                type: "array",
+                items: {
+                    type: "object",
+                    properties: {
+                        ru: { type: "string" },
+                        en: { type: "string" },
+                        uz: { type: "string" }
+                    },
+                    required: ["ru", "en", "uz"],
+                    additionalProperties: false
+                }
+            }
+        },
+        required: [
+            "title_ru", "title_en", "title_uz",
+            "description_ru", "description_en", "description_uz",
+            "is_commercial", "is_sold",
+            "type_ru", "type_en", "type_uz",
+            "price_raw", "price_number",
+            "bedrooms", "bathrooms", "area", "floor", "total_floors", "ceiling_height",
+            "district", "address", "landmark", "amenities"
+        ],
+        additionalProperties: false
+    }
+};
+
+// Приводим ответ ИИ к тому же виду, что возвращает parseListing() —
+// дальше по коду (createDraftPage, processPost и т.д.) не нужно ничего
+// менять, они просто получают готовый объект `parsed` из одного источника
+// или другого.
+function mapAiResultToParsed(ai) {
+
+    const isCommercial = Boolean(ai.is_commercial);
+
+    const type = {
+        ru: ai.type_ru || "Квартира",
+        en: ai.type_en || "Apartment",
+        uz: ai.type_uz || "Kvartira"
+    };
+
+    const commercialFields = {
+        district_ru: ai.district || "",
+        district_en: "",
+        district_uz: "",
+        address_ru: ai.address || "",
+        address_en: "",
+        address_uz: "",
+        landmark_ru: ai.landmark || "",
+        landmark_en: "",
+        landmark_uz: "",
+        floor: ai.floor != null ? String(ai.floor) : "",
+        ceiling: ai.ceiling_height != null ? String(ai.ceiling_height) : "",
+        area: ai.area != null ? String(ai.area) : ""
+    };
+
+    const missing = [];
+    if (!ai.title_ru) missing.push("название");
+    if (!ai.price_raw) missing.push("цена");
+    if (isCommercial) {
+        if (ai.area == null) missing.push("площадь");
+    } else {
+        if (ai.bedrooms == null) missing.push("кол-во комнат");
+    }
+
+    return {
+        isCommercial,
+        isSold: Boolean(ai.is_sold),
+        missing,
+        title_ru: ai.title_ru || "Квартира",
+        title_en: ai.title_en || "",
+        title_uz: ai.title_uz || "",
+        description_ru: ai.description_ru || "",
+        description_en: ai.description_en || "",
+        description_uz: ai.description_uz || "",
+        price: ai.price_raw || "",
+        priceNumber: ai.price_number ?? null,
+        bedrooms: ai.bedrooms != null ? String(ai.bedrooms) : "",
+        bathrooms: ai.bathrooms != null ? String(ai.bathrooms) : "",
+        area: ai.area != null ? String(ai.area) : "",
+        floor: ai.floor != null ? String(ai.floor) : "",
+        totalFloors: ai.total_floors != null ? String(ai.total_floors) : "",
+        locationLine: ai.district || ai.address || "",
+        type,
+        amenities: Array.isArray(ai.amenities) ? ai.amenities : [],
+        commercialFields
+    };
+}
+
+async function parseWithAI(text) {
+
+    if (!OPENAI_API_KEY) return null;
+
+    try {
+
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 20000);
+
+        const res = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${OPENAI_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: "gpt-4o-mini",
+                temperature: 0,
+                messages: [
+                    { role: "system", content: AI_SYSTEM_PROMPT },
+                    { role: "user", content: text }
+                ],
+                response_format: {
+                    type: "json_schema",
+                    json_schema: AI_JSON_SCHEMA
+                }
+            }),
+            signal: controller.signal
+        });
+
+        clearTimeout(timeout);
+
+        if (!res.ok) {
+            console.log("OPENAI API ERROR:", res.status, await res.text());
+            return null;
+        }
+
+        const data = await res.json();
+        const raw = data.choices?.[0]?.message?.content;
+
+        if (!raw) {
+            console.log("OPENAI: пустой ответ");
+            return null;
+        }
+
+        const ai = JSON.parse(raw);
+
+        return mapAiResultToParsed(ai);
+
+    } catch (e) {
+
+        console.log("AI PARSE EXCEPTION:", e.message);
+        return null;
+    }
+}
+
+
+// Пробуем ИИ, при любой неудаче — старый regex-парсер. Оба возвращают
+// объект одинаковой формы, так что вызывающему коду не важно, откуда он.
+async function getParsedListing(text) {
+    return (await parseWithAI(text)) || parseListing(text);
 }
 
 
@@ -602,7 +822,7 @@ async function uploadPhoto(fileId) {
         const looksLikeImage =
             buffer.length > 100 &&
             ((buffer[0] === 0xff && buffer[1] === 0xd8) ||
-             (buffer[0] === 0x89 && buffer[1] === 0x50));
+                (buffer[0] === 0x89 && buffer[1] === 0x50));
 
         if (!looksLikeImage) {
             console.log("DOWNLOADED FILE DOES NOT LOOK LIKE AN IMAGE, size:", buffer.length);
@@ -632,7 +852,7 @@ async function uploadPhoto(fileId) {
 }
 
 
-async function createDraftPage(table, linkIdField, cardId, parsed, image) {
+async function createDraftPage(table, linkIdField, cardId, parsed, images) {
 
     try {
 
@@ -654,9 +874,9 @@ async function createDraftPage(table, linkIdField, cardId, parsed, image) {
             about_en: "",
             about_uz: "",
 
-            price: priceToNumber(parsed.price),
+            price: parsed.priceNumber != null ? parsed.priceNumber : priceToNumber(parsed.price),
 
-            images: image ? [image] : [],
+            images: images || [],
             amenities: parsed.amenities || [],
 
             is_draft: true
@@ -724,10 +944,12 @@ async function createDraftPage(table, linkIdField, cardId, parsed, image) {
 }
 
 
-async function processPost(mainMsg, image, hasVideo) {
+async function processPost(mainMsg, images, hasVideo) {
+
+    const image = images[0] || "";
 
     const text = mainMsg.caption || mainMsg.text || "";
-    const parsed = parseListing(text);
+    const parsed = await getParsedListing(text);
 
     if (parsed.isSold) {
         await replyToChannel(mainMsg, "ℹ️ Похоже, объект уже продан/снят — пост не публикую на сайт. Если это не так, добавьте объект вручную в админке.");
@@ -786,7 +1008,7 @@ async function processPost(mainMsg, image, hasVideo) {
 
     const draftTable = parsed.isCommercial ? "commercial_pages" : "villas";
     const draftLinkField = parsed.isCommercial ? "commercial_id" : "card_id";
-    const draftOk = await createDraftPage(draftTable, draftLinkField, data.id, parsed, image);
+    const draftOk = await createDraftPage(draftTable, draftLinkField, data.id, parsed, images);
 
     const label = parsed.isCommercial ? "коммерция" : "жильё";
 
@@ -795,7 +1017,7 @@ async function processPost(mainMsg, image, hasVideo) {
         : `✅ Добавлено (${label}): «${parsed.title_ru}» — ${parsed.price || "цена не указана"}`;
 
     statusLine += draftOk
-        ? "\n📝 Черновик страницы объекта создан — откройте её в админке и дозаполните описание/удобства/доп. фото."
+        ? "\n📝 Черновик страницы объекта создан — откройте её в админке и дозаполните описание/удобства при необходимости."
         : "\n⚠️ Карточка создана, но черновик страницы объекта создать не удалось — заведите её вручную.";
 
     await replyToChannel(mainMsg, statusLine);
@@ -805,7 +1027,7 @@ async function processPost(mainMsg, image, hasVideo) {
 async function processEditedPost(msg) {
 
     const text = msg.caption || msg.text || "";
-    const parsed = parseListing(text);
+    const parsed = await getParsedListing(text);
 
     await fillMissingTranslations(parsed, ["title", "description"]);
     if (parsed.isCommercial) {
@@ -878,9 +1100,10 @@ async function handleAlbumMessage(msg) {
     const text = msg.caption || msg.text || "";
     const ownFileId = getBestImageFileId(msg);
 
+    // проверяем, не обработана ли уже эта группа (чтобы не создать вторую карточку)
     const { data: existing } = await supabase
         .from("bot_pending_albums")
-        .select("*")
+        .select("processed, images")
         .eq("media_group_id", groupId)
         .maybeSingle();
 
@@ -888,27 +1111,44 @@ async function handleAlbumMessage(msg) {
         return;
     }
 
-    let image = existing?.image || "";
-    if (!image && ownFileId) {
-        image = await uploadPhoto(ownFileId);
+    let images = existing?.images || [];
+
+    if (ownFileId) {
+
+        const uploaded = await uploadPhoto(ownFileId);
+
+        if (uploaded) {
+            // append_album_image добавляет фото в общий список атомарно на
+            // стороне базы — это защищает от гонки, когда несколько фото
+            // альбома прилетают почти одновременно отдельными вызовами
+            // функции (см. sql/add_album_gallery.sql)
+            const { data: rpcResult, error: rpcError } = await supabase.rpc(
+                "append_album_image",
+                { p_media_group_id: groupId, p_image: uploaded }
+            );
+
+            if (rpcError) {
+                console.log("APPEND ALBUM IMAGE ERROR:", rpcError);
+            } else if (rpcResult) {
+                images = rpcResult;
+            }
+        }
     }
 
     if (!text.trim()) {
-        await supabase.from("bot_pending_albums").upsert({
-            media_group_id: groupId,
-            image,
-            processed: false
-        });
+        // текста в этом сообщении нет — фото (если было) уже сохранено
+        // функцией выше, просто ждём сообщение с текстом
         return;
     }
 
+    // это сообщение с текстом — помечаем группу обработанной и создаём объект
     await supabase.from("bot_pending_albums").upsert({
         media_group_id: groupId,
-        image,
+        images,
         processed: true
     });
 
-    await processPost(msg, image, Boolean(msg.video));
+    await processPost(msg, images, Boolean(msg.video));
 }
 
 
@@ -953,7 +1193,7 @@ export default async function handler(req, res) {
 
         const mainFileId = getBestImageFileId(msg);
         const image = mainFileId ? await uploadPhoto(mainFileId) : "";
-        await processPost(msg, image, Boolean(msg.video));
+        await processPost(msg, image ? [image] : [], Boolean(msg.video));
 
         return res.status(200).json({ ok: true });
 

@@ -489,6 +489,7 @@ export function parseListing(text) {
         description_en,
         description_uz,
         price,
+        priceNumber: null,
         bedrooms,
         bathrooms,
         area,
@@ -499,4 +500,211 @@ export function parseListing(text) {
         amenities,
         commercialFields
     };
+}
+
+
+
+
+// =======================================================================
+// РАЗБОР ЧЕРЕЗ OPENAI (опционально, если задан OPENAI_API_KEY)
+//
+// Один запрос на пост, строгий JSON-ответ по схеме. Модель обязана
+// извлекать ТОЛЬКО то, что реально есть в тексте — никаких выдуманных
+// удобств, дополненных описаний или "правдоподобных" цифр. Если запрос
+// падает по любой причине — возвращаем null, вызывающий код сам
+// откатывается на regex-парсер (parseListing выше).
+// =======================================================================
+
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+
+const AI_SYSTEM_PROMPT = `Ты — парсер объявлений о недвижимости. Тебе присылают сырой текст поста из Telegram-канала о продаже/аренде недвижимости в Узбекистане (обычно на русском, иногда со вставками на узбекском/английском). Извлеки структурированные данные СТРОГО по правилам ниже и верни JSON по заданной схеме.
+
+КРИТИЧЕСКИ ВАЖНЫЕ ПРАВИЛА:
+1. Извлекай ТОЛЬКО то, что явно написано в тексте. Никогда не выдумывай, не додумывай и не предполагай информацию, которой нет в исходном тексте.
+2. Если какого-то поля нет в тексте — верни null (для чисел/строк) или пустой массив (для списков). НЕ заполняй поле "правдоподобным" значением, даже если оно кажется типичным для такого объекта.
+3. "amenities" (удобства) — ТОЛЬКО пункты, явно упомянутые в тексте. НИКОГДА не добавляй "стандартные" удобства, которых нет в тексте.
+4. "description_ru" — краткий пересказ ОСТАЛЬНОГО текста поста (без заголовка, без цены/этажа/площади, которые уже вынесены в отдельные поля, без телефона и имени агента) своими словами, но без добавления фактов, которых не было в оригинале. Если после вычитания заголовка и служебных полей ничего содержательного не остаётся — верни пустую строку.
+5. "description_en" и "description_uz" — точные переводы description_ru, без художественных приукрашиваний и без добавления деталей.
+6. "title_en" и "title_uz" — точные переводы title_ru.
+7. Если пост вообще не про объект недвижимости — можешь оставить большинство полей null/пустыми.
+8. "is_sold" = true ТОЛЬКО если в тексте явно сказано, что объект уже продан/сдан/снят с продажи.
+9. "price_raw" — цена ровно как в тексте. "price_number" — то же самое, но как число в долларах, если валюта явно $ или это очевидно итоговая цена продажи. Упоминание процента оплаты (например "при 100% оплате") — это НЕ цена. Если цена дана в сумах с курсом и отдельно указан итог в $ — используй именно итог в $.
+10. "is_commercial" = true, если это коммерческая недвижимость, false — если жильё.
+11. "type_ru"/"type_en"/"type_uz" — категория ЖИЛЬЯ (Квартира/Apartment/Kvartira, Вилла/Villa/Villa, Дом/House/Uy, Коттедж/Cottage/Kottej, Резиденция/Residence/Rezidensiya, Пентхаус/Penthouse/Pentxaus) — только если это жильё. Название ЖК может само содержать слово вроде "House" или "Villas" — ориентируйся на реальный смысл текста. Если is_commercial=true, оставь эти поля null.
+12. Никогда не копируй в description номер телефона, имя агента или ссылки на инстаграм/телеграм.`;
+
+const AI_JSON_SCHEMA = {
+    name: "real_estate_listing",
+    strict: true,
+    schema: {
+        type: "object",
+        properties: {
+            title_ru: { type: "string" },
+            title_en: { type: "string" },
+            title_uz: { type: "string" },
+            description_ru: { type: "string" },
+            description_en: { type: "string" },
+            description_uz: { type: "string" },
+            is_commercial: { type: "boolean" },
+            is_sold: { type: "boolean" },
+            type_ru: { type: ["string", "null"] },
+            type_en: { type: ["string", "null"] },
+            type_uz: { type: ["string", "null"] },
+            price_raw: { type: ["string", "null"] },
+            price_number: { type: ["number", "null"] },
+            bedrooms: { type: ["integer", "null"] },
+            bathrooms: { type: ["integer", "null"] },
+            area: { type: ["number", "null"] },
+            floor: { type: ["integer", "null"] },
+            total_floors: { type: ["integer", "null"] },
+            ceiling_height: { type: ["number", "null"] },
+            district: { type: ["string", "null"] },
+            address: { type: ["string", "null"] },
+            landmark: { type: ["string", "null"] },
+            amenities: {
+                type: "array",
+                items: {
+                    type: "object",
+                    properties: {
+                        ru: { type: "string" },
+                        en: { type: "string" },
+                        uz: { type: "string" }
+                    },
+                    required: ["ru", "en", "uz"],
+                    additionalProperties: false
+                }
+            }
+        },
+        required: [
+            "title_ru", "title_en", "title_uz",
+            "description_ru", "description_en", "description_uz",
+            "is_commercial", "is_sold",
+            "type_ru", "type_en", "type_uz",
+            "price_raw", "price_number",
+            "bedrooms", "bathrooms", "area", "floor", "total_floors", "ceiling_height",
+            "district", "address", "landmark", "amenities"
+        ],
+        additionalProperties: false
+    }
+};
+
+function mapAiResultToParsed(ai) {
+
+    const isCommercial = Boolean(ai.is_commercial);
+
+    const type = {
+        ru: ai.type_ru || "Квартира",
+        en: ai.type_en || "Apartment",
+        uz: ai.type_uz || "Kvartira"
+    };
+
+    const commercialFields = {
+        district_ru: ai.district || "",
+        district_en: "",
+        district_uz: "",
+        address_ru: ai.address || "",
+        address_en: "",
+        address_uz: "",
+        landmark_ru: ai.landmark || "",
+        landmark_en: "",
+        landmark_uz: "",
+        floor: ai.floor != null ? String(ai.floor) : "",
+        ceiling: ai.ceiling_height != null ? String(ai.ceiling_height) : "",
+        area: ai.area != null ? String(ai.area) : ""
+    };
+
+    const missing = [];
+    if (!ai.title_ru) missing.push("название");
+    if (!ai.price_raw) missing.push("цена");
+    if (isCommercial) {
+        if (ai.area == null) missing.push("площадь");
+    } else {
+        if (ai.bedrooms == null) missing.push("кол-во комнат");
+    }
+
+    return {
+        isCommercial,
+        isSold: Boolean(ai.is_sold),
+        missing,
+        title_ru: ai.title_ru || "Квартира",
+        title_en: ai.title_en || "",
+        title_uz: ai.title_uz || "",
+        description_ru: ai.description_ru || "",
+        description_en: ai.description_en || "",
+        description_uz: ai.description_uz || "",
+        price: ai.price_raw || "",
+        priceNumber: ai.price_number ?? null,
+        bedrooms: ai.bedrooms != null ? String(ai.bedrooms) : "",
+        bathrooms: ai.bathrooms != null ? String(ai.bathrooms) : "",
+        area: ai.area != null ? String(ai.area) : "",
+        floor: ai.floor != null ? String(ai.floor) : "",
+        totalFloors: ai.total_floors != null ? String(ai.total_floors) : "",
+        locationLine: ai.district || ai.address || "",
+        type,
+        amenities: Array.isArray(ai.amenities) ? ai.amenities : [],
+        commercialFields
+    };
+}
+
+export async function parseWithAI(text) {
+
+    if (!OPENAI_API_KEY) return null;
+
+    try {
+
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 20000);
+
+        const res = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${OPENAI_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: "gpt-4o-mini",
+                temperature: 0,
+                messages: [
+                    { role: "system", content: AI_SYSTEM_PROMPT },
+                    { role: "user", content: text }
+                ],
+                response_format: {
+                    type: "json_schema",
+                    json_schema: AI_JSON_SCHEMA
+                }
+            }),
+            signal: controller.signal
+        });
+
+        clearTimeout(timeout);
+
+        if (!res.ok) {
+            console.log("OPENAI API ERROR:", res.status, await res.text());
+            return null;
+        }
+
+        const data = await res.json();
+        const raw = data.choices?.[0]?.message?.content;
+
+        if (!raw) {
+            console.log("OPENAI: пустой ответ");
+            return null;
+        }
+
+        const ai = JSON.parse(raw);
+
+        return mapAiResultToParsed(ai);
+
+    } catch (e) {
+
+        console.log("AI PARSE EXCEPTION:", e.message);
+        return null;
+    }
+}
+
+
+// Пробуем ИИ, при любой неудаче — старый regex-парсер. Оба возвращают
+// объект одинаковой формы.
+export async function getParsedListing(text) {
+    return (await parseWithAI(text)) || parseListing(text);
 }

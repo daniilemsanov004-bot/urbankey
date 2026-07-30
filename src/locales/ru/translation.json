@@ -748,8 +748,6 @@
   "listingLimitDesc": "На бесплатном плане доступно до {{limit}} активных объявлений. Чтобы разместить больше — свяжитесь с нами.",
   "listingLimitCta": "Связаться с нами",
   "boostBadge": "Топ",
-  "boostRequest": "Поднять в топ",
-  "boostRequestSent": "Заявка отправлена, с вами свяжутся",
   "boostAdmin7": "Топ 7 дн.",
   "boostAdmin14": "Топ 14 дн.",
   "boostAdminClear": "Снять буст",
