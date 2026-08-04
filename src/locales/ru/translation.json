@@ -605,6 +605,7 @@
   "location": "Расположение",
   "type": "Категория",
   "bedrooms": "Количество комнат",
+  "bedroomsShort": "Комнат",
   "specifications": "Параметры",
   "about": "Описание",
   "year": "Год",

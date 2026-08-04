@@ -11,6 +11,7 @@ import "dotenv/config";
 
 import TelegramBot from "node-telegram-bot-api";
 import { createClient } from "@supabase/supabase-js";
+import sharp from "sharp";
 
 import {
     getParsedListing,
@@ -74,6 +75,22 @@ function getBestImageFileId(msg) {
 }
 
 
+// Видео Telegram присылает либо в msg.video, либо в msg.document с
+// mime_type video/* ("Отправить как файл").
+function getBestVideoFileId(msg) {
+
+    if (msg.document?.mime_type?.startsWith("video/")) {
+        return msg.document.file_id;
+    }
+
+    if (msg.video?.file_id) {
+        return msg.video.file_id;
+    }
+
+    return null;
+}
+
+
 async function uploadPhoto(fileId) {
 
     try {
@@ -90,23 +107,44 @@ async function uploadPhoto(fileId) {
             return "";
         }
 
-        const buffer = Buffer.from(await response.arrayBuffer());
+        const rawBuffer = Buffer.from(await response.arrayBuffer());
 
         // подстраховка: если это всё-таки не картинка (например, Telegram
         // отдал HTML-страницу с ошибкой вместо файла, а response.ok был
         // true из-за редиректа) — не льём мусор в Storage под видом jpeg.
         // JPEG всегда начинается с байтов FF D8, PNG — 89 50 4E 47.
         const looksLikeImage =
-            buffer.length > 100 &&
-            ((buffer[0] === 0xff && buffer[1] === 0xd8) ||
-                (buffer[0] === 0x89 && buffer[1] === 0x50));
+            rawBuffer.length > 100 &&
+            ((rawBuffer[0] === 0xff && rawBuffer[1] === 0xd8) ||
+                (rawBuffer[0] === 0x89 && rawBuffer[1] === 0x50));
 
         if (!looksLikeImage) {
-            console.log("DOWNLOADED FILE DOES NOT LOOK LIKE AN IMAGE, size:", buffer.length);
+            console.log("DOWNLOADED FILE DOES NOT LOOK LIKE AN IMAGE, size:", rawBuffer.length);
             return "";
         }
 
-        const fileName = `${Date.now()}.jpg`;
+        // Сжимаем перед загрузкой в Storage — см. подробный комментарий в
+        // api/telegram-webhook.js (uploadPhoto). При сбое сжатия грузим
+        // оригинал, не теряем фото.
+        let buffer = rawBuffer;
+        try {
+
+            buffer = await sharp(rawBuffer)
+                .rotate()
+                .resize({
+                    width: 1920,
+                    height: 1920,
+                    fit: "inside",
+                    withoutEnlargement: true
+                })
+                .jpeg({ quality: 78, mozjpeg: true })
+                .toBuffer();
+
+        } catch (compressError) {
+            console.log("IMAGE COMPRESS FAILED, uploading original:", compressError.message);
+        }
+
+        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}.jpg`;
 
         const { error } =
             await supabase.storage
@@ -129,9 +167,59 @@ async function uploadPhoto(fileId) {
 }
 
 
+// Видео не пережимаем (см. api/telegram-webhook.js) — просто перекладываем
+// в тот же Storage-бакет.
+async function uploadVideo(fileId) {
+
+    try {
+
+        const file = await bot.getFile(fileId);
+
+        const url =
+            `https://api.telegram.org/file/bot${process.env.PARSER_BOT_TOKEN}/${file.file_path}`;
+
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            console.log("VIDEO DOWNLOAD FROM TELEGRAM FAILED:", response.status);
+            return "";
+        }
+
+        const buffer = Buffer.from(await response.arrayBuffer());
+
+        if (buffer.length < 100) {
+            console.log("DOWNLOADED VIDEO LOOKS EMPTY, size:", buffer.length);
+            return "";
+        }
+
+        const ext = (file.file_path.split(".").pop() || "mp4").toLowerCase();
+        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${ext}`;
+        const contentType = `video/${ext === "mov" ? "quicktime" : ext}`;
+
+        const { error } =
+            await supabase.storage
+                .from("images")
+                .upload(fileName, buffer, { contentType });
+
+        if (error) {
+            console.log("VIDEO UPLOAD ERROR:", error);
+            return "";
+        }
+
+        const { data } = supabase.storage.from("images").getPublicUrl(fileName);
+        return data.publicUrl;
+
+    } catch (e) {
+
+        console.log("VIDEO UPLOAD EXCEPTION:", e);
+        return "";
+    }
+}
 
 
-async function createDraftPage(table, linkIdField, cardId, parsed, images) {
+
+
+async function createDraftPage(table, linkIdField, cardId, parsed, images, videos) {
 
     try {
 
@@ -151,6 +239,7 @@ async function createDraftPage(table, linkIdField, cardId, parsed, images) {
             about_uz: "",
             price: parsed.priceNumber != null ? parsed.priceNumber : priceToNumber(parsed.price),
             images: images || [],
+            videos: videos || [],
             amenities: parsed.amenities || [],
             is_draft: true
         };
@@ -278,7 +367,7 @@ async function processPost(mainMsg, allMsgs) {
 
         const text = mainMsg.caption || mainMsg.text || "";
 
-        if (!text.trim() && !allMsgs.some(m => getBestImageFileId(m))) {
+        if (!text.trim() && !allMsgs.some(m => getBestImageFileId(m) || getBestVideoFileId(m))) {
             return;
         }
 
@@ -295,11 +384,11 @@ async function processPost(mainMsg, allMsgs) {
             await fillMissingTranslations(parsed.commercialFields, ["district", "address", "landmark"]);
         }
 
-        // собираем и грузим ВСЕ фото альбома (не только первое) — они пойдут
-        // в галерею детальной страницы; для самой карточки (image) по-прежнему
-        // используется только первое, как и раньше
+        // собираем и грузим ВСЕ фото и видео альбома (не только первое фото)
+        // — они пойдут в галерею детальной страницы; для самой карточки
+        // (image) по-прежнему используется только первое фото, как и раньше
         const fileIds = allMsgs.map(getBestImageFileId).filter(Boolean);
-        const hasVideo = allMsgs.some(m => m.video);
+        const videoIds = allMsgs.map(getBestVideoFileId).filter(Boolean);
 
         const uploaded = [];
         for (const fileId of fileIds) {
@@ -307,9 +396,15 @@ async function processPost(mainMsg, allMsgs) {
             if (url) uploaded.push(url);
         }
 
+        const uploadedVideos = [];
+        for (const videoId of videoIds) {
+            const url = await uploadVideo(videoId);
+            if (url) uploadedVideos.push(url);
+        }
+
         const image = uploaded[0] || "";
 
-        if (!image && !hasVideo) parsed.missing.push("фото");
+        if (!image && !uploadedVideos.length) parsed.missing.push("фото");
 
         const baseFields = {
             title_ru: parsed.title_ru,
@@ -358,7 +453,7 @@ async function processPost(mainMsg, allMsgs) {
 
         const draftTable = parsed.isCommercial ? "commercial_pages" : "villas";
         const draftLinkField = parsed.isCommercial ? "commercial_id" : "card_id";
-        const draftOk = await createDraftPage(draftTable, draftLinkField, data.id, parsed, uploaded);
+        const draftOk = await createDraftPage(draftTable, draftLinkField, data.id, parsed, uploaded, uploadedVideos);
 
         const label = parsed.isCommercial ? "коммерция" : "жильё";
 

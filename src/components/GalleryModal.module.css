@@ -94,7 +94,8 @@
 
 
 
-.slide img {
+.slide img,
+.slide video {
 
 
     width: 100%;
@@ -287,7 +288,8 @@
 
 
 
-    .slide img {
+    .slide img,
+.slide video {
 
 
         border-radius: 22px;
@@ -335,7 +337,8 @@
 
 
 
-    .slide img {
+    .slide img,
+.slide video {
 
 
         object-fit: contain;

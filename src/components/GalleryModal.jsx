@@ -7,7 +7,12 @@ import "swiper/css"
 import "swiper/css/navigation"
 import "swiper/css/pagination"
 
-const GalleryModal = ({ images, activeIndex, onClose }) => {
+// `media` — массив { src, type }, type: "image" | "video". Оставлен
+// пропс `images` для обратной совместимости: если передали просто
+// массив строк, оборачиваем их в { src, type: "image" } сами.
+const GalleryModal = ({ images, media, activeIndex, onClose }) => {
+
+    const items = media || (images || []).map((src) => ({ src, type: "image" }));
 
     const swiperRef = useRef(null)
     useLayoutEffect(() => {
@@ -16,13 +21,13 @@ const GalleryModal = ({ images, activeIndex, onClose }) => {
         requestAnimationFrame(() => {
             swiperRef.current.update();
 
-            if (images.length > 1) {
+            if (items.length > 1) {
                 swiperRef.current.slideToLoop(activeIndex, 0, false);
             } else {
                 swiperRef.current.slideTo(activeIndex, 0, false);
             }
         });
-    }, [activeIndex, images.length]);
+    }, [activeIndex, items.length]);
 
     useEffect(() => {
         document.body.style.overflow = "hidden"
@@ -66,13 +71,25 @@ const GalleryModal = ({ images, activeIndex, onClose }) => {
                 </button>
 
                 <Swiper
+                    modules={[Navigation, Pagination]}
+                    navigation
+                    pagination={{ clickable: true }}
+                    loop={items.length > 1}
                     initialSlide={activeIndex}
                     className={s.swiper}
+                    observer
+                    observeParents
+                    onSwiper={(swiper) => {
+                        swiperRef.current = swiper
+                        requestAnimationFrame(() => swiper.update())
+                    }}
                 >
 
-                    {images.map((img, i) => (
+                    {items.map((item, i) => (
                         <SwiperSlide key={i} className={s.slide}>
-                            <img src={img} alt="" />
+                            {item.type === "video"
+                                ? <video src={item.src} controls playsInline />
+                                : <img src={item.src} alt="" />}
                         </SwiperSlide>
                     ))}
 
