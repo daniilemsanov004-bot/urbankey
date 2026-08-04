@@ -39,7 +39,27 @@
 //   пока задеплоен сайт.
 
 import { createClient } from "@supabase/supabase-js";
-import sharp from "sharp";
+
+// sharp — нативный модуль (C-биндинги), и на serverless-рантайме Vercel
+// он иногда не может загрузиться (не тот бинарник под платформу, не
+// докачался и т.п.). Если бы импорт был статическим ("import sharp from
+// 'sharp'") наверху файла и он бы упал — упал бы ВЕСЬ модуль целиком, то
+// есть переставал бы отвечать вообще весь вебхук, на любые посты, даже
+// без фото. Поэтому грузим лениво и по требованию, с кэшем результата:
+// если sharp недоступен — просто отключаем сжатие и грузим фото как
+// есть, а не роняем бота.
+let sharpModulePromise = null;
+async function getSharp() {
+    if (!sharpModulePromise) {
+        sharpModulePromise = import("sharp")
+            .then((mod) => mod.default || mod)
+            .catch((e) => {
+                console.log("SHARP UNAVAILABLE, image compression disabled:", e.message);
+                return null;
+            });
+    }
+    return sharpModulePromise;
+}
 
 
 // Чистая логика разбора поста и перевода — без Telegram/Supabase.
@@ -859,16 +879,20 @@ async function uploadPhoto(fileId) {
         let buffer = rawBuffer;
         try {
 
-            buffer = await sharp(rawBuffer)
-                .rotate()
-                .resize({
-                    width: 1920,
-                    height: 1920,
-                    fit: "inside",
-                    withoutEnlargement: true
-                })
-                .jpeg({ quality: 78, mozjpeg: true })
-                .toBuffer();
+            const sharp = await getSharp();
+
+            if (sharp) {
+                buffer = await sharp(rawBuffer)
+                    .rotate()
+                    .resize({
+                        width: 1920,
+                        height: 1920,
+                        fit: "inside",
+                        withoutEnlargement: true
+                    })
+                    .jpeg({ quality: 78, mozjpeg: true })
+                    .toBuffer();
+            }
 
         } catch (compressError) {
             console.log("IMAGE COMPRESS FAILED, uploading original:", compressError.message);

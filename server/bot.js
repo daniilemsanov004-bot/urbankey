@@ -11,7 +11,19 @@ import "dotenv/config";
 
 import TelegramBot from "node-telegram-bot-api";
 import { createClient } from "@supabase/supabase-js";
-import sharp from "sharp";
+
+let sharpModulePromise = null;
+async function getSharp() {
+    if (!sharpModulePromise) {
+        sharpModulePromise = import("sharp")
+            .then((mod) => mod.default || mod)
+            .catch((e) => {
+                console.log("SHARP UNAVAILABLE, image compression disabled:", e.message);
+                return null;
+            });
+    }
+    return sharpModulePromise;
+}
 
 import {
     getParsedListing,
@@ -129,16 +141,20 @@ async function uploadPhoto(fileId) {
         let buffer = rawBuffer;
         try {
 
-            buffer = await sharp(rawBuffer)
-                .rotate()
-                .resize({
-                    width: 1920,
-                    height: 1920,
-                    fit: "inside",
-                    withoutEnlargement: true
-                })
-                .jpeg({ quality: 78, mozjpeg: true })
-                .toBuffer();
+            const sharp = await getSharp();
+
+            if (sharp) {
+                buffer = await sharp(rawBuffer)
+                    .rotate()
+                    .resize({
+                        width: 1920,
+                        height: 1920,
+                        fit: "inside",
+                        withoutEnlargement: true
+                    })
+                    .jpeg({ quality: 78, mozjpeg: true })
+                    .toBuffer();
+            }
 
         } catch (compressError) {
             console.log("IMAGE COMPRESS FAILED, uploading original:", compressError.message);
