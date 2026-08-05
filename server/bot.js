@@ -106,7 +106,7 @@ async function uploadPhoto(fileId) {
             return "";
         }
 
-        const fileName = `${Date.now()}.jpg`;
+        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}.jpg`;
 
         const { error } =
             await supabase.storage

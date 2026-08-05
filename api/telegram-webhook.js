@@ -829,7 +829,12 @@ async function uploadPhoto(fileId) {
             return "";
         }
 
-        const fileName = `${Date.now()}.jpg`;
+        // Date.now() может совпасть у нескольких фото одного альбома,
+        // загружаемых почти одновременно (параллельные вызовы serverless-
+        // функции) — совпавшее имя файла тихо перезаписывает предыдущее в
+        // Storage, и вместо нескольких разных фото в галерею попадает
+        // одно. Добавляем случайный суффикс для гарантированной уникальности.
+        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}.jpg`;
 
         const { error } =
             await supabase.storage

@@ -66,8 +66,18 @@ const GalleryModal = ({ images, activeIndex, onClose }) => {
                 </button>
 
                 <Swiper
+                    modules={[Navigation, Pagination]}
+                    navigation
+                    pagination={{ clickable: true }}
+                    loop={images.length > 1}
                     initialSlide={activeIndex}
                     className={s.swiper}
+                    observer
+                    observeParents
+                    onSwiper={(swiper) => {
+                        swiperRef.current = swiper
+                        requestAnimationFrame(() => swiper.update())
+                    }}
                 >
 
                     {images.map((img, i) => (

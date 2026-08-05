@@ -120,6 +120,12 @@ const CommercialProperty = ({ data }) => {
                             disableOnInteraction: false
                         }}
 
+                        observer
+                        observeParents
+                        onSwiper={(swiper) => {
+                            requestAnimationFrame(() => swiper.update());
+                        }}
+
                         className={s.mySwiper}
 
                     >

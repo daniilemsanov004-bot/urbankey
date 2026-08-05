@@ -64,10 +64,21 @@ const Property = ({ data }) => {
 
 
                 <motion.div
+
                     className={s.swiperWrapper}
-                    initial={false}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 1 }}
+
+                    initial={{
+                        opacity: 0
+                    }}
+
+                    animate={{
+                        opacity: 1
+                    }}
+
+                    transition={{
+                        duration: 1
+                    }}
+
                 >
 
 
