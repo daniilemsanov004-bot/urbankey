@@ -476,7 +476,8 @@
 
 
 
-.slide img {
+.slide img,
+.slide video {
 
 
     width: 100%;
@@ -865,7 +866,8 @@
         border-radius: 20px;
     }
 
-    .slide img {
+    .slide img,
+.slide video {
         border-radius: 20px;
     }
 

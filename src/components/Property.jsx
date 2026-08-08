@@ -54,6 +54,14 @@ const Property = ({ data }) => {
     if (!data) return null;
 
     const images = data.images || [];
+    const videos = data.videos || [];
+
+    // Единый список для свайпера и модалки-галереи: фото и видео вперемешку,
+    // с явным типом (а не угадыванием по расширению файла).
+    const media = [
+        ...images.map((src) => ({ src, type: "image" })),
+        ...videos.map((src) => ({ src, type: "video" }))
+    ];
 
     return (
 
@@ -102,14 +110,17 @@ const Property = ({ data }) => {
 
 
                         loop={
-                            images.length > 1
+                            media.length > 1
                         }
 
 
-                        autoplay={{
-                            delay: 3000,
-                            disableOnInteraction: false
-                        }}
+                        // Автопрокрутку отключаем, если в галерее есть видео —
+                        // иначе свайпер уводил бы слайд, пока видео ещё играет.
+                        autoplay={
+                            media.some((m) => m.type === "video")
+                                ? false
+                                : { delay: 3000, disableOnInteraction: false }
+                        }
 
 
                         // Swiper иногда меряет ширину контейнера ДО того, как
@@ -136,7 +147,7 @@ const Property = ({ data }) => {
 
 
                         {
-                            images.map((img, i) => (
+                            media.map((item, i) => (
 
 
                                 <SwiperSlide
@@ -149,23 +160,47 @@ const Property = ({ data }) => {
 
 
 
-                                    <img
+                                    {item.type === "video" ? (
 
-                                        src={img}
+                                        <video
 
-                                        alt="villa"
+                                            src={item.src}
+
+                                            controls
+
+                                            playsInline
+
+                                            onClick={() => {
+
+                                                setIndex(i)
+
+                                                setOpen(true)
+
+                                            }}
+
+                                        />
+
+                                    ) : (
+
+                                        <img
+
+                                            src={item.src}
+
+                                            alt="villa"
 
 
-                                        onClick={() => {
+                                            onClick={() => {
 
-                                            setIndex(i)
+                                                setIndex(i)
 
-                                            setOpen(true)
+                                                setOpen(true)
 
-                                        }}
+                                            }}
 
 
-                                    />
+                                        />
+
+                                    )}
 
 
                                 </SwiperSlide>
@@ -435,7 +470,7 @@ const Property = ({ data }) => {
                 <GalleryModal
 
 
-                    images={images}
+                    media={media}
 
 
                     activeIndex={index}

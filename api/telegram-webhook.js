@@ -40,6 +40,27 @@
 
 import { createClient } from "@supabase/supabase-js";
 
+// sharp — нативный модуль (C-биндинги), и на serverless-рантайме Vercel
+// он иногда не может загрузиться (не тот бинарник под платформу, не
+// докачался и т.п.). Если бы импорт был статическим ("import sharp from
+// 'sharp'") наверху файла и он бы упал — упал бы ВЕСЬ модуль целиком, то
+// есть переставал бы отвечать вообще весь вебхук, на любые посты, даже
+// без фото. Поэтому грузим лениво и по требованию, с кэшем результата:
+// если sharp недоступен — просто отключаем сжатие и грузим фото как
+// есть, а не роняем бота.
+let sharpModulePromise = null;
+async function getSharp() {
+    if (!sharpModulePromise) {
+        sharpModulePromise = import("sharp")
+            .then((mod) => mod.default || mod)
+            .catch((e) => {
+                console.log("SHARP UNAVAILABLE, image compression disabled:", e.message);
+                return null;
+            });
+    }
+    return sharpModulePromise;
+}
+
 
 // Чистая логика разбора поста и перевода — без Telegram/Supabase.
 // Используется и в server/bot.js (long-polling, для запуска на своём
@@ -801,6 +822,23 @@ function getBestImageFileId(msg) {
 }
 
 
+// Видео Telegram присылает либо в msg.video (обычное "Видео"), либо в
+// msg.document с mime_type вида video/* ("Отправить как файл"). Как и
+// с фото, предпочитаем document-вариант, если он есть.
+function getBestVideoFileId(msg) {
+
+    if (msg.document?.mime_type?.startsWith("video/")) {
+        return msg.document.file_id;
+    }
+
+    if (msg.video?.file_id) {
+        return msg.video.file_id;
+    }
+
+    return null;
+}
+
+
 async function uploadPhoto(fileId) {
 
     try {
@@ -817,16 +855,47 @@ async function uploadPhoto(fileId) {
             return "";
         }
 
-        const buffer = Buffer.from(await response.arrayBuffer());
+        const rawBuffer = Buffer.from(await response.arrayBuffer());
 
         const looksLikeImage =
-            buffer.length > 100 &&
-            ((buffer[0] === 0xff && buffer[1] === 0xd8) ||
-                (buffer[0] === 0x89 && buffer[1] === 0x50));
+            rawBuffer.length > 100 &&
+            ((rawBuffer[0] === 0xff && rawBuffer[1] === 0xd8) ||
+                (rawBuffer[0] === 0x89 && rawBuffer[1] === 0x50));
 
         if (!looksLikeImage) {
-            console.log("DOWNLOADED FILE DOES NOT LOOK LIKE AN IMAGE, size:", buffer.length);
+            console.log("DOWNLOADED FILE DOES NOT LOOK LIKE AN IMAGE, size:", rawBuffer.length);
             return "";
+        }
+
+        // Сжимаем перед загрузкой в Storage. Telegram уже сжимает обычное
+        // "Фото", но если оно прислано файлом ("без сжатия") — это может
+        // быть исходник в несколько МБ, а на сайте всё равно показывается
+        // уменьшенным в галерее. Ограничиваем по большей стороне и
+        // пережимаем в JPEG. rotate() без аргументов учитывает EXIF-
+        // ориентацию (иначе фото с телефона может лечь "на бок" после
+        // сжатия — EXIF-тег теряется, а пиксели без него не повёрнуты).
+        // Если сжатие вдруг упадёт (битый файл и т.п.) — заливаем
+        // оригинал как есть: несжатое фото лучше, чем потерянное.
+        let buffer = rawBuffer;
+        try {
+
+            const sharp = await getSharp();
+
+            if (sharp) {
+                buffer = await sharp(rawBuffer)
+                    .rotate()
+                    .resize({
+                        width: 1920,
+                        height: 1920,
+                        fit: "inside",
+                        withoutEnlargement: true
+                    })
+                    .jpeg({ quality: 78, mozjpeg: true })
+                    .toBuffer();
+            }
+
+        } catch (compressError) {
+            console.log("IMAGE COMPRESS FAILED, uploading original:", compressError.message);
         }
 
         // Date.now() может совпасть у нескольких фото одного альбома,
@@ -857,7 +926,62 @@ async function uploadPhoto(fileId) {
 }
 
 
-async function createDraftPage(table, linkIdField, cardId, parsed, images) {
+// Видео НЕ пережимаем: транскодирование видео требует ffmpeg и тяжёлое
+// по времени/памяти — не укладывается в лимиты serverless-функции на
+// Vercel (особенно на Hobby-плане). Telegram и так сжимает видео,
+// отправленное как обычное "Видео" (не файлом). Просто перекладываем
+// файл в тот же Storage-бакет, что и фото.
+async function uploadVideo(fileId) {
+
+    try {
+
+        const fileResp = await telegramApi("getFile", { file_id: fileId });
+        if (!fileResp.ok) return "";
+
+        // Telegram Bot API не отдаёт через getFile файлы крупнее 20 МБ —
+        // это ограничение самого Telegram, не бота.
+        const url = `https://api.telegram.org/file/bot${BOT_TOKEN}/${fileResp.result.file_path}`;
+
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            console.log("VIDEO DOWNLOAD FROM TELEGRAM FAILED:", response.status);
+            return "";
+        }
+
+        const buffer = Buffer.from(await response.arrayBuffer());
+
+        if (buffer.length < 100) {
+            console.log("DOWNLOADED VIDEO LOOKS EMPTY, size:", buffer.length);
+            return "";
+        }
+
+        const ext = (fileResp.result.file_path.split(".").pop() || "mp4").toLowerCase();
+        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${ext}`;
+        const contentType = `video/${ext === "mov" ? "quicktime" : ext}`;
+
+        const { error } =
+            await supabase.storage
+                .from("images")
+                .upload(fileName, buffer, { contentType });
+
+        if (error) {
+            console.log("VIDEO UPLOAD ERROR:", error);
+            return "";
+        }
+
+        const { data } = supabase.storage.from("images").getPublicUrl(fileName);
+        return data.publicUrl;
+
+    } catch (e) {
+
+        console.log("VIDEO UPLOAD EXCEPTION:", e);
+        return "";
+    }
+}
+
+
+async function createDraftPage(table, linkIdField, cardId, parsed, images, videos) {
 
     try {
 
@@ -882,6 +1006,7 @@ async function createDraftPage(table, linkIdField, cardId, parsed, images) {
             price: parsed.priceNumber != null ? parsed.priceNumber : priceToNumber(parsed.price),
 
             images: images || [],
+            videos: videos || [],
             amenities: parsed.amenities || [],
 
             is_draft: true
@@ -949,7 +1074,7 @@ async function createDraftPage(table, linkIdField, cardId, parsed, images) {
 }
 
 
-async function processPost(mainMsg, images, hasVideo) {
+async function processPost(mainMsg, images, videos) {
 
     const image = images[0] || "";
 
@@ -967,7 +1092,7 @@ async function processPost(mainMsg, images, hasVideo) {
         await fillMissingTranslations(parsed.commercialFields, ["district", "address", "landmark"]);
     }
 
-    if (!image && !hasVideo) parsed.missing.push("фото");
+    if (!image && !videos.length) parsed.missing.push("фото");
 
     const baseFields = {
         title_ru: parsed.title_ru,
@@ -1013,7 +1138,7 @@ async function processPost(mainMsg, images, hasVideo) {
 
     const draftTable = parsed.isCommercial ? "commercial_pages" : "villas";
     const draftLinkField = parsed.isCommercial ? "commercial_id" : "card_id";
-    const draftOk = await createDraftPage(draftTable, draftLinkField, data.id, parsed, images);
+    const draftOk = await createDraftPage(draftTable, draftLinkField, data.id, parsed, images, videos);
 
     const label = parsed.isCommercial ? "коммерция" : "жильё";
 
@@ -1110,6 +1235,7 @@ async function handleAlbumMessage(msg) {
     const groupId = String(msg.media_group_id);
     const text = msg.caption || msg.text || "";
     const ownFileId = getBestImageFileId(msg);
+    const ownVideoId = getBestVideoFileId(msg);
 
     // проверяем, не обработана ли уже эта группа (чтобы не создать вторую карточку)
     const { data: existing } = await supabase
@@ -1142,16 +1268,27 @@ async function handleAlbumMessage(msg) {
         }
     }
 
-    if (Boolean(msg.video)) {
-        await supabase
-            .from("bot_pending_albums")
-            .update({ has_video: true })
-            .eq("media_group_id", groupId);
+    if (ownVideoId) {
+
+        const uploadedVideo = await uploadVideo(ownVideoId);
+
+        if (uploadedVideo) {
+            // тот же приём, что и для фото выше, но своя колонка/функция —
+            // см. sql/add_album_video.sql
+            const { error: rpcError } = await supabase.rpc(
+                "append_album_video",
+                { p_media_group_id: groupId, p_video: uploadedVideo }
+            );
+
+            if (rpcError) {
+                console.log("APPEND ALBUM VIDEO ERROR:", rpcError);
+            }
+        }
     }
 
     if (!text.trim()) {
-        // текста в этом сообщении нет — фото (если было) уже сохранено
-        // функцией выше, просто ждём сообщение с текстом
+        // текста в этом сообщении нет — фото/видео (если было) уже
+        // сохранено функциями выше, просто ждём сообщение с текстом
         return;
     }
 
@@ -1161,14 +1298,20 @@ async function handleAlbumMessage(msg) {
     // и данные о сообщении — объект создаст отдельная задача по
     // расписанию (api/finalize-albums.js, дёргается Vercel Cron), когда
     // увидит, что в группу какое-то время не добавлялись новые фото.
-    await supabase
+    const { data: claimed } = await supabase
         .from("bot_pending_albums")
-        .update({
-            chat_id: msg.chat.id,
-            message_id: msg.message_id,
-            caption: text
-        })
-        .eq("media_group_id", groupId);
+        .update({ processed: true })
+        .eq("media_group_id", groupId)
+        .eq("processed", false)
+        .select("images, videos")
+        .maybeSingle();
+
+    if (!claimed) {
+        // группу уже забрал другой вызов
+        return;
+    }
+
+    await processPost(msg, claimed.images || [], claimed.videos || []);
 }
 
 
@@ -1202,7 +1345,7 @@ export default async function handler(req, res) {
 
         const text = msg.caption || msg.text || "";
 
-        if (!text.trim() && !getBestImageFileId(msg)) {
+        if (!text.trim() && !getBestImageFileId(msg) && !getBestVideoFileId(msg)) {
             return res.status(200).json({ ok: true });
         }
 
@@ -1212,8 +1355,10 @@ export default async function handler(req, res) {
         }
 
         const mainFileId = getBestImageFileId(msg);
+        const mainVideoId = getBestVideoFileId(msg);
         const image = mainFileId ? await uploadPhoto(mainFileId) : "";
-        await processPost(msg, image ? [image] : [], Boolean(msg.video));
+        const video = mainVideoId ? await uploadVideo(mainVideoId) : "";
+        await processPost(msg, image ? [image] : [], video ? [video] : []);
 
         return res.status(200).json({ ok: true });
 
