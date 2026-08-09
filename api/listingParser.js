@@ -107,6 +107,11 @@ export function extractRooms(text) {
     m = text.match(/(одно|одна|двух|две|трёх|трех|три|четырёх|четырех|четыре|пяти|пять|шести|шесть)[-\s]?комнат/i);
     if (m) return String(ROOM_WORDS[m[1].toLowerCase()] || "");
 
+    // формат "Комнат - 2" / "Комнат: 2" — метка перед числом, встречается
+    // в постах, оформленных списком характеристик
+    m = text.match(/комнат\w*\s*[-:—]\s*(\d+)/i);
+    if (m) return m[1];
+
     return "";
 }
 
@@ -124,6 +129,12 @@ export function extractArea(text) {
     if (m) return m[1].replace(",", ".");
 
     m = text.match(/(\d+(?:[.,]\d+)?)\s*(?:м²|м2|кв\.?\s*м)/i);
+    if (m) return m[1].replace(",", ".");
+
+    // формат "Общая площадь, кв.м. -49.31" — единица идёт ПЕРЕД числом;
+    // берём просто ближайшее число после слова "площадь", без требования
+    // единицы измерения сразу рядом
+    m = text.match(/площадь\D{0,35}?(\d+(?:[.,]\d+)?)/i);
     if (m) return m[1].replace(",", ".");
 
     return "";
@@ -144,8 +155,8 @@ export function extractFloorInfo(text) {
     m = text.match(/(\d+)\s*этаж\w*\s+(\d+)-этажн/i);
     if (m) return { floor: m[1], totalFloors: m[2] };
 
-    const floorM = text.match(/Этаж\s*:\s*(\d+)/i);
-    const totalM = text.match(/Этажность\s*:\s*(\d+)/i);
+    const floorM = text.match(/Этаж(?!ность)\s*[-:—]\s*(\d+)/i);
+    const totalM = text.match(/Этажность\s*[-:—]\s*(\d+)/i);
 
     if (floorM || totalM) {
         return { floor: floorM?.[1] || "", totalFloors: totalM?.[1] || "" };

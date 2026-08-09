@@ -64,12 +64,6 @@ const CommercialProperty = ({ data }) => {
 
 
     const images = data.images || [];
-    const videos = data.videos || [];
-
-    const media = [
-        ...images.map((src) => ({ src, type: "image" })),
-        ...videos.map((src) => ({ src, type: "video" }))
-    ];
 
 
 
@@ -118,19 +112,12 @@ const CommercialProperty = ({ data }) => {
                         }}
 
                         loop={
-                            media.length > 1
+                            images.length > 1
                         }
 
-                        autoplay={
-                            media.some((m) => m.type === "video")
-                                ? false
-                                : { delay: 3000, disableOnInteraction: false }
-                        }
-
-                        observer
-                        observeParents
-                        onSwiper={(swiper) => {
-                            requestAnimationFrame(() => swiper.update());
+                        autoplay={{
+                            delay: 3000,
+                            disableOnInteraction: false
                         }}
 
                         observer
@@ -145,7 +132,7 @@ const CommercialProperty = ({ data }) => {
 
 
                         {
-                            media.map((item, i) => (
+                            images.map((img, i) => (
 
 
                                 <SwiperSlide
@@ -154,30 +141,16 @@ const CommercialProperty = ({ data }) => {
                                 >
 
 
-                                    {item.type === "video" ? (
-                                        <video
-                                            src={item.src}
-                                            controls
-                                            playsInline
-                                            onClick={() => {
+                                    <img
+                                        src={img}
+                                        alt=""
+                                        onClick={() => {
 
-                                                setIndex(i);
-                                                setOpen(true);
+                                            setIndex(i);
+                                            setOpen(true);
 
-                                            }}
-                                        />
-                                    ) : (
-                                        <img
-                                            src={item.src}
-                                            alt=""
-                                            onClick={() => {
-
-                                                setIndex(i);
-                                                setOpen(true);
-
-                                            }}
-                                        />
-                                    )}
+                                        }}
+                                    />
 
 
                                 </SwiperSlide>
@@ -192,6 +165,16 @@ const CommercialProperty = ({ data }) => {
 
 
                 </motion.div>
+
+
+                {data.video && (
+                    <video
+                        className={s.videoPlayer}
+                        src={data.video}
+                        controls
+                        preload="metadata"
+                    />
+                )}
 
 
 
@@ -429,7 +412,7 @@ const CommercialProperty = ({ data }) => {
 
                 <GalleryModal
 
-                    media={media}
+                    images={images}
 
                     activeIndex={index}
 

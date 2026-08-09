@@ -143,6 +143,9 @@ function extractRooms(text) {
     m = text.match(/(одно|одна|двух|две|трёх|трех|три|четырёх|четырех|четыре|пяти|пять|шести|шесть)[-\s]?комнат/i);
     if (m) return String(ROOM_WORDS[m[1].toLowerCase()] || "");
 
+    m = text.match(/комнат\w*\s*[-:—]\s*(\d+)/i);
+    if (m) return m[1];
+
     return "";
 }
 
@@ -160,6 +163,9 @@ function extractArea(text) {
     if (m) return m[1].replace(",", ".");
 
     m = text.match(/(\d+(?:[.,]\d+)?)\s*(?:м²|м2|кв\.?\s*м)/i);
+    if (m) return m[1].replace(",", ".");
+
+    m = text.match(/площадь\D{0,35}?(\d+(?:[.,]\d+)?)/i);
     if (m) return m[1].replace(",", ".");
 
     return "";
@@ -180,8 +186,8 @@ function extractFloorInfo(text) {
     m = text.match(/(\d+)\s*этаж\w*\s+(\d+)-этажн/i);
     if (m) return { floor: m[1], totalFloors: m[2] };
 
-    const floorM = text.match(/Этаж\s*:\s*(\d+)/i);
-    const totalM = text.match(/Этажность\s*:\s*(\d+)/i);
+    const floorM = text.match(/Этаж(?!ность)\s*[-:—]\s*(\d+)/i);
+    const totalM = text.match(/Этажность\s*[-:—]\s*(\d+)/i);
 
     if (floorM || totalM) {
         return { floor: floorM?.[1] || "", totalFloors: totalM?.[1] || "" };
@@ -801,6 +807,74 @@ function getBestImageFileId(msg) {
 }
 
 
+// Telegram Bot API не даёт боту скачать файл больше 20 МБ (жёсткое
+// ограничение самого Telegram, не наше) — если видео тяжелее, просто
+// пропускаем его (возвращаем null), не ломая создание объекта.
+const MAX_VIDEO_BYTES = 20 * 1024 * 1024;
+
+function getVideoInfo(msg) {
+
+    const video = msg.video || (msg.document?.mime_type?.startsWith("video/") ? msg.document : null);
+
+    if (!video) return null;
+
+    return {
+        fileId: video.file_id,
+        fileSize: video.file_size || 0
+    };
+}
+
+
+async function uploadVideo(fileId) {
+
+    try {
+
+        const file = await bot_getFile(fileId);
+        if (!file) return "";
+
+        const url = `https://api.telegram.org/file/bot${BOT_TOKEN}/${file.file_path}`;
+
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            console.log("VIDEO DOWNLOAD FAILED:", response.status);
+            return "";
+        }
+
+        const buffer = Buffer.from(await response.arrayBuffer());
+        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}.mp4`;
+
+        const { error } =
+            await supabase.storage
+                .from("videos")
+                .upload(fileName, buffer, { contentType: "video/mp4" });
+
+        if (error) {
+            console.log("VIDEO UPLOAD ERROR:", error);
+            return "";
+        }
+
+        const { data } = supabase.storage.from("videos").getPublicUrl(fileName);
+        return data.publicUrl;
+
+    } catch (e) {
+
+        console.log("VIDEO UPLOAD EXCEPTION:", e);
+        return "";
+    }
+}
+
+
+async function bot_getFile(fileId) {
+
+    const fileResp = await telegramApi("getFile", { file_id: fileId });
+
+    if (!fileResp.ok) return null;
+
+    return fileResp.result;
+}
+
+
 async function uploadPhoto(fileId) {
 
     try {
@@ -857,7 +931,7 @@ async function uploadPhoto(fileId) {
 }
 
 
-async function createDraftPage(table, linkIdField, cardId, parsed, images) {
+async function createDraftPage(table, linkIdField, cardId, parsed, images, videoUrl) {
 
     try {
 
@@ -882,6 +956,7 @@ async function createDraftPage(table, linkIdField, cardId, parsed, images) {
             price: parsed.priceNumber != null ? parsed.priceNumber : priceToNumber(parsed.price),
 
             images: images || [],
+            video: videoUrl || "",
             amenities: parsed.amenities || [],
 
             is_draft: true
@@ -949,9 +1024,10 @@ async function createDraftPage(table, linkIdField, cardId, parsed, images) {
 }
 
 
-async function processPost(mainMsg, images, hasVideo) {
+async function processPost(mainMsg, images, videoUrl) {
 
     const image = images[0] || "";
+    const hasVideo = Boolean(videoUrl);
 
     const text = mainMsg.caption || mainMsg.text || "";
     const parsed = await getParsedListing(text);
@@ -977,6 +1053,7 @@ async function processPost(mainMsg, images, hasVideo) {
         description_en: parsed.description_en,
         description_uz: parsed.description_uz,
         image,
+        video: videoUrl || "",
         price: parsed.price,
         tg_chat_id: mainMsg.chat.id,
         tg_message_id: mainMsg.message_id
@@ -1013,7 +1090,7 @@ async function processPost(mainMsg, images, hasVideo) {
 
     const draftTable = parsed.isCommercial ? "commercial_pages" : "villas";
     const draftLinkField = parsed.isCommercial ? "commercial_id" : "card_id";
-    const draftOk = await createDraftPage(draftTable, draftLinkField, data.id, parsed, images);
+    const draftOk = await createDraftPage(draftTable, draftLinkField, data.id, parsed, images, videoUrl);
 
     const label = parsed.isCommercial ? "коммерция" : "жильё";
 
@@ -1142,11 +1219,25 @@ async function handleAlbumMessage(msg) {
         }
     }
 
-    if (Boolean(msg.video)) {
-        await supabase
-            .from("bot_pending_albums")
-            .update({ has_video: true })
-            .eq("media_group_id", groupId);
+    const videoInfo = getVideoInfo(msg);
+
+    if (videoInfo) {
+
+        if (videoInfo.fileSize && videoInfo.fileSize > MAX_VIDEO_BYTES) {
+
+            await replyToChannel(msg, "⚠️ Видео в альбоме больше 20 МБ — Telegram не даёт боту скачать такой файл, оно будет пропущено.");
+
+        } else {
+
+            const videoUrl = await uploadVideo(videoInfo.fileId);
+
+            if (videoUrl) {
+                await supabase
+                    .from("bot_pending_albums")
+                    .update({ video: videoUrl, updated_at: new Date().toISOString() })
+                    .eq("media_group_id", groupId);
+            }
+        }
     }
 
     if (!text.trim()) {
@@ -1245,8 +1336,9 @@ export default async function handler(req, res) {
         if (!msg) return res.status(200).json({ ok: true });
 
         const text = msg.caption || msg.text || "";
+        const videoInfo = getVideoInfo(msg);
 
-        if (!text.trim() && !getBestImageFileId(msg)) {
+        if (!text.trim() && !getBestImageFileId(msg) && !videoInfo) {
             return res.status(200).json({ ok: true });
         }
 
@@ -1257,7 +1349,17 @@ export default async function handler(req, res) {
 
         const mainFileId = getBestImageFileId(msg);
         const image = mainFileId ? await uploadPhoto(mainFileId) : "";
-        await processPost(msg, image ? [image] : [], Boolean(msg.video));
+
+        let videoUrl = "";
+        if (videoInfo) {
+            if (videoInfo.fileSize && videoInfo.fileSize > MAX_VIDEO_BYTES) {
+                await replyToChannel(msg, "⚠️ Видео больше 20 МБ — Telegram не даёт боту скачать такой файл. Объект будет создан без видео, добавьте его вручную при желании.");
+            } else {
+                videoUrl = await uploadVideo(videoInfo.fileId);
+            }
+        }
+
+        await processPost(msg, image ? [image] : [], videoUrl);
 
         return res.status(200).json({ ok: true });
 

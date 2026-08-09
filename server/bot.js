@@ -12,19 +12,6 @@ import "dotenv/config";
 import TelegramBot from "node-telegram-bot-api";
 import { createClient } from "@supabase/supabase-js";
 
-let sharpModulePromise = null;
-async function getSharp() {
-    if (!sharpModulePromise) {
-        sharpModulePromise = import("sharp")
-            .then((mod) => mod.default || mod)
-            .catch((e) => {
-                console.log("SHARP UNAVAILABLE, image compression disabled:", e.message);
-                return null;
-            });
-    }
-    return sharpModulePromise;
-}
-
 import {
     getParsedListing,
     fillMissingTranslations,
@@ -87,19 +74,57 @@ function getBestImageFileId(msg) {
 }
 
 
-// Видео Telegram присылает либо в msg.video, либо в msg.document с
-// mime_type video/* ("Отправить как файл").
-function getBestVideoFileId(msg) {
+// Telegram Bot API не даёт боту скачать файл больше 20 МБ — жёсткое
+// ограничение самого Telegram. Если видео тяжелее, просто пропускаем его.
+const MAX_VIDEO_BYTES = 20 * 1024 * 1024;
 
-    if (msg.document?.mime_type?.startsWith("video/")) {
-        return msg.document.file_id;
+function getVideoInfo(msg) {
+
+    const video = msg.video || (msg.document?.mime_type?.startsWith("video/") ? msg.document : null);
+
+    if (!video) return null;
+
+    return { fileId: video.file_id, fileSize: video.file_size || 0 };
+}
+
+
+async function uploadVideo(fileId) {
+
+    try {
+
+        const file = await bot.getFile(fileId);
+
+        const url =
+            `https://api.telegram.org/file/bot${process.env.PARSER_BOT_TOKEN}/${file.file_path}`;
+
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            console.log("VIDEO DOWNLOAD FAILED:", response.status);
+            return "";
+        }
+
+        const buffer = Buffer.from(await response.arrayBuffer());
+        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}.mp4`;
+
+        const { error } =
+            await supabase.storage
+                .from("videos")
+                .upload(fileName, buffer, { contentType: "video/mp4" });
+
+        if (error) {
+            console.log("VIDEO UPLOAD ERROR:", error);
+            return "";
+        }
+
+        const { data } = supabase.storage.from("videos").getPublicUrl(fileName);
+        return data.publicUrl;
+
+    } catch (e) {
+
+        console.log("VIDEO UPLOAD EXCEPTION:", e);
+        return "";
     }
-
-    if (msg.video?.file_id) {
-        return msg.video.file_id;
-    }
-
-    return null;
 }
 
 
@@ -119,45 +144,20 @@ async function uploadPhoto(fileId) {
             return "";
         }
 
-        const rawBuffer = Buffer.from(await response.arrayBuffer());
+        const buffer = Buffer.from(await response.arrayBuffer());
 
         // подстраховка: если это всё-таки не картинка (например, Telegram
         // отдал HTML-страницу с ошибкой вместо файла, а response.ok был
         // true из-за редиректа) — не льём мусор в Storage под видом jpeg.
         // JPEG всегда начинается с байтов FF D8, PNG — 89 50 4E 47.
         const looksLikeImage =
-            rawBuffer.length > 100 &&
-            ((rawBuffer[0] === 0xff && rawBuffer[1] === 0xd8) ||
-                (rawBuffer[0] === 0x89 && rawBuffer[1] === 0x50));
+            buffer.length > 100 &&
+            ((buffer[0] === 0xff && buffer[1] === 0xd8) ||
+                (buffer[0] === 0x89 && buffer[1] === 0x50));
 
         if (!looksLikeImage) {
-            console.log("DOWNLOADED FILE DOES NOT LOOK LIKE AN IMAGE, size:", rawBuffer.length);
+            console.log("DOWNLOADED FILE DOES NOT LOOK LIKE AN IMAGE, size:", buffer.length);
             return "";
-        }
-
-        // Сжимаем перед загрузкой в Storage — см. подробный комментарий в
-        // api/telegram-webhook.js (uploadPhoto). При сбое сжатия грузим
-        // оригинал, не теряем фото.
-        let buffer = rawBuffer;
-        try {
-
-            const sharp = await getSharp();
-
-            if (sharp) {
-                buffer = await sharp(rawBuffer)
-                    .rotate()
-                    .resize({
-                        width: 1920,
-                        height: 1920,
-                        fit: "inside",
-                        withoutEnlargement: true
-                    })
-                    .jpeg({ quality: 78, mozjpeg: true })
-                    .toBuffer();
-            }
-
-        } catch (compressError) {
-            console.log("IMAGE COMPRESS FAILED, uploading original:", compressError.message);
         }
 
         const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}.jpg`;
@@ -183,59 +183,9 @@ async function uploadPhoto(fileId) {
 }
 
 
-// Видео не пережимаем (см. api/telegram-webhook.js) — просто перекладываем
-// в тот же Storage-бакет.
-async function uploadVideo(fileId) {
-
-    try {
-
-        const file = await bot.getFile(fileId);
-
-        const url =
-            `https://api.telegram.org/file/bot${process.env.PARSER_BOT_TOKEN}/${file.file_path}`;
-
-        const response = await fetch(url);
-
-        if (!response.ok) {
-            console.log("VIDEO DOWNLOAD FROM TELEGRAM FAILED:", response.status);
-            return "";
-        }
-
-        const buffer = Buffer.from(await response.arrayBuffer());
-
-        if (buffer.length < 100) {
-            console.log("DOWNLOADED VIDEO LOOKS EMPTY, size:", buffer.length);
-            return "";
-        }
-
-        const ext = (file.file_path.split(".").pop() || "mp4").toLowerCase();
-        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${ext}`;
-        const contentType = `video/${ext === "mov" ? "quicktime" : ext}`;
-
-        const { error } =
-            await supabase.storage
-                .from("images")
-                .upload(fileName, buffer, { contentType });
-
-        if (error) {
-            console.log("VIDEO UPLOAD ERROR:", error);
-            return "";
-        }
-
-        const { data } = supabase.storage.from("images").getPublicUrl(fileName);
-        return data.publicUrl;
-
-    } catch (e) {
-
-        console.log("VIDEO UPLOAD EXCEPTION:", e);
-        return "";
-    }
-}
 
 
-
-
-async function createDraftPage(table, linkIdField, cardId, parsed, images, videos) {
+async function createDraftPage(table, linkIdField, cardId, parsed, images, videoUrl) {
 
     try {
 
@@ -255,7 +205,7 @@ async function createDraftPage(table, linkIdField, cardId, parsed, images, video
             about_uz: "",
             price: parsed.priceNumber != null ? parsed.priceNumber : priceToNumber(parsed.price),
             images: images || [],
-            videos: videos || [],
+            video: videoUrl || "",
             amenities: parsed.amenities || [],
             is_draft: true
         };
@@ -383,7 +333,7 @@ async function processPost(mainMsg, allMsgs) {
 
         const text = mainMsg.caption || mainMsg.text || "";
 
-        if (!text.trim() && !allMsgs.some(m => getBestImageFileId(m) || getBestVideoFileId(m))) {
+        if (!text.trim() && !allMsgs.some(m => getBestImageFileId(m))) {
             return;
         }
 
@@ -400,11 +350,10 @@ async function processPost(mainMsg, allMsgs) {
             await fillMissingTranslations(parsed.commercialFields, ["district", "address", "landmark"]);
         }
 
-        // собираем и грузим ВСЕ фото и видео альбома (не только первое фото)
-        // — они пойдут в галерею детальной страницы; для самой карточки
-        // (image) по-прежнему используется только первое фото, как и раньше
+        // собираем и грузим ВСЕ фото альбома (не только первое) — они пойдут
+        // в галерею детальной страницы; для самой карточки (image) по-прежнему
+        // используется только первое, как и раньше
         const fileIds = allMsgs.map(getBestImageFileId).filter(Boolean);
-        const videoIds = allMsgs.map(getBestVideoFileId).filter(Boolean);
 
         const uploaded = [];
         for (const fileId of fileIds) {
@@ -412,15 +361,25 @@ async function processPost(mainMsg, allMsgs) {
             if (url) uploaded.push(url);
         }
 
-        const uploadedVideos = [];
-        for (const videoId of videoIds) {
-            const url = await uploadVideo(videoId);
-            if (url) uploadedVideos.push(url);
+        let videoUrl = "";
+        const videoMsg = allMsgs.find(m => getVideoInfo(m));
+
+        if (videoMsg) {
+
+            const videoInfo = getVideoInfo(videoMsg);
+
+            if (videoInfo.fileSize && videoInfo.fileSize > MAX_VIDEO_BYTES) {
+                await replyToChannel(mainMsg, "⚠️ Видео больше 20 МБ — Telegram не даёт боту скачать такой файл. Объект будет создан без видео.");
+            } else {
+                videoUrl = await uploadVideo(videoInfo.fileId);
+            }
         }
+
+        const hasVideo = Boolean(videoUrl);
 
         const image = uploaded[0] || "";
 
-        if (!image && !uploadedVideos.length) parsed.missing.push("фото");
+        if (!image && !hasVideo) parsed.missing.push("фото");
 
         const baseFields = {
             title_ru: parsed.title_ru,
@@ -430,6 +389,7 @@ async function processPost(mainMsg, allMsgs) {
             description_en: parsed.description_en,
             description_uz: parsed.description_uz,
             image,
+            video: videoUrl || "",
             price: parsed.price,
             tg_chat_id: mainMsg.chat.id,
             tg_message_id: mainMsg.message_id
@@ -469,7 +429,7 @@ async function processPost(mainMsg, allMsgs) {
 
         const draftTable = parsed.isCommercial ? "commercial_pages" : "villas";
         const draftLinkField = parsed.isCommercial ? "commercial_id" : "card_id";
-        const draftOk = await createDraftPage(draftTable, draftLinkField, data.id, parsed, uploaded, uploadedVideos);
+        const draftOk = await createDraftPage(draftTable, draftLinkField, data.id, parsed, uploaded, videoUrl);
 
         const label = parsed.isCommercial ? "коммерция" : "жильё";
 

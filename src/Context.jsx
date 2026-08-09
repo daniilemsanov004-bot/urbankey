@@ -312,6 +312,27 @@ export const MyProvider = ({ children }) => {
                 },
 
 
+                bedrooms: {
+                    ru: item.bedrooms_ru,
+                    en: item.bedrooms_en,
+                    uz: item.bedrooms_uz
+                },
+
+
+                bathrooms: {
+                    ru: item.bathrooms_ru,
+                    en: item.bathrooms_en,
+                    uz: item.bathrooms_uz
+                },
+
+
+                type: {
+                    ru: item.type_ru,
+                    en: item.type_en,
+                    uz: item.type_uz
+                },
+
+
                 image: item.image,
 
                 price: item.price,
@@ -862,7 +883,9 @@ export const MyProvider = ({ children }) => {
             floor: data.floor || "",
             price: data.price || "",
 
-            images: data.images || []
+            images: data.images || [],
+
+            video: data.video || ""
 
         });
 
@@ -1802,6 +1825,8 @@ export const MyProvider = ({ children }) => {
 
 
                 images: data.images || [],
+
+                video: data.video || "",
 
                 amenities: data.amenities || []
 

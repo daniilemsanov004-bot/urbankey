@@ -854,7 +854,7 @@ async function uploadPhoto(fileId) {
 }
 
 
-async function createDraftPage(table, linkIdField, cardId, parsed, images) {
+async function createDraftPage(table, linkIdField, cardId, parsed, images, videoUrl) {
 
     try {
 
@@ -879,6 +879,7 @@ async function createDraftPage(table, linkIdField, cardId, parsed, images) {
             price: parsed.priceNumber != null ? parsed.priceNumber : priceToNumber(parsed.price),
 
             images: images || [],
+            video: videoUrl || "",
             amenities: parsed.amenities || [],
 
             is_draft: true
@@ -946,9 +947,10 @@ async function createDraftPage(table, linkIdField, cardId, parsed, images) {
 }
 
 
-async function processPost(mainMsg, images, hasVideo) {
+async function processPost(mainMsg, images, videoUrl) {
 
     const image = images[0] || "";
+    const hasVideo = Boolean(videoUrl);
 
     const text = mainMsg.caption || mainMsg.text || "";
     const parsed = await getParsedListing(text);
@@ -974,6 +976,7 @@ async function processPost(mainMsg, images, hasVideo) {
         description_en: parsed.description_en,
         description_uz: parsed.description_uz,
         image,
+        video: videoUrl || "",
         price: parsed.price,
         tg_chat_id: mainMsg.chat.id,
         tg_message_id: mainMsg.message_id
@@ -1010,7 +1013,7 @@ async function processPost(mainMsg, images, hasVideo) {
 
     const draftTable = parsed.isCommercial ? "commercial_pages" : "villas";
     const draftLinkField = parsed.isCommercial ? "commercial_id" : "card_id";
-    const draftOk = await createDraftPage(draftTable, draftLinkField, data.id, parsed, images);
+    const draftOk = await createDraftPage(draftTable, draftLinkField, data.id, parsed, images, videoUrl);
 
     const label = parsed.isCommercial ? "коммерция" : "жильё";
 
@@ -1054,7 +1057,7 @@ export default async function handler(req, res) {
 
         const { data: candidates, error } = await supabase
             .from("bot_pending_albums")
-            .select("media_group_id, chat_id, message_id, caption, has_video")
+            .select("media_group_id, chat_id, message_id, caption, video")
             .eq("processed", false)
             .not("caption", "is", null)
             .lt("updated_at", cutoff)
@@ -1096,7 +1099,7 @@ export default async function handler(req, res) {
             };
 
             try {
-                await processPost(syntheticMsg, claimed.images || [], Boolean(row.has_video));
+                await processPost(syntheticMsg, claimed.images || [], row.video || "");
                 processedCount++;
             } catch (e) {
                 console.log("FINALIZE PROCESS POST ERROR:", row.media_group_id, e);
