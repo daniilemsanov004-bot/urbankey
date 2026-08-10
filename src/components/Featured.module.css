@@ -103,21 +103,21 @@
 .card {
     position: relative;
     border: 1px solid var(--border);
-    border-radius: 28px;
+    border-radius: 20px;
     padding: 24px;
     width: 100%;
-    height: 549px;
+    min-height: 549px;
+    height: 100%;
     display: flex;
     flex-direction: column;
-    background: linear-gradient(145deg, var(--card), var(--dark-gray));
-    box-shadow: 0 30px 90px rgba(0, 0, 0, .25);
+    background: var(--card);
     transition: transform .4s ease, border-color .4s ease, box-shadow .4s ease;
 }
 
 .card:hover {
-    transform: translateY(-12px);
+    transform: translateY(-8px);
     border-color: var(--violet);
-    box-shadow: 0 40px 100px rgba(214, 168, 58, .2);
+    box-shadow: 0 24px 48px rgba(0, 0, 0, .18);
 }
 
 .card:hover .image {
@@ -149,10 +149,6 @@
     color: var(--white);
     margin-top: 18px;
     margin-bottom: 12px;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
 }
 
 .info {
