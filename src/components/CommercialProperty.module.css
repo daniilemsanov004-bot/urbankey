@@ -19,7 +19,7 @@
 
 .mySwiper {
     width: 100%;
-    height: 500px;
+    height: 700px;
     border-radius: 25px;
     overflow: hidden;
     min-width: 0;
@@ -127,7 +127,7 @@
     }
 
     .mySwiper {
-        height: 450px;
+        height: 480px;
     }
 
     .cards {

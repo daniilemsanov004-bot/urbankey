@@ -1999,6 +1999,8 @@ export const MyProvider = ({ children }) => {
 
                 images: data.images,
 
+                video: data.video,
+
                 amenities: data.amenities
 
 
@@ -2200,6 +2202,8 @@ export const MyProvider = ({ children }) => {
 
 
             images: page.images,
+
+            video: page.video,
 
             amenities: page.amenities
 

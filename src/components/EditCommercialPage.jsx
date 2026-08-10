@@ -511,6 +511,14 @@ const EditCommercialPage = () => {
 
 
 
+                <input
+                    placeholder="Ссылка на видео"
+                    value={page.video || ""}
+                    onChange={e => changeValue(e, "video")}
+                />
+
+
+
 
 
 

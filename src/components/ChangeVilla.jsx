@@ -422,6 +422,29 @@ const ChangeVilla = () => {
 
                     <input
 
+                        placeholder="Video URL"
+
+                        value={villa.video || ""}
+
+                        onChange={(e) =>
+
+                            setVilla(prev => ({
+
+                                ...prev,
+
+                                video: e.target.value
+
+                            }))
+
+                        }
+
+                    />
+
+
+
+
+                    <input
+
                         placeholder="Bedrooms"
 
                         value={villa.bedrooms || ""}
