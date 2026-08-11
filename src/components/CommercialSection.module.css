@@ -253,7 +253,6 @@
 
 
     display: -webkit-box;
-    -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -385,13 +384,11 @@
     font-size: 15px;
     margin: 0 0 8px;
     display: -webkit-box;
-    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
 
 .desc.expanded {
-    -webkit-line-clamp: unset;
     overflow: visible;
 }
 

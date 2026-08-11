@@ -23,19 +23,19 @@ const Admin = () => {
     <section className={s.admin}>
 
       <Link className={s.link} to="/admin/createCard">
-        Создать карточку
+        Создать карточку квартиры 
       </Link>
 
       <Link className={s.link} to="/admin/changeCard">
-        Изменить карточку
+        Изменить карточку квартиры 
       </Link>
 
       <Link className={s.link} to="/admin/CreateVilla">
-        Создать виллу
+        Создать страницу квартиры  
       </Link>
 
       <Link className={s.link} to="/admin/changeVilla">
-        Изменить виллу
+        Изменить  страницу квартиры 
       </Link>
 
       <Link className={s.link} to="/admin/createCommercialPage">
