@@ -39,6 +39,7 @@ import AddProperty from "./pages/AddProperty";
 import MyListings from "./pages/MyListings";
 import AdminLeads from "./pages/AdminLeads";
 import TelegramFloatButton from "./components/TelegramFloatButton";
+import CallFloatButton from "./components/CallFloatButton";
 import LeadPopup from "./components/LeadPopup";
 
 
@@ -75,6 +76,7 @@ const App = () => {
       <BottomNav />
       <OfflineBanner />
       <TelegramFloatButton />
+      <CallFloatButton />
       <LeadPopup />
 
       <ToastContainer

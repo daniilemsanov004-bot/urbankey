@@ -1,0 +1,86 @@
+.button {
+
+    position: fixed;
+    right: 24px;
+    bottom: 100px;
+    z-index: 999;
+
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+
+    background: linear-gradient(160deg, #e8c064, var(--violet));
+    color: var(--black);
+    text-decoration: none;
+
+    box-shadow:
+        0 10px 25px rgba(214, 168, 58, .45),
+        0 0 0 4px rgba(214, 168, 58, .12);
+
+    animation: float 3s ease-in-out infinite;
+    animation-delay: .3s;
+    transition: transform .25s, box-shadow .25s;
+}
+
+
+.button:hover {
+    transform: translateY(-4px) scale(1.05);
+    box-shadow:
+        0 16px 32px rgba(214, 168, 58, .55),
+        0 0 0 6px rgba(214, 168, 58, .16);
+}
+
+
+.icon {
+    transform: rotate(0deg);
+}
+
+
+.label {
+
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .04em;
+    line-height: 1;
+}
+
+
+@keyframes float {
+
+    0%, 100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-6px);
+    }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+    .button {
+        animation: none;
+    }
+}
+
+
+@media (max-width: 640px) {
+
+    .button {
+        right: 16px;
+        /* над кнопкой телеграма, которая уже поднята над BottomNav */
+        bottom: calc(16px + 64px + 64px + 12px + env(safe-area-inset-bottom));
+        width: 56px;
+        height: 56px;
+    }
+
+    .label {
+        font-size: 9px;
+    }
+}
