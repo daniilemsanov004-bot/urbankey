@@ -247,7 +247,7 @@ const verifyTurnstile = async (token, ip) => {
 
 // белый список источников — чтобы в поле "source" нельзя было прислать
 // что угодно (оно идёт прямо в текст сообщения в Telegram)
-const ALLOWED_SOURCES = ["Connect", "Connect_one", "Happen", "Footer newsletter"];
+const ALLOWED_SOURCES = ["Connect", "Connect_one", "Happen", "Footer newsletter", "LeadPopup"];
 
 const MAX_FIELDS = 15;
 const MAX_FIELD_LENGTH = 1500;
