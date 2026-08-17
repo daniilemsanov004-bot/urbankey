@@ -716,54 +716,78 @@ function mapAiResultToParsed(ai) {
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.6-flash";
 
+// Статусы, на которые имеет смысл повторить запрос: 503 (модель
+// перегружена, "UNAVAILABLE") и 429 (превышен лимит запросов в минуту)
+// — оба временные и обычно проходят через пару секунд. Остальные ошибки
+// (неверный ключ, недоступная модель и т.п.) повторять бессмысленно —
+// сразу возвращаем null, как и раньше.
+const GEMINI_RETRYABLE_STATUSES = new Set([429, 503]);
+const GEMINI_RETRY_DELAYS_MS = [1200, 2500];
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 async function parseWithGemini(text) {
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 20000);
+    for (let attempt = 0; attempt <= GEMINI_RETRY_DELAYS_MS.length; attempt++) {
 
-    try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 20000);
 
-        const res = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
-            {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    system_instruction: { parts: [{ text: AI_SYSTEM_PROMPT }] },
-                    contents: [{ parts: [{ text }] }],
-                    generationConfig: {
-                        temperature: 0,
-                        responseMimeType: "application/json",
-                        responseSchema: GEMINI_RESPONSE_SCHEMA
-                    }
-                }),
-                signal: controller.signal
+        try {
+
+            const res = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        system_instruction: { parts: [{ text: AI_SYSTEM_PROMPT }] },
+                        contents: [{ parts: [{ text }] }],
+                        generationConfig: {
+                            temperature: 0,
+                            responseMimeType: "application/json",
+                            responseSchema: GEMINI_RESPONSE_SCHEMA
+                        }
+                    }),
+                    signal: controller.signal
+                }
+            );
+
+            clearTimeout(timeout);
+
+            if (!res.ok) {
+
+                const errBody = await res.text();
+
+                if (GEMINI_RETRYABLE_STATUSES.has(res.status) && attempt < GEMINI_RETRY_DELAYS_MS.length) {
+                    console.log(`GEMINI API ERROR (retryable, попытка ${attempt + 1}/${GEMINI_RETRY_DELAYS_MS.length + 1}):`, res.status, errBody);
+                    await sleep(GEMINI_RETRY_DELAYS_MS[attempt]);
+                    continue;
+                }
+
+                console.log("GEMINI API ERROR:", res.status, errBody);
+                return null;
             }
-        );
 
-        clearTimeout(timeout);
+            const data = await res.json();
+            const raw = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
-        if (!res.ok) {
-            console.log("GEMINI API ERROR:", res.status, await res.text());
+            if (!raw) {
+                console.log("GEMINI: пустой ответ");
+                return null;
+            }
+
+            return mapAiResultToParsed(JSON.parse(raw));
+
+        } catch (e) {
+
+            clearTimeout(timeout);
+            console.log("GEMINI PARSE EXCEPTION:", e.message);
             return null;
         }
-
-        const data = await res.json();
-        const raw = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-        if (!raw) {
-            console.log("GEMINI: пустой ответ");
-            return null;
-        }
-
-        return mapAiResultToParsed(JSON.parse(raw));
-
-    } catch (e) {
-
-        clearTimeout(timeout);
-        console.log("GEMINI PARSE EXCEPTION:", e.message);
-        return null;
     }
+
+    return null;
 }
 
 async function parseWithOpenAI(text) {
