@@ -4,7 +4,7 @@
 // (serverless-версия на Vercel, работает всегда без единого запущенного
 // процесса — см. инструкцию в начале того файла).
 //
-// Вся логика разбора поста и перевода вынесена в server/listingParser.js
+// Вся логика разбора поста и перевода вынесена в api/listingParser.js
 // и используется в обеих версиях бота, чтобы не расходиться местами.
 
 import "dotenv/config";
@@ -17,7 +17,7 @@ import {
     fillMissingTranslations,
     priceToNumber,
     slugify
-} from "./listingParser.js";
+} from "../api/listingParser.js";
 
 
 const bot = new TelegramBot(

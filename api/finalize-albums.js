@@ -19,7 +19,7 @@
 //        FINALIZE_SECRET — придумайте любую случайную строку (как и
 //                          TELEGRAM_WEBHOOK_SECRET раньше)
 //      Остальные переменные (PARSER_BOT_TOKEN, SUPABASE_SERVICE_KEY,
-//      VITE_SUPABASE_URL, OPENAI_API_KEY) уже должны быть настроены.
+//      VITE_SUPABASE_URL, GEMINI_API_KEY) уже должны быть настроены.
 //   3. На Vercel Hobby-плане встроенный Cron не подходит (там минимум —
 //      раз в сутки), поэтому дёргать этот эндпоинт нужно внешним
 //      бесплатным сервисом-планировщиком, например cron-job.org:
@@ -613,6 +613,61 @@ const AI_JSON_SCHEMA = {
     }
 };
 
+// Тот же список полей, что и AI_JSON_SCHEMA выше, но в диалекте Gemini
+// (responseSchema): типы ЗАГЛАВНЫМИ ("STRING"/"OBJECT"/...), null-допустимые
+// поля — через "nullable": true рядом с обычным type (Gemini не понимает
+// type: ["string","null"], как у OpenAI), "additionalProperties" не
+// поддерживается — просто убран. Смысл и набор полей — один в один с
+// AI_JSON_SCHEMA, эту схему НЕ придумывали заново, только перевели формат.
+const GEMINI_RESPONSE_SCHEMA = {
+    type: "OBJECT",
+    properties: {
+        title_ru: { type: "STRING" },
+        title_en: { type: "STRING" },
+        title_uz: { type: "STRING" },
+        description_ru: { type: "STRING" },
+        description_en: { type: "STRING" },
+        description_uz: { type: "STRING" },
+        is_commercial: { type: "BOOLEAN" },
+        is_sold: { type: "BOOLEAN" },
+        type_ru: { type: "STRING", nullable: true },
+        type_en: { type: "STRING", nullable: true },
+        type_uz: { type: "STRING", nullable: true },
+        price_raw: { type: "STRING", nullable: true },
+        price_number: { type: "NUMBER", nullable: true },
+        bedrooms: { type: "INTEGER", nullable: true },
+        bathrooms: { type: "INTEGER", nullable: true },
+        area: { type: "NUMBER", nullable: true },
+        floor: { type: "INTEGER", nullable: true },
+        total_floors: { type: "INTEGER", nullable: true },
+        ceiling_height: { type: "NUMBER", nullable: true },
+        district: { type: "STRING", nullable: true },
+        address: { type: "STRING", nullable: true },
+        landmark: { type: "STRING", nullable: true },
+        amenities: {
+            type: "ARRAY",
+            items: {
+                type: "OBJECT",
+                properties: {
+                    ru: { type: "STRING" },
+                    en: { type: "STRING" },
+                    uz: { type: "STRING" }
+                },
+                required: ["ru", "en", "uz"]
+            }
+        }
+    },
+    required: [
+        "title_ru", "title_en", "title_uz",
+        "description_ru", "description_en", "description_uz",
+        "is_commercial", "is_sold",
+        "type_ru", "type_en", "type_uz",
+        "price_raw", "price_number",
+        "bedrooms", "bathrooms", "area", "floor", "total_floors", "ceiling_height",
+        "district", "address", "landmark", "amenities"
+    ]
+};
+
 // Приводим ответ ИИ к тому же виду, что возвращает parseListing() —
 // дальше по коду (createDraftPage, processPost и т.д.) не нужно ничего
 // менять, они просто получают готовый объект `parsed` из одного источника
@@ -675,7 +730,60 @@ function mapAiResultToParsed(ai) {
     };
 }
 
-async function parseWithAI(text) {
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.6-flash";
+
+async function parseWithGemini(text) {
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 20000);
+
+    try {
+
+        const res = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+            {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    system_instruction: { parts: [{ text: AI_SYSTEM_PROMPT }] },
+                    contents: [{ parts: [{ text }] }],
+                    generationConfig: {
+                        temperature: 0,
+                        responseMimeType: "application/json",
+                        responseSchema: GEMINI_RESPONSE_SCHEMA
+                    }
+                }),
+                signal: controller.signal
+            }
+        );
+
+        clearTimeout(timeout);
+
+        if (!res.ok) {
+            console.log("GEMINI API ERROR:", res.status, await res.text());
+            return null;
+        }
+
+        const data = await res.json();
+        const raw = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (!raw) {
+            console.log("GEMINI: пустой ответ");
+            return null;
+        }
+
+        return mapAiResultToParsed(JSON.parse(raw));
+
+    } catch (e) {
+
+        clearTimeout(timeout);
+        console.log("GEMINI PARSE EXCEPTION:", e.message);
+        return null;
+    }
+}
+
+async function parseWithOpenAI(text) {
 
     if (!OPENAI_API_KEY) return null;
 
@@ -729,6 +837,18 @@ async function parseWithAI(text) {
         console.log("AI PARSE EXCEPTION:", e.message);
         return null;
     }
+}
+
+// Приоритет — бесплатный Gemini (если задан GEMINI_API_KEY). OpenAI —
+// запасной вариант для тех, у кого уже был платный ключ, срабатывает
+// только если Gemini не настроен. Если не задано ничего — parseWithAI
+// вернёт null, и getParsedListing ниже сам откатится на regex-парсер
+// (parseListing) — это уже было в проекте, тут не меняется.
+async function parseWithAI(text) {
+
+    if (GEMINI_API_KEY) return parseWithGemini(text);
+    if (OPENAI_API_KEY) return parseWithOpenAI(text);
+    return null;
 }
 
 
@@ -1074,7 +1194,20 @@ export default async function handler(req, res) {
 
         let processedCount = 0;
 
+        // Бесплатный тир Gemini обычно даёт ~10-15 запросов/мин для
+        // Flash-моделей. Обычно посты прилетают по одному, но здесь за
+        // раз может добиваться сразу несколько альбомов из очереди —
+        // если используется Gemini, даём небольшую паузу между вызовами
+        // parseWithAI (через processPost -> getParsedListing), чтобы не
+        // упереться в лимит. На OpenAI/regex-фолбэк пауза не влияет.
+        const throttleAiCalls = Boolean(GEMINI_API_KEY) && candidates.length > 1;
+        const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
         for (const row of candidates) {
+
+            if (throttleAiCalls && processedCount > 0) {
+                await sleep(400);
+            }
 
             // атомарно "забираем" группу — если её уже кто-то забрал
             // (например, два последовательных запуска cron наложились
