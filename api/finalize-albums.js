@@ -547,9 +547,9 @@ const AI_SYSTEM_PROMPT = `Ты — парсер объявлений о недв
 КРИТИЧЕСКИ ВАЖНЫЕ ПРАВИЛА:
 1. Извлекай ТОЛЬКО то, что явно написано в тексте. Никогда не выдумывай, не додумывай и не предполагай информацию, которой нет в исходном тексте.
 2. Если какого-то поля нет в тексте — верни null (для чисел/строк) или пустой массив (для списков). НЕ заполняй поле "правдоподобным" значением, даже если оно кажется типичным для такого объекта.
-3. "amenities" (удобства) — ТОЛЬКО пункты, явно упомянутые в тексте (например, если написано "есть парковка" — добавь пункт про парковку; если про удобства вообще ничего не сказано — верни пустой массив). НИКОГДА не добавляй "стандартные" удобства, которых нет в тексте.
+3. "amenities" (удобства) — ТОЛЬКО пункты, явно упомянутые в тексте, но категория ШИРЕ, чем просто "features": сюда входят и характеристики вроде качества ремонта или статуса новостройки. Примеры категорий (добавляй только то, что реально упомянуто, список не исчерпывающий — похожие по смыслу пункты тоже подходят): парковка, мебель, бытовая техника, кондиционер, лифт, детская площадка, тихий/зелёный двор, гардеробная, раздельный санузел, панорамный вид/окна, вид на город, охрана, консьерж, бассейн, терраса, балкон, стиральная машина, холодильник, телевизор, качество ремонта (дизайнерский/евроремонт/свежий ремонт), новостройка, система вентиляции и пожарной безопасности. Если про удобства вообще ничего не сказано — верни пустой массив. НИКОГДА не добавляй "стандартные" удобства, которых нет в тексте.
 4. "title_ru" — короткий привлекательный заголовок объявления на основе типа объекта и его реальных характеристик из текста (район/ЖК, ключевая особенность и т.п.). Разрешены лёгкие маркетинговые слова и обороты для благозвучности ("уютная", "просторная", "с продуманной планировкой" и т.п.), даже если их не было в посте буквально — НО нельзя добавлять конкретные факты, которых нет в тексте (нельзя выдумывать площадь, кол-во комнат, ремонт, вид из окна и т.п., если это не упомянуто).
-5. "description_ru" — пересказ ОСТАЛЬНОГО текста поста (без заголовка, без цены/этажа/площади, которые уже вынесены в отдельные поля, без телефона и имени агента) в приятном, продающем стиле, своими словами читателя объявления. Разрешены общие маркетинговые обороты и оценочные слова ("уютный", "продуманная планировка", "светлый", "тихий район" и т.п.), даже если их не было в посте дословно — стиль подачи можно улучшать. НО граница та же, что и для amenities выше: нельзя добавлять конкретные факты (удобства, точные характеристики, детали инфраструктуры), которых нет в исходном тексте — украшать можно только форму, не содержание. Если после вычитания заголовка и служебных полей ничего содержательного не остаётся — верни пустую строку, не сочиняй описание с нуля.
+5. "description_ru" — пересказ ОСТАЛЬНОГО текста поста (без заголовка, без цены/этажа/площади, которые уже вынесены в отдельные поля, без телефона и имени агента) в приятном, продающем стиле, своими словами читателя объявления. Разрешены общие маркетинговые обороты и оценочные слова ("уютный", "продуманная планировка", "светлый", "тихий район" и т.п.), даже если их не было в посте дословно — стиль подачи можно улучшать. НО граница та же, что и для amenities выше: нельзя добавлять конкретные факты (удобства, точные характеристики, детали инфраструктуры), которых нет в исходном тексте — украшать можно только форму, не содержание. ВАЖНО: любой содержательный факт из текста, который не попал ни в одно отдельное поле (title/price/floor/area/district/address/landmark) и не подошёл под amenities, всё равно НЕ должен пропадать — включай его в description. Пустую строку возвращай только если буквально ничего не остаётся, кроме приветствия, контактов (телефон/имя агента/ссылки) и призыва к действию ("звоните", "пишите в директ" и т.п.) — если же в тексте есть хоть один содержательный факт (например, про ремонт, инфраструктуру, состояние объекта), он обязан попасть либо в amenities, либо в description, но не потеряться.
 6. "description_en" и "description_uz" — переводы description_ru в том же продающем стиле (не дословный подстрочник, но и не более приукрашенные, чем сам description_ru — новых фактов добавлять нельзя).
 7. "title_en" и "title_uz" — переводы title_ru тем же тоном.
 8. Если пост вообще не про объект недвижимости (нет ни одной характеристики) — можешь оставить большинство полей null/пустыми.
@@ -734,54 +734,80 @@ function mapAiResultToParsed(ai) {
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.6-flash";
 
+// Статусы, на которые имеет смысл повторить запрос: 503 (модель
+// перегружена, "UNAVAILABLE") и 429 (превышен лимит запросов в минуту)
+// — оба временные и обычно проходят через пару секунд. Остальные ошибки
+// (неверный ключ, недоступная модель и т.п.) повторять бессмысленно —
+// сразу возвращаем null, как и раньше.
+const GEMINI_RETRYABLE_STATUSES = new Set([429, 503]);
+const GEMINI_RETRY_DELAYS_MS = [1200, 2500];
+
+// Общий sleep — используется и здесь при ретраях, и ниже в цикле
+// finalize-albums для паузы между постами (throttleAiCalls).
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 async function parseWithGemini(text) {
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 20000);
+    for (let attempt = 0; attempt <= GEMINI_RETRY_DELAYS_MS.length; attempt++) {
 
-    try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 20000);
 
-        const res = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
-            {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    system_instruction: { parts: [{ text: AI_SYSTEM_PROMPT }] },
-                    contents: [{ parts: [{ text }] }],
-                    generationConfig: {
-                        temperature: 0,
-                        responseMimeType: "application/json",
-                        responseSchema: GEMINI_RESPONSE_SCHEMA
-                    }
-                }),
-                signal: controller.signal
+        try {
+
+            const res = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        system_instruction: { parts: [{ text: AI_SYSTEM_PROMPT }] },
+                        contents: [{ parts: [{ text }] }],
+                        generationConfig: {
+                            temperature: 0,
+                            responseMimeType: "application/json",
+                            responseSchema: GEMINI_RESPONSE_SCHEMA
+                        }
+                    }),
+                    signal: controller.signal
+                }
+            );
+
+            clearTimeout(timeout);
+
+            if (!res.ok) {
+
+                const errBody = await res.text();
+
+                if (GEMINI_RETRYABLE_STATUSES.has(res.status) && attempt < GEMINI_RETRY_DELAYS_MS.length) {
+                    console.log(`GEMINI API ERROR (retryable, попытка ${attempt + 1}/${GEMINI_RETRY_DELAYS_MS.length + 1}):`, res.status, errBody);
+                    await sleep(GEMINI_RETRY_DELAYS_MS[attempt]);
+                    continue;
+                }
+
+                console.log("GEMINI API ERROR:", res.status, errBody);
+                return null;
             }
-        );
 
-        clearTimeout(timeout);
+            const data = await res.json();
+            const raw = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
-        if (!res.ok) {
-            console.log("GEMINI API ERROR:", res.status, await res.text());
+            if (!raw) {
+                console.log("GEMINI: пустой ответ");
+                return null;
+            }
+
+            return mapAiResultToParsed(JSON.parse(raw));
+
+        } catch (e) {
+
+            clearTimeout(timeout);
+            console.log("GEMINI PARSE EXCEPTION:", e.message);
             return null;
         }
-
-        const data = await res.json();
-        const raw = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-        if (!raw) {
-            console.log("GEMINI: пустой ответ");
-            return null;
-        }
-
-        return mapAiResultToParsed(JSON.parse(raw));
-
-    } catch (e) {
-
-        clearTimeout(timeout);
-        console.log("GEMINI PARSE EXCEPTION:", e.message);
-        return null;
     }
+
+    return null;
 }
 
 async function parseWithOpenAI(text) {
@@ -1202,7 +1228,6 @@ export default async function handler(req, res) {
         // parseWithAI (через processPost -> getParsedListing), чтобы не
         // упереться в лимит. На OpenAI/regex-фолбэк пауза не влияет.
         const throttleAiCalls = Boolean(GEMINI_API_KEY) && candidates.length > 1;
-        const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
         for (const row of candidates) {
 
