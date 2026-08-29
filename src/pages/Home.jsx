@@ -1,4 +1,3 @@
-import React from 'react'
 import Hero from '../components/Hero'
 import Feautured from '../components/Feautured'
 import What from '../components/What'
