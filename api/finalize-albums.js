@@ -36,6 +36,7 @@
 //   иногда терявшей часть фото публикации.
 
 import { createClient } from "@supabase/supabase-js";
+import { runListingAiChain, isGeminiConfigured } from "./aiProviders.js";
 
 
 // Чистая логика разбора поста и перевода — без Telegram/Supabase.
@@ -529,7 +530,7 @@ function parseListing(text) {
 
 
 // =======================================================================
-// РАЗБОР ЧЕРЕЗ OPENAI (опционально, если задан OPENAI_API_KEY)
+// РАЗБОР ЧЕРЕЗ ИИ (опционально, если задан хотя бы один ключ провайдера)
 //
 // Один запрос на пост, строгий JSON-ответ по схеме. Модель обязана
 // извлекать ТОЛЬКО то, что реально есть в тексте — никаких выдуманных
@@ -539,8 +540,6 @@ function parseListing(text) {
 // причине (нет ключа, лимит, таймаут, невалидный JSON) — возвращаем null,
 // и вызывающий код сам откатывается на regex-парсер (parseListing выше).
 // =======================================================================
-
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 const AI_SYSTEM_PROMPT = `Ты — парсер объявлений о недвижимости. Тебе присылают сырой текст поста из Telegram-канала о продаже/аренде недвижимости в Узбекистане (обычно на русском, иногда со вставками на узбекском/английском). Извлеки структурированные данные СТРОГО по правилам ниже и верни JSON по заданной схеме.
 
@@ -731,153 +730,31 @@ function mapAiResultToParsed(ai) {
     };
 }
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.6-flash";
-
-// Статусы, на которые имеет смысл повторить запрос: 503 (модель
-// перегружена, "UNAVAILABLE") и 429 (превышен лимит запросов в минуту)
-// — оба временные и обычно проходят через пару секунд. Остальные ошибки
-// (неверный ключ, недоступная модель и т.п.) повторять бессмысленно —
-// сразу возвращаем null, как и раньше.
-const GEMINI_RETRYABLE_STATUSES = new Set([429, 503]);
-const GEMINI_RETRY_DELAYS_MS = [1200, 2500];
-
-// Общий sleep — используется и здесь при ретраях, и ниже в цикле
-// finalize-albums для паузы между постами (throttleAiCalls).
+// Общий sleep — используется ниже в цикле finalize-albums для паузы
+// между постами (throttleAiCalls). Ретраи и сам fetch к Gemini теперь
+// живут в общем api/aiProviders.js.
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function parseWithGemini(text) {
 
-    for (let attempt = 0; attempt <= GEMINI_RETRY_DELAYS_MS.length; attempt++) {
-
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 20000);
-
-        try {
-
-            const res = await fetch(
-                `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        system_instruction: { parts: [{ text: AI_SYSTEM_PROMPT }] },
-                        contents: [{ parts: [{ text }] }],
-                        generationConfig: {
-                            temperature: 0,
-                            responseMimeType: "application/json",
-                            responseSchema: GEMINI_RESPONSE_SCHEMA
-                        }
-                    }),
-                    signal: controller.signal
-                }
-            );
-
-            clearTimeout(timeout);
-
-            if (!res.ok) {
-
-                const errBody = await res.text();
-
-                if (GEMINI_RETRYABLE_STATUSES.has(res.status) && attempt < GEMINI_RETRY_DELAYS_MS.length) {
-                    console.log(`GEMINI API ERROR (retryable, попытка ${attempt + 1}/${GEMINI_RETRY_DELAYS_MS.length + 1}):`, res.status, errBody);
-                    await sleep(GEMINI_RETRY_DELAYS_MS[attempt]);
-                    continue;
-                }
-
-                console.log("GEMINI API ERROR:", res.status, errBody);
-                return null;
-            }
-
-            const data = await res.json();
-            const raw = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-            if (!raw) {
-                console.log("GEMINI: пустой ответ");
-                return null;
-            }
-
-            return mapAiResultToParsed(JSON.parse(raw));
-
-        } catch (e) {
-
-            clearTimeout(timeout);
-            console.log("GEMINI PARSE EXCEPTION:", e.message);
-            return null;
-        }
-    }
-
-    return null;
-}
-
-async function parseWithOpenAI(text) {
-
-    if (!OPENAI_API_KEY) return null;
-
-    try {
-
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 20000);
-
-        const res = await fetch("https://api.openai.com/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${OPENAI_API_KEY}`
-            },
-            body: JSON.stringify({
-                model: "gpt-4o-mini",
-                temperature: 0,
-                messages: [
-                    { role: "system", content: AI_SYSTEM_PROMPT },
-                    { role: "user", content: text }
-                ],
-                response_format: {
-                    type: "json_schema",
-                    json_schema: AI_JSON_SCHEMA
-                }
-            }),
-            signal: controller.signal
-        });
-
-        clearTimeout(timeout);
-
-        if (!res.ok) {
-            console.log("OPENAI API ERROR:", res.status, await res.text());
-            return null;
-        }
-
-        const data = await res.json();
-        const raw = data.choices?.[0]?.message?.content;
-
-        if (!raw) {
-            console.log("OPENAI: пустой ответ");
-            return null;
-        }
-
-        const ai = JSON.parse(raw);
-
-        return mapAiResultToParsed(ai);
-
-    } catch (e) {
-
-        console.log("AI PARSE EXCEPTION:", e.message);
-        return null;
-    }
-}
-
-// Приоритет — бесплатный Gemini (если задан GEMINI_API_KEY). OpenAI —
-// запасной вариант для тех, у кого уже был платный ключ, срабатывает
-// только если Gemini не настроен. Если не задано ничего — parseWithAI
-// вернёт null, и getParsedListing ниже сам откатится на regex-парсер
-// (parseListing) — это уже было в проекте, тут не меняется.
+// Цепочка ИИ-провайдеров (Gemini → Groq → OpenRouter → Mistral → SambaNova)
+// вынесена в общий модуль api/aiProviders.js — используется
+// отсюда, из api/listingParser.js и из api/telegram-webhook.js, чтобы
+// список провайдеров и порядок фоллбэка не расходились по трём файлам.
 async function parseWithAI(text) {
 
-    if (GEMINI_API_KEY) return parseWithGemini(text);
-    if (OPENAI_API_KEY) return parseWithOpenAI(text);
-    return null;
-}
+    const result = await runListingAiChain({
+        systemPrompt: AI_SYSTEM_PROMPT,
+        jsonSchema: AI_JSON_SCHEMA,
+        geminiResponseSchema: GEMINI_RESPONSE_SCHEMA,
+        userText: text
+    });
 
+    if (!result.ok) return null;
+
+    console.log(`AI PARSE: сработал провайдер "${result.provider}"`);
+
+    return mapAiResultToParsed(result.data);
+}
 
 // Пробуем ИИ, при любой неудаче — старый regex-парсер. Оба возвращают
 // объект одинаковой формы, так что вызывающему коду не важно, откуда он.
@@ -1226,8 +1103,9 @@ export default async function handler(req, res) {
         // раз может добиваться сразу несколько альбомов из очереди —
         // если используется Gemini, даём небольшую паузу между вызовами
         // parseWithAI (через processPost -> getParsedListing), чтобы не
-        // упереться в лимит. На OpenAI/regex-фолбэк пауза не влияет.
-        const throttleAiCalls = Boolean(GEMINI_API_KEY) && candidates.length > 1;
+        // упереться в лимит. На остальных провайдеров цепочки (Groq/
+        // Groq/OpenRouter/Mistral/SambaNova) / regex-фолбэк пауза не влияет.
+        const throttleAiCalls = isGeminiConfigured() && candidates.length > 1;
 
         for (const row of candidates) {
 
