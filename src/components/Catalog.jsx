@@ -36,6 +36,22 @@ const BEDROOM_OPTIONS = [1, 2, 3, 4, 5];
 const PAGE_SIZE = 9;
 
 
+// Категории жилья — тот же словарь, что и в бэкенд-парсере
+// (api/listingParser.js, TYPE_DICT/detectType), на всех 3 языках. Вилла/
+// Коттедж/Резиденция/Пентхаус убраны по прямому запросу — такого жилья
+// в Ташкенте нет.
+// Фильтр по типу берёт эти значения СТАТИЧЕСКИ, а не только из уже
+// существующих объявлений в базе — иначе "Дом"/"Новостройка" не
+// появлялись бы в выпадающем списке, пока не создастся хотя бы одно
+// такое объявление (а появляться они должны сразу, до первого
+// реального объявления этого типа).
+const RESIDENTIAL_TYPE_LABELS = {
+    ru: ["Квартира", "Дом", "Новостройка"],
+    en: ["Apartment", "House", "New building"],
+    uz: ["Kvartira", "Uy", "Yangi qurilish"]
+};
+
+
 const Catalog = () => {
 
     const {
@@ -167,9 +183,23 @@ const Catalog = () => {
                 ? items
                 : items.filter((i) => i.category === category);
 
-        return [...new Set(scoped.map((i) => i.typeLabel).filter(Boolean))];
+        const observed = new Set(scoped.map((i) => i.typeLabel).filter(Boolean));
 
-    }, [items, category]);
+        // Для "Все" и "Жильё" сначала фиксированный словарь (в нужном
+        // порядке), затем — то, что реально встретилось в данных, но в
+        // словарь не входит (старые/нестандартные значения жилья, а для
+        // "Все" ещё и типы коммерции вроде "Коммерция").
+        if (category === "residential" || category === "all") {
+
+            const canonical = RESIDENTIAL_TYPE_LABELS[lang] || RESIDENTIAL_TYPE_LABELS.ru;
+            const extra = [...observed].filter((label) => !canonical.includes(label));
+
+            return [...canonical, ...extra];
+        }
+
+        return [...observed];
+
+    }, [items, category, lang]);
 
 
     useEffect(() => {
