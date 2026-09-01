@@ -207,6 +207,7 @@ async function createDraftPage(table, linkIdField, cardId, parsed, images, video
             images: images || [],
             video: videoUrl || "",
             amenities: parsed.amenities || [],
+            is_rent: Boolean(parsed.isRent),
             is_draft: true
         };
 
@@ -221,14 +222,15 @@ async function createDraftPage(table, linkIdField, cardId, parsed, images, video
                 location_uz: "",
                 // Категория/тип коммерции (Помещение/Здание/Офис и т.п.) — не
                 // используем словарь типов жилья (Квартира/Вилла/Дом), он тут
-                // не подходит по смыслу. Оставляем пустым, как about/class/
-                // purpose — дозаполняете в админке.
+                // не подходит по смыслу. class_* — поле "Категория" на сайте
+                // (см. CommercialHero.jsx text("class")) — по прямому
+                // запросу ставим фиксированное "Коммерция", а не пусто.
                 type_ru: "",
                 type_en: "",
                 type_uz: "",
-                class_ru: "",
-                class_en: "",
-                class_uz: "",
+                class_ru: "Коммерция",
+                class_en: "Commercial",
+                class_uz: "Tijorat",
                 purpose_ru: "",
                 purpose_en: "",
                 purpose_uz: "",
@@ -391,6 +393,7 @@ async function processPost(mainMsg, allMsgs) {
             image,
             video: videoUrl || "",
             price: parsed.price,
+            is_rent: Boolean(parsed.isRent),
             tg_chat_id: mainMsg.chat.id,
             tg_message_id: mainMsg.message_id
         };
@@ -493,12 +496,14 @@ bot.on("edited_channel_post", async (msg) => {
                 title_ru: parsed.title_ru, title_en: parsed.title_en, title_uz: parsed.title_uz,
                 description_ru: parsed.description_ru, description_en: parsed.description_en, description_uz: parsed.description_uz,
                 price: parsed.price,
+                is_rent: Boolean(parsed.isRent),
                 ...parsed.commercialFields
             }
             : {
                 title_ru: parsed.title_ru, title_en: parsed.title_en, title_uz: parsed.title_uz,
                 description_ru: parsed.description_ru, description_en: parsed.description_en, description_uz: parsed.description_uz,
                 price: parsed.price,
+                is_rent: Boolean(parsed.isRent),
                 bedrooms_ru: parsed.bedrooms ? `${parsed.bedrooms} спальни` : "",
                 bedrooms_en: parsed.bedrooms ? `${parsed.bedrooms} bedrooms` : "",
                 bedrooms_uz: parsed.bedrooms ? `${parsed.bedrooms} yotoqxona` : "",

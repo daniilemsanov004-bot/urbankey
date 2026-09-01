@@ -987,5 +987,11 @@
   "changeCommercialPageTitle": "Edit commercial listings",
   "deleteCommercialConfirm": "Delete?",
   "commercialDeleted": "Commercial listing deleted",
-  "catalogDeleteConfirm": "Delete this listing from the catalog? This action cannot be undone."
+  "catalogDeleteConfirm": "Delete this listing from the catalog? This action cannot be undone.",
+  "dealType": {
+    "label": "Deal type",
+    "all": "Any deal type",
+    "rent": "For rent",
+    "sale": "For sale"
+  }
 }

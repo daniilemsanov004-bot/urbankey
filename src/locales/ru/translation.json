@@ -988,5 +988,11 @@
   "changeCommercialPageTitle": "Изменение коммерции",
   "deleteCommercialConfirm": "Удалить?",
   "commercialDeleted": "Коммерческий объект удалён",
-  "catalogDeleteConfirm": "Удалить эту карточку из каталога? Действие необратимо."
+  "catalogDeleteConfirm": "Удалить эту карточку из каталога? Действие необратимо.",
+  "dealType": {
+    "label": "Сделка",
+    "all": "Любая сделка",
+    "rent": "Аренда",
+    "sale": "Продажа"
+  }
 }

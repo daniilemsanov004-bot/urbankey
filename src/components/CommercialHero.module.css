@@ -12,6 +12,19 @@
 }
 
 
+.dealBadge {
+    display: inline-block;
+    padding: 6px 16px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--violet);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: .02em;
+}
+
+
 h1 {
     font-size: clamp(40px, 5vw, 70px);
     line-height: 1;

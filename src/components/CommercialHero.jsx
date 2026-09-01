@@ -49,6 +49,11 @@ const CommercialHero = ({ data }) => {
             <div className={s.container}>
 
 
+                <span className={s.dealBadge}>
+                    {data.is_rent ? t("dealType.rent") : t("dealType.sale")}
+                </span>
+
+
                 <h1>
 
                     {text("title")}
@@ -171,15 +176,6 @@ const CommercialHero = ({ data }) => {
 
 
                             {formatPriceIn(data.price, currency)}
-
-
-
-                            {" "}
-
-
-
-                            UZS
-
 
 
                         </h3>

@@ -93,6 +93,7 @@ const Catalog = () => {
 
     const [category, setCategory] = useState("all");
     const [type, setType] = useState("all");
+    const [dealType, setDealType] = useState("all");
     const [minPrice, setMinPrice] = useState("");
     const [maxPrice, setMaxPrice] = useState("");
     const [bedrooms, setBedrooms] = useState("all");
@@ -125,6 +126,7 @@ const Catalog = () => {
             price: item.price,
             priceValue: parsePriceValue(item.price),
             typeLabel: item.type?.[lang] || item.type?.ru || "",
+            isRent: item.is_rent === true,
             bedroomsLabel: item.bedrooms?.[lang] || item.bedrooms?.ru || "",
             bedroomsValue: parseFirstNumber(item.bedrooms?.ru),
             bathroomsLabel: item.bathrooms?.[lang] || item.bathrooms?.ru || "",
@@ -144,6 +146,7 @@ const Catalog = () => {
             typeLabel:
                 item.class?.[lang] || item.class?.ru
                 || t("catalog.commercial"),
+            isRent: item.is_rent === true,
             district: item.district?.[lang] || item.district?.ru || "",
             area: item.area || "",
             floor: item.floor || "",
@@ -205,6 +208,8 @@ const Catalog = () => {
 
                 if (type !== "all" && item.typeLabel !== type) return false;
 
+                if (dealType !== "all" && (item.isRent ? "rent" : "sale") !== dealType) return false;
+
                 if (min !== null && (item.priceValue === null || item.priceValue < min)) return false;
                 if (max !== null && (item.priceValue === null || item.priceValue > max)) return false;
 
@@ -240,7 +245,7 @@ const Catalog = () => {
 
         return result;
 
-    }, [items, category, type, minPrice, maxPrice, bedrooms, debouncedSearch, sort]);
+    }, [items, category, type, dealType, minPrice, maxPrice, bedrooms, debouncedSearch, sort]);
 
 
     const suggestions = useMemo(() => {
@@ -269,17 +274,18 @@ const Catalog = () => {
 
     useEffect(() => {
         setVisibleCount(PAGE_SIZE);
-    }, [category, type, minPrice, maxPrice, bedrooms, debouncedSearch, sort]);
+    }, [category, type, dealType, minPrice, maxPrice, bedrooms, debouncedSearch, sort]);
 
 
     const hasActiveFilters =
-        category !== "all" || type !== "all" || minPrice || maxPrice ||
+        category !== "all" || type !== "all" || dealType !== "all" || minPrice || maxPrice ||
         bedrooms !== "all" || search;
 
 
     const resetFilters = () => {
         setCategory("all");
         setType("all");
+        setDealType("all");
         setMinPrice("");
         setMaxPrice("");
         setBedrooms("all");
@@ -403,6 +409,15 @@ const Catalog = () => {
                     </div>
 
                     <div className={s.field}>
+                        <label>{t("dealType.label")}</label>
+                        <select value={dealType} onChange={(e) => setDealType(e.target.value)}>
+                            <option value="all">{t("dealType.all")}</option>
+                            <option value="sale">{t("dealType.sale")}</option>
+                            <option value="rent">{t("dealType.rent")}</option>
+                        </select>
+                    </div>
+
+                    <div className={s.field}>
                         <label>{t("catalog.priceFrom")}</label>
                         <input
                             type="number"
@@ -515,6 +530,10 @@ const Catalog = () => {
                                         {item.category === "residential"
                                             ? t("catalog.residential")
                                             : t("catalog.commercial")}
+                                    </span>
+
+                                    <span className={s.dealBadge}>
+                                        {item.isRent ? t("dealType.rent") : t("dealType.sale")}
                                     </span>
 
                                     <FavoriteButton

@@ -61,6 +61,13 @@ const Villa = ({ data }) => {
 
 
 
+                <motion.span className={s.dealBadge}>
+
+                    {data.is_rent ? t("dealType.rent") : t("dealType.sale")}
+
+                </motion.span>
+
+
                 <motion.h1>
 
 

@@ -45,7 +45,6 @@
     padding: 80px 20px;
 
 
-
     position: relative;
 
     z-index: 2;
@@ -365,6 +364,19 @@
             }
         }
     }
+}
+
+
+.dealBadge {
+    display: inline-block;
+    padding: 6px 16px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--violet);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: .02em;
 }
 
 

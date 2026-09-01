@@ -15,6 +15,10 @@ const TYPE_DICT = [
     { test: /коттедж|cottage|kottej/i, ru: "Коттедж", en: "Cottage", uz: "Kottej" },
     { test: /резиденци|residence|rezidensiya/i, ru: "Резиденция", en: "Residence", uz: "Rezidensiya" },
     { test: /пентхаус|penthouse|pentxaus/i, ru: "Пентхаус", en: "Penthouse", uz: "Pentxaus" },
+    // "Новостройка" ПЕРЕД "Дом" — иначе пост вроде "новостройка, частный
+    // дом" определился бы как обычный "Дом", хотя явно указано, что это
+    // новостройка (более узкий, приоритетный признак).
+    { test: /новостройк|yangi\s*qurilgan|new\s*building|off[\s-]?plan/i, ru: "Новостройка", en: "New building", uz: "Yangi qurilish" },
     { test: /\bдом\b|\bhouse\b|\buy\b/i, ru: "Дом", en: "House", uz: "Uy" }
 ];
 
@@ -260,6 +264,31 @@ export function isCommercialPost(text) {
 }
 
 
+// ---------------------------------------------------------------------
+// Аренда или продажа.
+//
+// "арендатор" (уже входит в COMMERCIAL_KEYWORDS выше — это про
+// СУЩЕСТВУЮЩЕГО арендатора в помещении, признак коммерции с доходом, а
+// не признак того, что САМ пост — предложение аренды) сюда специально
+// не включаем, чтобы не путать с "сдам"/"сдаётся". Проверяем аренду
+// ПЕРВОЙ (она обычно однозначнее по формулировкам "сдам"/"сдаётся"/
+// "в аренду"), продажу — по остаточному принципу через отдельный список
+// маркеров; если не нашлось ни одного явного маркера ни в одну, ни в
+// другую сторону — считаем продажей (это исторически подавляющее
+// большинство постов в канале).
+const RENT_KEYWORDS =
+    /сдам\b|сдаётся|сдается|сдаю\b|в\s*аренду|аренда\s+(?:на|от|помещени|квартир)|долгосрочн(?:ую|ая)\s+аренд|посуточно|ижарага|ijaraga|for\s*rent|rent(?:al)?\b/i;
+
+const SALE_KEYWORDS =
+    /продам\b|продаётся|продается|продажа|на\s*продажу|sotiladi|sotuvda|for\s*sale/i;
+
+export function detectIsRent(text) {
+    if (RENT_KEYWORDS.test(text)) return true;
+    if (SALE_KEYWORDS.test(text)) return false;
+    return false;
+}
+
+
 
 
 // ---------------------------------------------------------------------
@@ -442,6 +471,8 @@ export function parseListing(text) {
 
     const isSold = /продан[оаы]|снят[оаы]? с продажи/i.test(text);
 
+    const isRent = detectIsRent(text);
+
     const type = detectType(text);
 
 
@@ -494,6 +525,7 @@ export function parseListing(text) {
     return {
         isCommercial,
         isSold,
+        isRent,
         missing,
         title_ru,
         title_en,
@@ -540,9 +572,10 @@ const AI_SYSTEM_PROMPT = `Ты — парсер объявлений о недв
 7. "title_en" и "title_uz" — переводы title_ru тем же тоном.
 8. Если пост вообще не про объект недвижимости — можешь оставить большинство полей null/пустыми.
 9. "is_sold" = true ТОЛЬКО если в тексте явно сказано, что объект уже продан/сдан/снят с продажи.
+9a. "is_rent" = true, если объект сдаётся В АРЕНДУ (сдам/сдаётся/долгосрочная или посуточная аренда), false — если объект ПРОДАЁТСЯ. Если в тексте нет явного маркера ни в одну, ни в другую сторону — считай false (продажа), это подавляющее большинство постов в канале.
 10. "price_raw" — цена ровно как в тексте. "price_number" — то же самое, но как число в долларах, если валюта явно $ или это очевидно итоговая цена продажи. Упоминание процента оплаты (например "при 100% оплате") — это НЕ цена. Если цена дана в сумах с курсом и отдельно указан итог в $ — используй именно итог в $.
 11. "is_commercial" = true, если это коммерческая недвижимость, false — если жильё.
-12. "type_ru"/"type_en"/"type_uz" — категория ЖИЛЬЯ (Квартира/Apartment/Kvartira, Вилла/Villa/Villa, Дом/House/Uy, Коттедж/Cottage/Kottej, Резиденция/Residence/Rezidensiya, Пентхаус/Penthouse/Pentxaus) — только если это жильё. Название ЖК может само содержать слово вроде "House" или "Villas" — ориентируйся на реальный смысл текста. Если is_commercial=true, оставь эти поля null.
+12. "type_ru"/"type_en"/"type_uz" — категория ЖИЛЬЯ (Квартира/Apartment/Kvartira, Вилла/Villa/Villa, Дом/House/Uy, Коттедж/Cottage/Kottej, Резиденция/Residence/Rezidensiya, Пентхаус/Penthouse/Pentxaus, Новостройка/New building/Yangi qurilish — если явно указано, что это новостройка/сдаваемый застройщиком объект, а не конкретный тип планировки) — только если это жильё. Название ЖК может само содержать слово вроде "House" или "Villas" — ориентируйся на реальный смысл текста. Если is_commercial=true, оставь эти поля null.
 13. Никогда не копируй в description номер телефона, имя агента или ссылки на инстаграм/телеграм.`;
 
 const AI_JSON_SCHEMA = {
@@ -559,6 +592,7 @@ const AI_JSON_SCHEMA = {
             description_uz: { type: "string" },
             is_commercial: { type: "boolean" },
             is_sold: { type: "boolean" },
+            is_rent: { type: "boolean" },
             type_ru: { type: ["string", "null"] },
             type_en: { type: ["string", "null"] },
             type_uz: { type: ["string", "null"] },
@@ -590,7 +624,7 @@ const AI_JSON_SCHEMA = {
         required: [
             "title_ru", "title_en", "title_uz",
             "description_ru", "description_en", "description_uz",
-            "is_commercial", "is_sold",
+            "is_commercial", "is_sold", "is_rent",
             "type_ru", "type_en", "type_uz",
             "price_raw", "price_number",
             "bedrooms", "bathrooms", "area", "floor", "total_floors", "ceiling_height",
@@ -617,6 +651,7 @@ const GEMINI_RESPONSE_SCHEMA = {
         description_uz: { type: "STRING" },
         is_commercial: { type: "BOOLEAN" },
         is_sold: { type: "BOOLEAN" },
+        is_rent: { type: "BOOLEAN" },
         type_ru: { type: "STRING", nullable: true },
         type_en: { type: "STRING", nullable: true },
         type_uz: { type: "STRING", nullable: true },
@@ -647,13 +682,71 @@ const GEMINI_RESPONSE_SCHEMA = {
     required: [
         "title_ru", "title_en", "title_uz",
         "description_ru", "description_en", "description_uz",
-        "is_commercial", "is_sold",
+        "is_commercial", "is_sold", "is_rent",
         "type_ru", "type_en", "type_uz",
         "price_raw", "price_number",
         "bedrooms", "bathrooms", "area", "floor", "total_floors", "ceiling_height",
         "district", "address", "landmark", "amenities"
     ]
 };
+
+// Нормализуем amenities: у Gemini строгая JSON-схема (responseSchema)
+// гарантирует форму {ru,en,uz} для каждого пункта, а у остальных
+// провайдеров в цепочке (Groq/OpenRouter/Mistral/SambaNova/Cloudflare)
+// строгой схемы нет — только текстовое описание в промпте, и слабые/
+// бесплатные модели иногда возвращают пункт просто строкой или под
+// другими ключами. Без этой нормализации на сайте такой пункт
+// показывался бы прочерком ("—"), как будто удобство есть, а текста
+// у него нет.
+function normalizeAmenities(rawAmenities) {
+
+    if (!Array.isArray(rawAmenities)) return [];
+
+    return rawAmenities
+        .map((item) => {
+
+            if (typeof item === "string") {
+                const text = item.trim();
+                return text ? { ru: text, en: text, uz: text } : null;
+            }
+
+            if (item && typeof item === "object") {
+                const ru = String(item.ru || item.text || item.name || "").trim();
+                const en = String(item.en || "").trim();
+                const uz = String(item.uz || "").trim();
+                if (!ru && !en && !uz) return null;
+                return {
+                    ru: ru || en || uz,
+                    en: en || ru || uz,
+                    uz: uz || ru || en
+                };
+            }
+
+            return null;
+        })
+        .filter(Boolean);
+}
+
+// price_number от ИИ доверяем только если он в целом согласуется с
+// тем, что можно детерминированно вытащить регэкспом из price_raw (той
+// же priceToNumber, что использует regex-парсер выше). У провайдеров
+// без строгой JSON-схемы (см. normalizeAmenities выше) изредка
+// случается, что price_raw текст верный, а price_number — нет
+// (сминаются с чем-то ещё цифры из поста). Если расхождение больше чем
+// на порядок в любую сторону — считаем, что это как раз такой случай,
+// и берём число из текста, а не то, что "досочинила" модель.
+function reconcilePriceNumber(priceRaw, aiPriceNumber) {
+
+    const fromText = priceToNumber(priceRaw);
+
+    if (aiPriceNumber == null) return fromText;
+    if (fromText == null || fromText === 0) return aiPriceNumber;
+
+    const ratio = aiPriceNumber / fromText;
+    if (ratio > 10 || ratio < 0.1) return fromText;
+
+    return aiPriceNumber;
+}
 
 function mapAiResultToParsed(ai) {
 
@@ -692,6 +785,7 @@ function mapAiResultToParsed(ai) {
     return {
         isCommercial,
         isSold: Boolean(ai.is_sold),
+        isRent: Boolean(ai.is_rent),
         missing,
         title_ru: ai.title_ru || "Квартира",
         title_en: ai.title_en || "",
@@ -700,7 +794,7 @@ function mapAiResultToParsed(ai) {
         description_en: ai.description_en || "",
         description_uz: ai.description_uz || "",
         price: ai.price_raw || "",
-        priceNumber: ai.price_number ?? null,
+        priceNumber: reconcilePriceNumber(ai.price_raw, ai.price_number),
         bedrooms: ai.bedrooms != null ? String(ai.bedrooms) : "",
         bathrooms: ai.bathrooms != null ? String(ai.bathrooms) : "",
         area: ai.area != null ? String(ai.area) : "",
@@ -708,12 +802,12 @@ function mapAiResultToParsed(ai) {
         totalFloors: ai.total_floors != null ? String(ai.total_floors) : "",
         locationLine: ai.district || ai.address || "",
         type,
-        amenities: Array.isArray(ai.amenities) ? ai.amenities : [],
+        amenities: normalizeAmenities(ai.amenities),
         commercialFields
     };
 }
 
-// Цепочка ИИ-провайдеров (Gemini → Groq → OpenRouter → Mistral → SambaNova)
+// Цепочка ИИ-провайдеров (Gemini → Groq → OpenRouter → Mistral → SambaNova → Cloudflare)
 // вынесена в общий модуль api/aiProviders.js — используется
 // отсюда, из api/finalize-albums.js и из api/telegram-webhook.js, чтобы
 // список провайдеров и порядок фоллбэка не расходились по трём файлам.

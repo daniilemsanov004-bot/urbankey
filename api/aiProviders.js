@@ -11,6 +11,9 @@
 //   3. OpenRouter   — доступ к куче моделей сразу через один ключ
 //   4. Mistral      — OpenAI-совместимый API (api.mistral.ai)
 //   5. SambaNova    — OpenAI-совместимый API (api.sambanova.ai)
+//   6. Cloudflare Workers AI — отдельный формат API (не /chat/completions,
+//                      а /accounts/{id}/ai/run/{model}), последний в
+//                      цепочке
 //
 // OpenAI, Anthropic Claude и Cerebras сознательно не используются здесь
 // (были предложены как варианты в процессе — убраны/заменены по
@@ -36,6 +39,10 @@ const MISTRAL_MODEL = process.env.MISTRAL_MODEL || "mistral-small-latest";
 
 const SAMBANOVA_API_KEY = process.env.SAMBANOVA_API_KEY;
 const SAMBANOVA_MODEL = process.env.SAMBANOVA_MODEL || "Meta-Llama-3.3-70B-Instruct";
+
+const CLOUDFLARE_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID;
+const CLOUDFLARE_API_TOKEN = process.env.CLOUDFLARE_API_TOKEN;
+const CLOUDFLARE_MODEL = process.env.CLOUDFLARE_MODEL || "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 
 const DEFAULT_TIMEOUT_MS = Number(process.env.AI_TIMEOUT_MS) || 20000;
 const GEMINI_RETRYABLE_STATUSES = new Set([429, 503]);
@@ -174,9 +181,75 @@ async function callOpenAICompatible({ providerName, baseUrl, apiKey, model, syst
     }
 }
 
-// Публичная функция цепочки: пробует провайдеров по очереди —
-// Gemini → Groq → OpenRouter → Mistral → SambaNova — и возвращает JSON
-// от первого, кто успешно ответил (плюс имя сработавшего провайдера,
+// Cloudflare Workers AI — свой формат эндпоинта
+// (/client/v4/accounts/{id}/ai/run/{model}, а не /chat/completions),
+// заголовок Authorization: Bearer с API-токеном (не ключ модели).
+// Отвечает { success, result: { response } }, а не { choices: [...] },
+// как у OpenAI-совместимых — поэтому отдельная функция, не через
+// callOpenAICompatible.
+async function callCloudflare(systemPrompt, userText) {
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
+
+    try {
+
+        const res = await fetch(
+            `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/ai/run/${CLOUDFLARE_MODEL}`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${CLOUDFLARE_API_TOKEN}`
+                },
+                body: JSON.stringify({
+                    temperature: 0,
+                    messages: [
+                        {
+                            role: "system",
+                            content: `${systemPrompt}\n\nОтвечай СТРОГО валидным JSON-объектом по описанной структуре, без пояснений и без markdown-разметки (без \`\`\`).`
+                        },
+                        { role: "user", content: userText }
+                    ]
+                }),
+                signal: controller.signal
+            }
+        );
+
+        clearTimeout(timeout);
+
+        if (!res.ok) {
+            console.log("CLOUDFLARE API ERROR:", res.status, await res.text());
+            return null;
+        }
+
+        const data = await res.json();
+
+        if (!data.success) {
+            console.log("CLOUDFLARE API ERROR (success:false):", JSON.stringify(data.errors));
+            return null;
+        }
+
+        const raw = data.result?.response;
+
+        if (!raw) {
+            console.log("CLOUDFLARE: пустой ответ");
+            return null;
+        }
+
+        return JSON.parse(cleanJsonText(raw));
+
+    } catch (e) {
+
+        clearTimeout(timeout);
+        console.log("CLOUDFLARE PARSE EXCEPTION:", e.message);
+        return null;
+    }
+}
+
+// Публичная функция цепочки: пробует провайдеров по очереди — Gemini →
+// Groq → OpenRouter → Mistral → SambaNova → Cloudflare Workers AI — и
+// возвращает JSON от первого, кто успешно ответил (плюс имя сработавшего провайдера,
 // на случай если понадобится для логов/отладки). Провайдер без ключа в
 // .env просто пропускается. Если не сработал ни один — { ok: false }.
 // Нужно снаружи (finalize-albums.js) для троттлинга между вызовами:
@@ -244,6 +317,11 @@ export async function runListingAiChain({ systemPrompt, jsonSchema, geminiRespon
             userText
         });
         if (data) return { ok: true, provider: "sambanova", data };
+    }
+
+    if (CLOUDFLARE_ACCOUNT_ID && CLOUDFLARE_API_TOKEN) {
+        const data = await callCloudflare(systemPrompt, userText);
+        if (data) return { ok: true, provider: "cloudflare", data };
     }
 
     return { ok: false, provider: null, data: null };
