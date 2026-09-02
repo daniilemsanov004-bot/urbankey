@@ -18,14 +18,14 @@ export const MyContext = createContext();
 const CARD_PUBLIC_COLUMNS =
     "id, title_ru, title_en, title_uz, description_ru, description_en, description_uz, " +
     "bedrooms_ru, bedrooms_en, bedrooms_uz, bathrooms_ru, bathrooms_en, bathrooms_uz, " +
-    "type_ru, type_en, type_uz, price, image, link, created_by, boosted_until";
+    "type_ru, type_en, type_uz, price, image, link, created_by, boosted_until, is_rent";
 
 const COMMERCIAL_PUBLIC_COLUMNS =
     "id, title_ru, title_en, title_uz, description_ru, description_en, description_uz, " +
     "district_ru, district_en, district_uz, address_ru, address_en, address_uz, " +
     "class_ru, class_en, class_uz, landmark_ru, landmark_en, landmark_uz, " +
     "floor, ceiling, area, price, discount_price, discount, " +
-    "status_ru, status_en, status_uz, delivery_date, image, created_by, boosted_until";
+    "status_ru, status_en, status_uz, delivery_date, image, created_by, boosted_until, is_rent";
 
 // true, если ошибка supabase означает "такой таблицы/view не существует"
 // (PostgREST/Postgres 42P01) — то есть SQL-миграция ещё не накатана
@@ -240,7 +240,8 @@ export const MyProvider = ({ children }) => {
 
                 link: item.link,
 
-                boostedUntil: item.boosted_until
+                boostedUntil: item.boosted_until,
+                is_rent: item.is_rent
 
 
             }));
@@ -339,7 +340,8 @@ export const MyProvider = ({ children }) => {
 
                 link: item.link,
 
-                boostedUntil: item.boosted_until
+                boostedUntil: item.boosted_until,
+                is_rent: item.is_rent
 
 
             }));
@@ -490,7 +492,8 @@ export const MyProvider = ({ children }) => {
 
                     image: item.image,
 
-                    boostedUntil: item.boosted_until
+                    boostedUntil: item.boosted_until,
+                    is_rent: item.is_rent
 
                 }))
 
@@ -971,6 +974,7 @@ export const MyProvider = ({ children }) => {
             ceiling_height: data.ceiling_height,
             floor: data.floor,
             price: data.price,
+            is_rent: Boolean(data.is_rent),
 
             images: data.images || [],
             amenities: data.amenities || []
@@ -1028,6 +1032,20 @@ export const MyProvider = ({ children }) => {
                 area: data.area,
 
                 price: data.price,
+
+                is_rent: Boolean(data.is_rent),
+
+                class: {
+                    ru: data.class_ru || "",
+                    en: data.class_en || "",
+                    uz: data.class_uz || ""
+                },
+
+                location: {
+                    ru: data.district_ru || "",
+                    en: data.district_en || "",
+                    uz: data.district_uz || ""
+                },
 
                 image: data.image,
 
@@ -1822,6 +1840,8 @@ export const MyProvider = ({ children }) => {
                 year: data.year,
 
                 square: data.square,
+
+                is_rent: Boolean(data.is_rent),
 
 
                 images: data.images || [],

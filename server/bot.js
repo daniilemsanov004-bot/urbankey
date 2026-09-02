@@ -399,7 +399,18 @@ async function processPost(mainMsg, allMsgs) {
         };
 
         const insertData = parsed.isCommercial
-            ? { ...baseFields, ...parsed.commercialFields }
+            ? {
+                ...baseFields,
+                ...parsed.commercialFields,
+                // Тот же хардкод "Коммерция", что и в createDraftPage
+                // (для альбомов) — тут отдельная, более простая ветка
+                // для постов с ОДНИМ фото, которая эти поля раньше не
+                // трогала вообще (оставались NULL/пустыми — отсюда была
+                // пустая "Категория" на сайте для таких постов).
+                class_ru: "Коммерция",
+                class_en: "Commercial",
+                class_uz: "Tijorat"
+            }
             : {
                 ...baseFields,
                 bedrooms_ru: parsed.bedrooms ? `${parsed.bedrooms} спальни` : "",
@@ -497,6 +508,9 @@ bot.on("edited_channel_post", async (msg) => {
                 description_ru: parsed.description_ru, description_en: parsed.description_en, description_uz: parsed.description_uz,
                 price: parsed.price,
                 is_rent: Boolean(parsed.isRent),
+                class_ru: "Коммерция",
+                class_en: "Commercial",
+                class_uz: "Tijorat",
                 ...parsed.commercialFields
             }
             : {
