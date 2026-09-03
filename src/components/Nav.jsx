@@ -135,6 +135,8 @@ const Nav = () => {
                         }
                         to={localizedPath("/", i18n.language)}
                         onClick={handleHomeClick}
+
+                        end
                     >
                         {t("home")}
                     </NavLink>
