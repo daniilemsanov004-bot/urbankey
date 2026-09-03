@@ -4,7 +4,7 @@ import { MyContext } from "../Context";
 import { useCurrency } from "../context/CurrencyContext";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { buildLangPath, localizedPath } from "../utils/lang";
+import { buildLangPath, localizedPath, stripLangPrefix } from "../utils/lang";
 import {
     Globe,
     Sun,
@@ -102,11 +102,24 @@ const Nav = () => {
         LANGUAGES.find(l => l.code === i18n.language)?.label
         || LANGUAGES[0].label;
 
+    const isOnHome = stripLangPrefix(location.pathname) === "" || stripLangPrefix(location.pathname) === "/";
+
+    const handleHomeClick = (e) => {
+        if (isOnHome) {
+            e.preventDefault();
+            window.location.reload();
+        }
+    };
+
     return (
         <nav className={`${s.nav} ${show ? s.active : s.hidden}`}>
             <div className={s.block}>
 
-                <NavLink className={s.logoLink} to={localizedPath("/", i18n.language)}>
+                <NavLink
+                    className={s.logoLink}
+                    to={localizedPath("/", i18n.language)}
+                    onClick={handleHomeClick}
+                >
                     <img
                         className={s.logo}
                         src="/image (16).webp"
@@ -121,6 +134,7 @@ const Nav = () => {
                             isActive ? `${s.link} ${s.activeLink}` : s.link
                         }
                         to={localizedPath("/", i18n.language)}
+                        onClick={handleHomeClick}
                     >
                         {t("home")}
                     </NavLink>

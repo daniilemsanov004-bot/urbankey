@@ -5,7 +5,7 @@ import { useCurrency } from "../context/CurrencyContext";
 import { useTranslation } from "react-i18next";
 import { Home, Search, PlusSquare, Heart, User, Menu, ListChecks, Sun, Moon, LogOut } from "lucide-react";
 import s from "./BottomNav.module.css";
-import { buildLangPath, localizedPath } from "../utils/lang";
+import { buildLangPath, localizedPath, stripLangPrefix } from "../utils/lang";
 
 const LANGUAGES = [
     { code: "ru", label: "Рус" },
@@ -75,10 +75,19 @@ const BottomNav = () => {
         await logout();
     };
 
+    const isOnHome = stripLangPrefix(location.pathname) === "" || stripLangPrefix(location.pathname) === "/";
+
+    const handleHomeClick = (e) => {
+        if (isOnHome) {
+            e.preventDefault();
+            window.location.reload();
+        }
+    };
+
     return (
         <>
             <nav className={`${s.bar} ${show ? "" : s.hidden}`} aria-label={t("menu")}>
-                <NavLink to={localizedPath("/", i18n.language)} end className={({ isActive }) => isActive ? `${s.item} ${s.active}` : s.item}>
+                <NavLink to={localizedPath("/", i18n.language)} end onClick={handleHomeClick} className={({ isActive }) => isActive ? `${s.item} ${s.active}` : s.item}>
                     <Home size={21} />
                     <span>{t("home")}</span>
                 </NavLink>
