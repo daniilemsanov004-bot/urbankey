@@ -2,6 +2,7 @@ import { useContext, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { MyContext } from "../Context";
+import { localizedPath } from "../utils/lang";
 import { useCurrency } from "../context/CurrencyContext";
 import { formatPriceIn } from "../utils/currency";
 import FavoriteButton from "../components/FavoriteButton";
@@ -17,7 +18,7 @@ const Favorites = () => {
         getFavorites
     } = useContext(MyContext);
 
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { currency } = useCurrency();
 
     useEffect(() => {
@@ -61,7 +62,7 @@ const Favorites = () => {
                             {t("noFavorites")
                                 || "Вы пока ничего не добавили в избранное"}
                         </p>
-                        <Link to="/Properties" className={s.loginBtn}>
+                        <Link to={localizedPath("/Properties", i18n.language)} className={s.loginBtn}>
                             {t("properties") || "Посмотреть объекты"}
                         </Link>
                     </div>

@@ -235,9 +235,9 @@ const What = () => {
                 />
 
 
-                <h1>
+                <h2>
                     {t("what.title")}
-                </h1>
+                </h2>
 
 
                 <div className={s.titles}>

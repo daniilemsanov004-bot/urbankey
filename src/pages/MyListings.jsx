@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Trash2 } from "lucide-react";
 import { MyContext } from "../Context";
+import { localizedPath } from "../utils/lang";
 import { toast } from "react-toastify";
 import s from "./MyListings.module.css";
 
@@ -85,8 +86,8 @@ const MyListings = () => {
                 {listings.map((item) => {
 
                     const linkTo = item.kind === "commercial"
-                        ? `/commercial/${item.id}`
-                        : `/property/${item.id}`;
+                        ? localizedPath(`/commercial/${item.id}`, i18n.language)
+                        : localizedPath(`/property/${item.id}`, i18n.language);
 
                     const kindLabel = item.kind === "commercial"
                         ? t("myListingsKindCommercial")

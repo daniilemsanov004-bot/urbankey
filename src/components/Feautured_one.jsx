@@ -10,6 +10,7 @@ import 'swiper/css'
 import 'swiper/css/navigation'
 
 import { MyContext } from '../Context';
+import { localizedPath } from '../utils/lang';
 import { useCurrency } from '../context/CurrencyContext';
 import { formatPriceIn } from '../utils/currency';
 import { Building2, Ruler, Tag } from 'lucide-react';
@@ -201,9 +202,9 @@ const Feautured = ({ data, commercial, items }) => {
                 />
 
 
-                <h1>
+                <h2>
                     {t("featuredTitle")}
-                </h1>
+                </h2>
 
 
                 <div className={s.titles}>
@@ -216,7 +217,7 @@ const Feautured = ({ data, commercial, items }) => {
 
                     <Link
                         className={s.link}
-                        to={"/Properties"}
+                        to={localizedPath("/Properties", i18n.language)}
                     >
 
                         {t("viewAll")}
@@ -488,7 +489,7 @@ const Feautured = ({ data, commercial, items }) => {
 
                                 <Link
 
-                                    to={commercial ? `/commercial/${item.id}` : `/property/${item.id}`}
+                                    to={localizedPath(commercial ? `/commercial/${item.id}` : `/property/${item.id}`, i18n.language)}
 
                                     className={s.linkk}
 

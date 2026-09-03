@@ -9,7 +9,7 @@ import Seo from '../components/Seo'
 const Services = () => {
   return (
     <>
-      <Seo title="Сервисы" description="Услуги UrbanKey: подбор объектов, сопровождение сделок, консультации." />
+      <Seo title="Услуги" description="Услуги UrbanKey в Ташкенте: подбор недвижимости, сопровождение сделок, консультации." />
       <Elevate />
       <Unlock />
       <Effortless />

@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom'
 import s from './Smart.module.css'
 import { motion } from "framer-motion"
+import { localizedPath } from "../utils/lang"
 import { useTranslation } from "react-i18next"
 
 const Smart = () => {
-    const { t } = useTranslation()
+    const { t, i18n } = useTranslation()
 
     const smart = [
         {
@@ -43,20 +44,20 @@ const Smart = () => {
                     className={s.logo}
                 />
 
-                <motion.h1>
+                <motion.h2>
                     {t("smart.title")}
-                </motion.h1>
+                </motion.h2>
 
                 <motion.p>
                     {t("smart.subtitle")}
                 </motion.p>
 
                 <motion.div className={s.cardd}>
-                    <h1>{t("smart.cta.title")}</h1>
+                    <h2>{t("smart.cta.title")}</h2>
 
                     <p>{t("smart.cta.desc")}</p>
 
-                    <Link className={s.linkk} to={"/ContactUs"}>
+                    <Link className={s.linkk} to={localizedPath("/ContactUs", i18n.language)}>
                         {t("smart.cta.button")}
                     </Link>
                 </motion.div>

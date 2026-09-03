@@ -44,9 +44,9 @@ const CommercialAmenities = ({ data }) => {
         <section className={s.amenities}>
 
 
-            <h1>
+            <h2>
                 {t("amenitiesTitle")}
-            </h1>
+            </h2>
 
 
 

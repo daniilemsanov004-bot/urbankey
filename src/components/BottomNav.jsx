@@ -1,10 +1,11 @@
-import { NavLink, Link } from "react-router-dom";
+import { NavLink, Link, useNavigate, useLocation } from "react-router-dom";
 import { useContext, useState, useEffect, useRef } from "react";
 import { MyContext } from "../Context";
 import { useCurrency } from "../context/CurrencyContext";
 import { useTranslation } from "react-i18next";
 import { Home, Search, PlusSquare, Heart, User, Menu, ListChecks, Sun, Moon, LogOut } from "lucide-react";
 import s from "./BottomNav.module.css";
+import { buildLangPath } from "../utils/lang";
 
 const LANGUAGES = [
     { code: "ru", label: "Рус" },
@@ -16,6 +17,8 @@ const BottomNav = () => {
     const { user, profile, handleBurger, handleDark, isDark, logout, getMyListings } = useContext(MyContext);
     const { currency, toggleCurrency } = useCurrency();
     const { t, i18n } = useTranslation();
+    const navigate = useNavigate();
+    const location = useLocation();
 
     const [show, setShow] = useState(true);
     const lastScroll = useRef(0);
@@ -63,8 +66,8 @@ const BottomNav = () => {
     };
 
     const changeLanguage = (lng) => {
-        i18n.changeLanguage(lng);
         localStorage.setItem("language", lng);
+        navigate(buildLangPath(location.pathname, lng) + location.search, { replace: true });
     };
 
     const handleLogout = async () => {
@@ -75,12 +78,12 @@ const BottomNav = () => {
     return (
         <>
             <nav className={`${s.bar} ${show ? "" : s.hidden}`} aria-label={t("menu")}>
-                <NavLink to="/" end className={({ isActive }) => isActive ? `${s.item} ${s.active}` : s.item}>
+                <NavLink to={localizedPath("/", i18n.language)} end className={({ isActive }) => isActive ? `${s.item} ${s.active}` : s.item}>
                     <Home size={21} />
                     <span>{t("home")}</span>
                 </NavLink>
 
-                <NavLink to="/Properties" className={({ isActive }) => isActive ? `${s.item} ${s.active}` : s.item}>
+                <NavLink to={localizedPath("/Properties", i18n.language)} className={({ isActive }) => isActive ? `${s.item} ${s.active}` : s.item}>
                     <Search size={21} />
                     <span>{t("properties")}</span>
                 </NavLink>
@@ -137,9 +140,9 @@ const BottomNav = () => {
                     <div className={s.drawerHandle} />
 
                     <div className={s.drawerLinks}>
-                        <Link to="/AboutUs" className={s.drawerLink} onClick={() => setDrawerOpen(false)}>{t("aboutUs")}</Link>
-                        <Link to="/Services" className={s.drawerLink} onClick={() => setDrawerOpen(false)}>{t("services")}</Link>
-                        <Link to="/ContactUs" className={s.drawerLink} onClick={() => setDrawerOpen(false)}>{t("contactUs")}</Link>
+                        <Link to={localizedPath("/AboutUs", i18n.language)} className={s.drawerLink} onClick={() => setDrawerOpen(false)}>{t("aboutUs")}</Link>
+                        <Link to={localizedPath("/Services", i18n.language)} className={s.drawerLink} onClick={() => setDrawerOpen(false)}>{t("services")}</Link>
+                        <Link to={localizedPath("/ContactUs", i18n.language)} className={s.drawerLink} onClick={() => setDrawerOpen(false)}>{t("contactUs")}</Link>
                     </div>
 
                     <div className={s.drawerRow}>

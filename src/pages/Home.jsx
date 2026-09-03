@@ -5,11 +5,16 @@ import Questions from '../components/Questions'
 import Footer from '../components/Footer'
 import CommercialSection from '../components/CommercialSection'
 import Seo from '../components/Seo'
+import { buildOrganizationJsonLd } from '../utils/structuredData'
 
 const Home = () => {
     return (
         <>
-            <Seo title="Главная" description="UrbanKey — подбор вилл, квартир и коммерческой недвижимости. Ключи от вашей недвижимости." />
+            <Seo
+                title="Недвижимость в Ташкенте"
+                description="UrbanKey — подбор и продажа вилл, квартир и коммерческой недвижимости в Ташкенте. Ключи от вашей недвижимости."
+                jsonLd={buildOrganizationJsonLd()}
+            />
             <Hero />
             <Feautured />
             <CommercialSection />

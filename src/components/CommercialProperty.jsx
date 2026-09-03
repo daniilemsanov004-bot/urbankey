@@ -200,9 +200,9 @@ const CommercialProperty = ({ data }) => {
 
 
 
-                    <h1>
+                    <h2>
                         {t("features")}
-                    </h1>
+                    </h2>
 
 
 
@@ -240,9 +240,9 @@ const CommercialProperty = ({ data }) => {
                     <div className={s.specifi}>
 
 
-                        <h1>
+                        <h2>
                             {t("specifications")}
-                        </h1>
+                        </h2>
 
 
 
@@ -383,9 +383,9 @@ const CommercialProperty = ({ data }) => {
 
 
 
-                <h1>
+                <h2>
                     {t("about")}
-                </h1>
+                </h2>
 
 
 

@@ -2,8 +2,9 @@ import s from "./Nav.module.css";
 import { useContext, useState, useEffect, useRef } from "react";
 import { MyContext } from "../Context";
 import { useCurrency } from "../context/CurrencyContext";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { buildLangPath } from "../utils/lang";
 import {
     Globe,
     Sun,
@@ -27,6 +28,7 @@ const Nav = () => {
 
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
+    const location = useLocation();
     const { currency, toggleCurrency } = useCurrency();
 
     const {
@@ -91,9 +93,9 @@ const Nav = () => {
     };
 
     const changeLanguage = (lng) => {
-        i18n.changeLanguage(lng);
         localStorage.setItem("language", lng);
         setIsOpen(false);
+        navigate(buildLangPath(location.pathname, lng) + location.search, { replace: true });
     };
 
     const currentLang =
@@ -104,7 +106,7 @@ const Nav = () => {
         <nav className={`${s.nav} ${show ? s.active : s.hidden}`}>
             <div className={s.block}>
 
-                <NavLink className={s.logoLink} to="/">
+                <NavLink className={s.logoLink} to={localizedPath("/", i18n.language)}>
                     <img
                         className={s.logo}
                         src="/image (16).webp"
@@ -118,7 +120,7 @@ const Nav = () => {
                         className={({ isActive }) =>
                             isActive ? `${s.link} ${s.activeLink}` : s.link
                         }
-                        to="/"
+                        to={localizedPath("/", i18n.language)}
                     >
                         {t("home")}
                     </NavLink>
@@ -127,7 +129,7 @@ const Nav = () => {
                         className={({ isActive }) =>
                             isActive ? `${s.link} ${s.activeLink}` : s.link
                         }
-                        to="/AboutUs"
+                        to={localizedPath("/AboutUs", i18n.language)}
                     >
                         {t("aboutUs")}
                     </NavLink>
@@ -136,7 +138,7 @@ const Nav = () => {
                         className={({ isActive }) =>
                             isActive ? `${s.link} ${s.activeLink}` : s.link
                         }
-                        to="/Properties"
+                        to={localizedPath("/Properties", i18n.language)}
                     >
                         {t("properties")}
                     </NavLink>
@@ -145,7 +147,7 @@ const Nav = () => {
                         className={({ isActive }) =>
                             isActive ? `${s.link} ${s.activeLink}` : s.link
                         }
-                        to="/Services"
+                        to={localizedPath("/Services", i18n.language)}
                     >
                         {t("services")}
                     </NavLink>
@@ -154,7 +156,7 @@ const Nav = () => {
 
                 <div className={s.right}>
 
-                    <NavLink to="/ContactUs" className={s.ctaBtn}>
+                    <NavLink to={localizedPath("/ContactUs", i18n.language)} className={s.ctaBtn}>
                         {t("contactUs")}
                     </NavLink>
 

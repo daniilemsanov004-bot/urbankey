@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import s from "./CommercialGallery.module.css";
 
@@ -36,6 +37,12 @@ const CommercialGallery = ({ data }) => {
 
                                 className={s.img}
 
+                                alt={`${title} — ${t("photo")} ${i + 1}`}
+
+                                loading="lazy"
+
+                                decoding="async"
+
                             />
 
 
@@ -64,7 +71,7 @@ const CommercialGallery = ({ data }) => {
                         </button>
 
 
-                        <img src={active} />
+                        <img src={active} alt={title} />
 
 
                     </div>

@@ -1,5 +1,46 @@
 {
+    "redirects": [
+        {
+            "source": "/",
+            "destination": "/ru",
+            "permanent": true
+        },
+        {
+            "source": "/AboutUs",
+            "destination": "/ru/AboutUs",
+            "permanent": true
+        },
+        {
+            "source": "/Properties",
+            "destination": "/ru/Properties",
+            "permanent": true
+        },
+        {
+            "source": "/Services",
+            "destination": "/ru/Services",
+            "permanent": true
+        },
+        {
+            "source": "/ContactUs",
+            "destination": "/ru/ContactUs",
+            "permanent": true
+        },
+        {
+            "source": "/property/:id",
+            "destination": "/ru/property/:id",
+            "permanent": true
+        },
+        {
+            "source": "/commercial/:id",
+            "destination": "/ru/commercial/:id",
+            "permanent": true
+        }
+    ],
     "rewrites": [
+        {
+            "source": "/sitemap.xml",
+            "destination": "/api/sitemap"
+        },
         {
             "source": "/(.*)",
             "destination": "/"

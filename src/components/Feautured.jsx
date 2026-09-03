@@ -10,6 +10,7 @@ import 'swiper/css'
 import 'swiper/css/navigation'
 
 import { MyContext } from '../Context';
+import { localizedPath } from '../utils/lang';
 import { useCurrency } from '../context/CurrencyContext';
 import { formatPriceIn } from '../utils/currency';
 import ListingCard from './ListingCard';
@@ -71,9 +72,9 @@ const Feautured = ({ excludeId } = {}) => {
                     className={s.logo}
                 />
 
-                <h1>
+                <h2>
                     {t("featured2Title")}
-                </h1>
+                </h2>
 
                 <div className={s.titles}>
 
@@ -83,7 +84,7 @@ const Feautured = ({ excludeId } = {}) => {
 
                     <Link
                         className={s.link}
-                        to={"/Properties"}
+                        to={localizedPath("/Properties", i18n.language)}
                     >
                         {t("viewAll")}
                     </Link>
@@ -151,13 +152,13 @@ const Feautured = ({ excludeId } = {}) => {
                                         title,
                                         image: item.image,
                                         price: item.price,
-                                        link: `/property/${item.id}`
+                                        link: localizedPath(`/property/${item.id}`, i18n.language)
                                     }}
                                     title={title}
                                     meta={meta}
                                     description={item.description?.[i18n.language]}
                                     price={formatPriceIn(item.price, currency)}
-                                    detailsLink={`/property/${item.id}`}
+                                    detailsLink={localizedPath(`/property/${item.id}`, i18n.language)}
                                     detailsLabel={t("viewProperty")}
                                     isAdmin={isAdmin}
                                     onDelete={() => deleteCard(item.id)}

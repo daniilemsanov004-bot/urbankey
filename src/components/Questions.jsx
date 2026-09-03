@@ -61,7 +61,7 @@ const Questions = () => {
             >
                 <img src="/Abstract Design.svg" alt="" className={s.logo} />
 
-                <h1>{t("f.title")}</h1>
+                <h2>{t("f.title")}</h2>
 
                 <div className={s.titles}>
                     <p>{t("f.subtitle")}</p>

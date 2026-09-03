@@ -41,6 +41,8 @@ import AdminLeads from "./pages/AdminLeads";
 import TelegramFloatButton from "./components/TelegramFloatButton";
 import CallFloatButton from "./components/CallFloatButton";
 import LeadPopup from "./components/LeadPopup";
+import LanguageLayout from "./components/LanguageLayout";
+import LegacyRedirect from "./components/LegacyRedirect";
 
 
 
@@ -93,11 +95,31 @@ const App = () => {
       />
 
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/AboutUs" element={<AboutUs />} />
-        <Route path="/Properties" element={<Properties />} />
-        <Route path="/Services" element={<Services />} />
-        <Route path="/ContactUs" element={<ContactUs />} />
+        {/* Публичные, индексируемые страницы — живут под языковым префиксом /ru /en /uz,
+            это даёт каждому языку собственный URL для hreflang и убирает дубли контента. */}
+        <Route path="/:lang" element={<LanguageLayout />}>
+          <Route index element={<Home />} />
+          <Route path="AboutUs" element={<AboutUs />} />
+          <Route path="Properties" element={<Properties />} />
+          <Route path="Services" element={<Services />} />
+          <Route path="ContactUs" element={<ContactUs />} />
+          <Route path="property/:id" element={<PropertyPage />} />
+          <Route path="commercial/:id" element={<CommercialPage />} />
+        </Route>
+
+        {/* Совместимость со старыми "голыми" ссылками без языкового префикса.
+            Основной 301/308-редирект настроен на уровне Vercel (vercel.json),
+            эти маршруты — клиентский fallback (dev-режим, прямые заходы мимо edge). */}
+        <Route path="/" element={<LegacyRedirect />} />
+        <Route path="/AboutUs" element={<LegacyRedirect />} />
+        <Route path="/Properties" element={<LegacyRedirect />} />
+        <Route path="/Services" element={<LegacyRedirect />} />
+        <Route path="/ContactUs" element={<LegacyRedirect />} />
+        <Route path="/property/:id" element={<LegacyRedirect />} />
+        <Route path="/commercial/:id" element={<LegacyRedirect />} />
+
+        {/* Служебные/приватные страницы — не индексируются (см. robots.txt),
+            мультиязычные URL им не нужны, оставляем как есть. */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route
@@ -112,14 +134,6 @@ const App = () => {
         <Route
           path="/admin"
           element={<Admin />}
-        />
-        <Route
-          path="/property/:id"
-          element={<PropertyPage />}
-        />
-        <Route
-          path="/commercial/:id"
-          element={<CommercialPage />}
         />
         <Route
           path="/reset-password"

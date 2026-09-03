@@ -1,10 +1,11 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import s from "./Burger.module.css";
 import { useContext } from "react";
 import { MyContext } from "../Context";
 import { useCurrency } from "../context/CurrencyContext";
 import { useTranslation } from "react-i18next";
 import { Sun, Moon, LogOut, Heart, Coins, PlusSquare, ListChecks } from "lucide-react";
+import { buildLangPath, localizedPath } from "../utils/lang";
 
 const LANGUAGES = [
     { code: "ru", label: "Рус" },
@@ -18,10 +19,11 @@ const Burger = () => {
     const { currency, toggleCurrency } = useCurrency();
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
+    const location = useLocation();
 
     const changeLanguage = (lng) => {
-        i18n.changeLanguage(lng);
         localStorage.setItem("language", lng);
+        navigate(buildLangPath(location.pathname, lng) + location.search, { replace: true });
     };
 
     const handleLogout = async () => {
@@ -39,11 +41,11 @@ const Burger = () => {
                 <div className={s.scroll}>
 
                     <div className={s.links}>
-                        <Link className={s.link} to={"/"} onClick={handleBurger}>{t("home")}</Link>
-                        <Link className={s.link} to={"/AboutUs"} onClick={handleBurger}>{t("aboutUs")}</Link>
-                        <Link className={s.link} to={"/Properties"} onClick={handleBurger}>{t("properties")}</Link>
-                        <Link className={s.link} to={"/Services"} onClick={handleBurger}>{t("services")}</Link>
-                        <Link className={s.link} to={"/ContactUs"} onClick={handleBurger}>{t("contactUs")}</Link>
+                        <Link className={s.link} to={localizedPath("/", i18n.language)} onClick={handleBurger}>{t("home")}</Link>
+                        <Link className={s.link} to={localizedPath("/AboutUs", i18n.language)} onClick={handleBurger}>{t("aboutUs")}</Link>
+                        <Link className={s.link} to={localizedPath("/Properties", i18n.language)} onClick={handleBurger}>{t("properties")}</Link>
+                        <Link className={s.link} to={localizedPath("/Services", i18n.language)} onClick={handleBurger}>{t("services")}</Link>
+                        <Link className={s.link} to={localizedPath("/ContactUs", i18n.language)} onClick={handleBurger}>{t("contactUs")}</Link>
                     </div>
 
                     <div className={s.divider} />

@@ -8,5 +8,7 @@ Disallow: /forgot-password
 Disallow: /profile
 Disallow: /favorites
 Disallow: /user/
+Disallow: /add-property
+Disallow: /my-listings
 
 Sitemap: https://urbankey.uz/sitemap.xml

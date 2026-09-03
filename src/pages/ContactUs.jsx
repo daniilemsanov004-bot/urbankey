@@ -7,7 +7,7 @@ import Seo from '../components/Seo'
 const ContactUs = () => {
   return (
     <>
-      <Seo title="Контакты" description="Свяжитесь с UrbanKey: телефон, адрес, форма обратной связи." />
+      <Seo title="Контакты" description="Свяжитесь с UrbanKey в Ташкенте: телефон, адрес офиса, форма обратной связи." />
       <Get />
       <Connect />
       <World />

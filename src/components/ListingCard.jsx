@@ -69,7 +69,7 @@ const ListingCard = ({
                 <img
                     src={image}
                     className={s.image}
-                    alt=""
+                    alt={title || ""}
                     loading="lazy"
                     decoding="async"
                 />

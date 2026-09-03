@@ -86,9 +86,9 @@ const World = () => {
                             className={s.logo}
                         />
 
-                        <h1>
+                        <h2>
                             {t("world.title")}
-                        </h1>
+                        </h2>
 
                         <p>
                             {t("world.description")}

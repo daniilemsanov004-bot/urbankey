@@ -332,7 +332,7 @@
 
 
 
-            h1 {
+            h1, h2 {
 
 
                 font-weight: 600;
@@ -621,7 +621,7 @@
         .card {
 
 
-            h1 {
+            h1, h2 {
 
                 font-size: 28px;
             }
@@ -682,7 +682,7 @@
 
 
 
-            h1 {
+            h1, h2 {
 
 
                 font-size: 24px;

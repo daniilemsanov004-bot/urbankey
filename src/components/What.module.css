@@ -15,7 +15,7 @@
             opacity: .9;
         }
 
-        h1 {
+        h1, h2 {
             font-family: var(--font-family);
             font-weight: 600;
             font-size: 38px;
@@ -687,7 +687,7 @@
         margin: 80px auto;
 
         .text {
-            h1 {
+            h1, h2 {
                 font-size: 28px;
             }
 

@@ -9,7 +9,7 @@ import Seo from '../components/Seo'
 const AboutUs = () => {
   return (
     <>
-      <Seo title="Компания" description="О компании UrbanKey: наша миссия, ценности и команда." />
+      <Seo title="О компании" description="UrbanKey — агентство недвижимости в Ташкенте: миссия, ценности и команда." />
       <Journey />
       <Value />
       <Achievements />

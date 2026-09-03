@@ -70,7 +70,7 @@ const Realtor = () => {
                     className={s.logo}
                 />
 
-                <h1>{t("realtor.title")}</h1>
+                <h2>{t("realtor.title")}</h2>
 
                 <div className={s.titles}>
                     <p>

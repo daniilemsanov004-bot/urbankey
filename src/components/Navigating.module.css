@@ -15,7 +15,7 @@
         animation: left 1s ease;
 
 
-        h1 {
+        h1, h2, .stepNum {
 
             font-weight: 600;
             font-size: 48px;
@@ -111,7 +111,7 @@
 
 
 
-            h1 {
+            h1, h2, .stepNum {
 
                 font-weight: 500;
 

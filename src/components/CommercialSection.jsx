@@ -1,5 +1,6 @@
 import { useContext, useEffect } from "react";
 import { MyContext } from "../Context";
+import { localizedPath } from "../utils/lang";
 import { useCurrency } from "../context/CurrencyContext";
 import { formatPriceIn } from "../utils/currency";
 import { useTranslation } from "react-i18next";
@@ -197,7 +198,7 @@ const CommercialSection = () => {
                                             title,
                                             image: item.image,
                                             price: item.price,
-                                            link: `/commercial/${item.id}`
+                                            link: localizedPath(`/commercial/${item.id}`, i18n.language)
                                         }}
                                         title={title}
                                         location={item.district?.[i18n.language] || item.district?.ru}
@@ -209,7 +210,7 @@ const CommercialSection = () => {
                                             item.description?.ru
                                         }
                                         price={formatPriceIn(item.price, currency)}
-                                        detailsLink={`/commercial/${item.id}`}
+                                        detailsLink={localizedPath(`/commercial/${item.id}`, i18n.language)}
                                         detailsLabel={t("viewDetails")}
                                         isAdmin={isAdmin}
                                         onDelete={() => deleteCommercial(item.id)}

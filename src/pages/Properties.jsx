@@ -8,7 +8,7 @@ import Seo from '../components/Seo'
 const Properties = () => {
   return (
     <>
-      <Seo title="Недвижимость" description="Каталог объектов недвижимости UrbanKey: виллы, квартиры, коммерческая недвижимость." />
+      <Seo title="Купить недвижимость в Ташкенте" description="Каталог недвижимости в Ташкенте: виллы, квартиры и коммерческие объекты. Актуальные предложения и цены от UrbanKey." />
       <Find />
       <Catalog />
       <Footer />

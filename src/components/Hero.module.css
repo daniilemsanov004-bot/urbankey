@@ -404,7 +404,8 @@
 
 
 
-.card h1 {
+.card h1,
+.card .statValue {
 
 
     font-size:40px;

@@ -153,8 +153,11 @@ const Property = ({ data }) => {
 
                                         src={img}
 
-                                        alt="villa"
+                                        alt={`${data?.title?.[i18n.language] || data?.title?.ru || t("properties")} — ${t("photo")} ${i + 1}`}
 
+                                        loading="lazy"
+
+                                        decoding="async"
 
                                         onClick={() => {
 
@@ -224,11 +227,11 @@ const Property = ({ data }) => {
 
 
 
-                    <h1>
+                    <h2>
 
                         {t("features")}
 
-                    </h1>
+                    </h2>
 
 
 
@@ -258,11 +261,11 @@ const Property = ({ data }) => {
                     <div className={s.specifi}>
 
 
-                        <h1>
+                        <h2>
 
                             {t("specifications")}
 
-                        </h1>
+                        </h2>
 
 
 
@@ -411,11 +414,11 @@ const Property = ({ data }) => {
 
 
 
-                <h1>
+                <h2>
 
                     {t("about")}
 
-                </h1>
+                </h2>
 
 
 

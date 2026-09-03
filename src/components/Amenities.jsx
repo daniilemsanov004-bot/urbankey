@@ -21,9 +21,9 @@ const Amenities = ({ data }) => {
         <section className={s.amenities}>
 
 
-            <h1>
+            <h2>
                 {t("amenitiesEighthTitle")}
-            </h1>
+            </h2>
 
 
 

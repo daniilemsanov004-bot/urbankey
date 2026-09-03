@@ -178,7 +178,7 @@ const LeadPopup = () => {
                         {sent ? (
 
                             <div className={s.thanks}>
-                                <h1>{t("leadPopupThanksTitle")}</h1>
+                                <h2>{t("leadPopupThanksTitle")}</h2>
                                 <p>{t("leadPopupThanksText")}</p>
 
                                 <button
@@ -199,7 +199,7 @@ const LeadPopup = () => {
                                     className={s.logo}
                                 />
 
-                                <h1>{t("leadPopupTitle")}</h1>
+                                <h2>{t("leadPopupTitle")}</h2>
                                 <p className={s.subtitle}>{t("leadPopupText")}</p>
 
                                 <form

@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom';
+import { localizedPath } from '../utils/lang';
 import s from './Effortless.module.css'
 import { motion } from "framer-motion"
 import { useTranslation } from "react-i18next"
 
 const Effortless = () => {
 
-    const { t } = useTranslation()
+    const { t, i18n } = useTranslation()
 
     const effortless = [
         {
@@ -69,9 +70,9 @@ const Effortless = () => {
                     className={s.logo}
                 />
 
-                <h1>
+                <h2>
                     {t("effortlessTitle")}
-                </h1>
+                </h2>
 
                 <p>
                     {t("effortlessText")}
@@ -205,7 +206,7 @@ const Effortless = () => {
                         >
 
                             <Link
-                                to="/Properties"
+                                to={localizedPath("/Properties", i18n.language)}
                                 className={s.linkk}
                             >
                                 {t("learnMore")}

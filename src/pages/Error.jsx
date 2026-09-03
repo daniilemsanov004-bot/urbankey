@@ -4,10 +4,11 @@ import { motion } from "framer-motion";
 import { Home, Search, ArrowLeft } from "lucide-react";
 import s from "./Error.module.css";
 import Seo from "../components/Seo";
+import { localizedPath } from "../utils/lang";
 
 const Error = () => {
 
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   return (
     <section className={s.wrap}>
@@ -53,12 +54,12 @@ const Error = () => {
           transition={{ duration: 0.6, delay: 0.3 }}
         >
 
-          <Link to="/" className={s.primaryBtn}>
+          <Link to={localizedPath("/", i18n.language)} className={s.primaryBtn}>
             <Home size={18} />
             {t("notFound.backHome")}
           </Link>
 
-          <Link to="/Properties" className={s.secondaryBtn}>
+          <Link to={localizedPath("/Properties", i18n.language)} className={s.secondaryBtn}>
             <Search size={18} />
             {t("notFound.backCatalog")}
           </Link>

@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import { MapPin, Building2, Ruler, BedDouble, Bath, SlidersHorizontal, X, Trash2 } from "lucide-react";
 
 import { MyContext } from "../Context";
+import { localizedPath } from "../utils/lang";
 import { useCurrency } from "../context/CurrencyContext";
 import { formatPriceIn } from "../utils/currency";
 import { fuzzyScore, highlightSegments } from "../utils/search";
@@ -146,7 +147,7 @@ const Catalog = () => {
             bedroomsLabel: item.bedrooms?.[lang] || item.bedrooms?.ru || "",
             bedroomsValue: parseFirstNumber(item.bedrooms?.ru),
             bathroomsLabel: item.bathrooms?.[lang] || item.bathrooms?.ru || "",
-            link: `/property/${item.id}`,
+            link: localizedPath(`/property/${item.id}`, i18n.language),
             boostedUntil: item.boostedUntil || item.boosted_until,
             raw: item
         }));
@@ -166,7 +167,7 @@ const Catalog = () => {
             district: item.district?.[lang] || item.district?.ru || "",
             area: item.area || "",
             floor: item.floor || "",
-            link: `/commercial/${item.id}`,
+            link: localizedPath(`/commercial/${item.id}`, i18n.language),
             boostedUntil: item.boostedUntil || item.boosted_until,
             raw: item
         }));

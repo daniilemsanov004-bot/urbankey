@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom';
+import { localizedPath } from '../utils/lang';
 import s from './Unlock.module.css'
 import { motion } from "framer-motion"
 import { useTranslation } from 'react-i18next'
 
 const Unlock = () => {
 
-    const { t } = useTranslation()
+    const { t, i18n } = useTranslation()
 
     const unlock = [
         {
@@ -69,7 +70,7 @@ const Unlock = () => {
                     className={s.decor}
                 />
 
-                <h1>{t("unlock.title")}</h1>
+                <h2>{t("unlock.title")}</h2>
 
                 <p>
                     {t("unlock.description")}
@@ -203,7 +204,7 @@ const Unlock = () => {
                         >
 
                             <Link
-                                to="/Properties"
+                                to={localizedPath("/Properties", i18n.language)}
                                 className={s.linkk}
                             >
                                 {t("unlock.button")}

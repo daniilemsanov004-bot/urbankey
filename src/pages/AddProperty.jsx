@@ -4,6 +4,7 @@ import { useNavigate, useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { X, Star, ImagePlus, Languages, RefreshCw } from "lucide-react";
 import { MyContext } from "../Context";
+import { localizedPath } from "../utils/lang";
 import { translateFields, pickLangValue, SUPPORTED_LISTING_LANGS } from "../utils/autoTranslate";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import s from "./AddProperty.module.css";
@@ -354,7 +355,7 @@ const AddProperty = () => {
                 <div className={s.limitCard}>
                     <h1>{t("listingLimitTitle")}</h1>
                     <p className={s.subtitle}>{t("listingLimitDesc", { limit: FREE_LISTING_LIMIT })}</p>
-                    <Link className={s.submitBtn} to="/ContactUs">{t("listingLimitCta")}</Link>
+                    <Link className={s.submitBtn} to={localizedPath("/ContactUs", i18n.language)}>{t("listingLimitCta")}</Link>
                 </div>
             </main>
         );

@@ -4,10 +4,11 @@ import { motion } from "framer-motion"
 import { useTranslation } from 'react-i18next'
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabase'
+import { localizedPath } from '../utils/lang'
 
 const Hero = () => {
 
-    const { t } = useTranslation()
+    const { t, i18n } = useTranslation()
 
     const [propertiesCount, setPropertiesCount] = useState(null)
 
@@ -68,7 +69,7 @@ const Hero = () => {
                         {t("heroTitle1")}
                     </motion.h1>
 
-                    <motion.h1
+                    <motion.h2
                         className={s.titl}
                         initial={{ opacity: 0, y: 40 }}
                         whileInView={{ opacity: 1, y: 0 }}
@@ -76,7 +77,7 @@ const Hero = () => {
                         viewport={{ amount: 0.2 }}
                     >
                         {t("heroTitle2")}
-                    </motion.h1>
+                    </motion.h2>
 
                     <motion.h3
                         className={s.subtitle}
@@ -98,11 +99,11 @@ const Hero = () => {
                     viewport={{ amount: 0.2 }}
                 >
 
-                    <Link className={s.link1} to={"/AboutUs"}>
+                    <Link className={s.link1} to={localizedPath("/AboutUs", i18n.language)}>
                         {t("learnMore")}
                     </Link>
 
-                    <Link className={s.link2} to={"/Properties"}>
+                    <Link className={s.link2} to={localizedPath("/Properties", i18n.language)}>
                         {t("browseProperties")}
                     </Link>
 
@@ -118,7 +119,7 @@ const Hero = () => {
                         viewport={{ amount: 0.2 }}
                         whileHover={{ y: -10, scale: 1.03 }}
                     >
-                        <h1>{propertiesCount ? `${propertiesCount}+` : "—"}</h1>
+                        <p className={s.statValue}>{propertiesCount ? `${propertiesCount}+` : "—"}</p>
                         <p>{t("propertiesForClients")}</p>
                     </motion.div>
 
@@ -130,7 +131,7 @@ const Hero = () => {
                         viewport={{ amount: 0.2 }}
                         whileHover={{ y: -10, scale: 1.03 }}
                     >
-                        <h1>6+</h1>
+                        <p className={s.statValue}>6+</p>
                         <p>{t("yearsExperience")}</p>
                     </motion.div>
 
@@ -142,7 +143,7 @@ const Hero = () => {
                         viewport={{ amount: 0.2 }}
                         whileHover={{ y: -10, scale: 1.03 }}
                     >
-                        <h1>3</h1>
+                        <p className={s.statValue}>3</p>
                         <p>{t("languagesSupported")}</p>
                     </motion.div>
 

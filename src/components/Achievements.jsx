@@ -43,7 +43,7 @@ const Achievements = () => {
                     className={s.logo}
                 />
 
-                <h1>{t("ourAchievements")}</h1>
+                <h2>{t("ourAchievements")}</h2>
 
                 <div className={s.titles}>
                     <p>

@@ -67,7 +67,7 @@ const Navigating = () => {
                     className={s.logo}
                 />
 
-                <h1>{t("navigatingTitle")}</h1>
+                <h2>{t("navigatingTitle")}</h2>
 
                 <div className={s.titles}>
                     <p>
@@ -111,7 +111,7 @@ const Navigating = () => {
                         }}
                     >
 
-                        <h1>{item.step}</h1>
+                        <p className={s.stepNum}>{item.step}</p>
 
                         <div className={s.info}>
                             <h2>{item.title}</h2>

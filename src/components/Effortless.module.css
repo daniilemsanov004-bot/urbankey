@@ -25,7 +25,7 @@
             margin-bottom: 18px;
         }
 
-        h1 {
+        h1, h2 {
 
             font-size: clamp(34px, 5vw, 48px);
 
@@ -277,7 +277,7 @@
 
             margin-bottom: 28px;
 
-            h1 {
+            h1, h2 {
 
                 flex: 1;
 
@@ -400,7 +400,7 @@
 
             margin-bottom: 45px;
 
-            h1 {
+            h1, h2 {
 
                 font-size: 36px;
             }
@@ -438,7 +438,7 @@
                 width: 58px;
             }
 
-            h1 {
+            h1, h2 {
 
                 font-size: 30px;
             }
@@ -479,7 +479,7 @@
 
             .text {
 
-                h1 {
+                h1, h2 {
 
                     font-size: 24px;
                 }
@@ -516,7 +516,7 @@
 
             .text {
 
-                h1 {
+                h1, h2 {
 
                     font-size: 22px;
                 }

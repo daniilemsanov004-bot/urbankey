@@ -95,7 +95,7 @@
 
 
 
-        h1 {
+        h1, .statValue {
 
 
             font-weight: 600;
@@ -244,7 +244,7 @@
 
 
 
-        h1 {
+        h1, .statValue {
 
 
 
@@ -346,7 +346,7 @@
 
 
 
-            h1 {
+            h1, .statValue {
 
                 font-size: 30px;
 
@@ -412,7 +412,7 @@
 
 
 
-            h1 {
+            h1, .statValue {
 
                 font-size: 24px;
             }

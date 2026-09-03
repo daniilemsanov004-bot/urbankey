@@ -55,7 +55,8 @@
     border: 1px solid rgba(212, 175, 55, .25);
 }
 
-.texts h1 {
+.texts h1,
+.texts h2 {
     font-size: 40px;
     color: #e7b84b;
     margin-bottom: 30px;
@@ -75,7 +76,8 @@
     font-size: 16px;
 }
 
-.specifi h1 {
+.specifi h1,
+.specifi h2 {
     margin-top: 50px;
     font-size: 30px;
 }
@@ -111,7 +113,8 @@
     border: 1px solid rgba(212, 175, 55, .25);
 }
 
-.text h1 {
+.text h1,
+.text h2 {
     color: #e7b84b;
 }
 
@@ -145,12 +148,14 @@
         padding: 0 14px;
     }
 
-    .texts h1 {
+    .texts h1,
+.texts h2 {
         font-size: 28px;
         margin-bottom: 20px;
     }
 
-    .specifi h1 {
+    .specifi h1,
+.specifi h2 {
         margin-top: 32px;
         font-size: 22px;
     }

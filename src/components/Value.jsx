@@ -53,14 +53,14 @@ const Value = () => {
                     className={s.logo}
                 />
 
-                <motion.h1
+                <motion.h2
                     initial={{ opacity: 0, y: 40 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.7 }}
                     viewport={{ amount: 0.2 }}
                 >
                     {t("value.title")}
-                </motion.h1>
+                </motion.h2>
 
                 <motion.p
                     initial={{ opacity: 0, y: 40 }}

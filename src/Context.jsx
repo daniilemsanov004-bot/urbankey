@@ -1756,7 +1756,6 @@ export const MyProvider = ({ children }) => {
 
         try {
 
-
             const { data, error } = await supabase
                 .from("villas")
                 .select("*")

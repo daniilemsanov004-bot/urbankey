@@ -73,7 +73,7 @@ const Journey = () => {
                         viewport={{ amount: 0.2 }}
                         whileHover={{ y: -10, scale: 1.03 }}
                     >
-                        <h1>{propertiesCount ? `${propertiesCount}+` : "—"}</h1>
+                        <p className={s.statValue}>{propertiesCount ? `${propertiesCount}+` : "—"}</p>
                         <p>{t("propertiesForClients")}</p>
                     </motion.div>
 
@@ -85,7 +85,7 @@ const Journey = () => {
                         viewport={{ amount: 0.2 }}
                         whileHover={{ y: -10, scale: 1.03 }}
                     >
-                        <h1>6+</h1>
+                        <p className={s.statValue}>6+</p>
                         <p>{t("yearsExperience")}</p>
                     </motion.div>
 
@@ -97,7 +97,7 @@ const Journey = () => {
                         viewport={{ amount: 0.2 }}
                         whileHover={{ y: -10, scale: 1.03 }}
                     >
-                        <h1>3</h1>
+                        <p className={s.statValue}>3</p>
                         <p>{t("languagesSupported")}</p>
                     </motion.div>
 
