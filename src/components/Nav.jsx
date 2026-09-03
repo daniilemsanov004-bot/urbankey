@@ -4,7 +4,7 @@ import { MyContext } from "../Context";
 import { useCurrency } from "../context/CurrencyContext";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { buildLangPath } from "../utils/lang";
+import { buildLangPath, localizedPath } from "../utils/lang";
 import {
     Globe,
     Sun,

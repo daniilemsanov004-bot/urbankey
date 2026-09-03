@@ -5,7 +5,7 @@ import { useCurrency } from "../context/CurrencyContext";
 import { useTranslation } from "react-i18next";
 import { Home, Search, PlusSquare, Heart, User, Menu, ListChecks, Sun, Moon, LogOut } from "lucide-react";
 import s from "./BottomNav.module.css";
-import { buildLangPath } from "../utils/lang";
+import { buildLangPath, localizedPath } from "../utils/lang";
 
 const LANGUAGES = [
     { code: "ru", label: "Рус" },
