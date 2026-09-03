@@ -3,13 +3,14 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { toast } from "react-toastify";
-import { MapPin, Building2, Ruler, BedDouble, Bath, SlidersHorizontal, X, Trash2 } from "lucide-react";
+import { MapPin, Building2, Ruler, BedDouble, Bath, SlidersHorizontal, X, Trash2, Sparkles } from "lucide-react";
 
 import { MyContext } from "../Context";
 import { localizedPath } from "../utils/lang";
 import { useCurrency } from "../context/CurrencyContext";
 import { formatPriceIn } from "../utils/currency";
 import { fuzzyScore, highlightSegments } from "../utils/search";
+import { aiSearchCatalog } from "../utils/aiSearch";
 import FavoriteButton from "./FavoriteButton";
 import { SkeletonGrid } from "./SkeletonCard";
 import s from "./Catalog.module.css";
@@ -117,6 +118,8 @@ const Catalog = () => {
     const [search, setSearch] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
     const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+    const [aiSearchLoading, setAiSearchLoading] = useState(false);
+    const [aiSearchApplied, setAiSearchApplied] = useState(false);
     const [sort, setSort] = useState("newest");
     const [filtersOpen, setFiltersOpen] = useState(false);
     const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -322,6 +325,55 @@ const Catalog = () => {
         setBedrooms("all");
         setSearch("");
         setSort("newest");
+        setAiSearchApplied(false);
+    };
+
+
+    // ИИ-поиск: человек пишет запрос свободным текстом в то же поле
+    // поиска (Enter или кнопка со звёздочкой) — эндпоинт /api/ai-search
+    // разбирает его в структурные фильтры (category/type/dealType/
+    // price/bedrooms) через ту же цепочку провайдеров, что и разбор
+    // объявлений бота, и мы применяем их к уже существующим ручным
+    // фильтрам. Остаток текста (keywords) уходит в обычный текстовый
+    // search — та же fuzzy-логика, что и при ручном наборе. Если ИИ не
+    // смог разобрать (нет ключей/сеть легла) — просто продолжаем
+    // работать как обычный текстовый поиск, без ошибок в интерфейсе.
+    const runAiSearch = async () => {
+
+        const query = search.trim();
+        if (!query || aiSearchLoading) return;
+
+        setAiSearchLoading(true);
+        setSuggestionsOpen(false);
+
+        try {
+
+            const result = await aiSearchCatalog(query, i18n.language);
+
+            if (!result?.ok) {
+                setAiSearchApplied(false);
+                return;
+            }
+
+            const f = result.filters || {};
+
+            if (f.category) setCategory(f.category);
+            if (f.type) setType(f.type);
+            if (f.dealType) setDealType(f.dealType);
+            if (f.minPrice != null) setMinPrice(String(f.minPrice));
+            if (f.maxPrice != null) setMaxPrice(String(f.maxPrice));
+            if (f.minBedrooms != null) {
+                const clamped = Math.min(Math.max(Math.round(f.minBedrooms), 1), 5);
+                setBedrooms(String(clamped));
+            }
+
+            setSearch(f.keywords || "");
+            setAiSearchApplied(true);
+
+        } finally {
+            setAiSearchLoading(false);
+        }
+
     };
 
 
@@ -373,11 +425,33 @@ const Catalog = () => {
                                 type="text"
                                 value={search}
                                 placeholder={t("catalog.searchPlaceholder")}
-                                onChange={(e) => setSearch(e.target.value)}
+                                onChange={(e) => {
+                                    setSearch(e.target.value);
+                                    if (aiSearchApplied) setAiSearchApplied(false);
+                                }}
                                 onFocus={() => setSuggestionsOpen(true)}
                                 onBlur={() => setTimeout(() => setSuggestionsOpen(false), 150)}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") runAiSearch();
+                                }}
                                 autoComplete="off"
                             />
+
+                            <button
+                                type="button"
+                                className={s.aiSearchBtn}
+                                onClick={runAiSearch}
+                                disabled={aiSearchLoading || !search.trim()}
+                                title={t("catalog.aiSearchHint")}
+                            >
+                                <Sparkles size={16} className={aiSearchLoading ? s.spin : undefined} />
+                            </button>
+
+                            {aiSearchApplied && (
+                                <span className={s.aiSearchBadge}>
+                                    {t("catalog.aiSearchApplied")}
+                                </span>
+                            )}
 
                             {suggestionsOpen && search.trim() && (
 

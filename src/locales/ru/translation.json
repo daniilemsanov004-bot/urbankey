@@ -915,7 +915,7 @@
     "bedroomsAny": "Любое кол-во комнат",
     "bedroomsPlus": "от {{n}}",
     "search": "Поиск по названию",
-    "searchPlaceholder": "Например, Aurora Heights",
+    "searchPlaceholder": "Например: 2-комнатная до $60k в Юнусабаде",
     "sort": "Сортировка",
     "sortNewest": "Сначала новые",
     "sortPriceAsc": "Сначала дешевле",
@@ -924,7 +924,9 @@
     "noResults": "По заданным фильтрам ничего не найдено",
     "resetFilters": "Сбросить фильтры",
     "filtersTitle": "Фильтры",
-    "loadMore": "Показать ещё"
+    "loadMore": "Показать ещё",
+    "aiSearchHint": "ИИ-поиск: опишите, что ищете, свободным текстом",
+    "aiSearchApplied": "✨ ИИ подобрал фильтры по запросу"
   },
   "edit": "Изменить",
   "addToFavorites": "Добавить в избранное",

@@ -914,7 +914,7 @@
     "bedroomsAny": "Any bedrooms",
     "bedroomsPlus": "{{n}}+",
     "search": "Search by title",
-    "searchPlaceholder": "e.g. Aurora Heights",
+    "searchPlaceholder": "e.g. 2-bedroom under $60k in Yunusabad",
     "sort": "Sort by",
     "sortNewest": "Newest first",
     "sortPriceAsc": "Price: low to high",
@@ -923,7 +923,9 @@
     "noResults": "No properties match your filters",
     "resetFilters": "Reset filters",
     "filtersTitle": "Filters",
-    "loadMore": "Show more"
+    "loadMore": "Show more",
+    "aiSearchHint": "AI search: describe what you're looking for",
+    "aiSearchApplied": "✨ AI matched filters to your request"
   },
   "edit": "Edit",
   "addToFavorites": "Add to favorites",

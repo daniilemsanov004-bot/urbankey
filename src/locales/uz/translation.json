@@ -989,7 +989,7 @@
     "bedroomsAny": "Xonalar soni muhim emas",
     "bedroomsPlus": "{{n}}+",
     "search": "Nomi bo'yicha qidirish",
-    "searchPlaceholder": "Masalan, Aurora Heights",
+    "searchPlaceholder": "Masalan: Yunusobodda $60k gacha 2 xonali",
     "sort": "Saralash",
     "sortNewest": "Avval yangilari",
     "sortPriceAsc": "Avval arzonlari",
@@ -998,7 +998,9 @@
     "noResults": "Filtrlarga mos obyekt topilmadi",
     "resetFilters": "Filtrlarni tozalash",
     "filtersTitle": "Filtrlar",
-    "loadMore": "Ko'proq ko'rsatish"
+    "loadMore": "Ko'proq ko'rsatish",
+    "aiSearchHint": "AI qidiruv: nima izlayotganingizni yozing",
+    "aiSearchApplied": "✨ AI so'rovga mos filtrlarni tanladi"
   },
   "edit": "Tahrirlash",
   "addToFavorites": "Sevimlilarga qo'shish",

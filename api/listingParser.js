@@ -576,7 +576,8 @@ const AI_SYSTEM_PROMPT = `Ты — парсер объявлений о недв
 10. "price_raw" — цена ровно как в тексте. "price_number" — то же самое, но как число в долларах, если валюта явно $ или это очевидно итоговая цена продажи. Упоминание процента оплаты (например "при 100% оплате") — это НЕ цена. Если цена дана в сумах с курсом и отдельно указан итог в $ — используй именно итог в $.
 11. "is_commercial" = true, если это коммерческая недвижимость, false — если жильё.
 12. "type_ru"/"type_en"/"type_uz" — категория ЖИЛЬЯ — используй ТОЛЬКО одно из трёх: Квартира/Apartment/Kvartira, Дом/House/Uy, Новостройка/New building/Yangi qurilish (последнее — если явно указано, что это новостройка/сдаваемый застройщиком объект, а не конкретный тип планировки; в остальных случаях по умолчанию Квартира). Другие слова вроде "вилла"/"коттедж"/"резиденция"/"пентхаус" НЕ используй как отдельную категорию — такого жилья на рынке недвижимости, с которым работает агентство, нет, приравнивай к Квартире. Категория — только если это жильё. Название ЖК может само содержать слово вроде "House" или "Villas" — ориентируйся на реальный смысл текста. Если is_commercial=true, оставь эти поля null.
-13. Никогда не копируй в description номер телефона, имя агента или ссылки на инстаграм/телеграм.`;
+13. Никогда не копируй в description номер телефона, имя агента или ссылки на инстаграм/телеграм.
+14. Формат текста строгий, единый для ЛЮБОЙ модели: title — одна строка без markdown (без **, #, эмодзи, кавычек-обёрток), не длиннее ~90 символов. description — связный абзац из 2–5 предложений обычным текстом, БЕЗ markdown, списков и эмодзи (если их не было в исходном посте).`;
 
 const AI_JSON_SCHEMA = {
     name: "real_estate_listing",
@@ -690,6 +691,40 @@ const GEMINI_RESPONSE_SCHEMA = {
     ]
 };
 
+// Санитайзер текста для title/description/amenities — гарантирует
+// ОДИНАКОВЫЙ формат независимо от того, какой из 6 провайдеров в
+// цепочке сработал. Промпт просит "без markdown", но модели послабее
+// (Groq/SambaNova/Cloudflare/OpenRouter, без строгой JSON-схемы) иногда
+// всё равно добавляют **жирный**, # заголовки, списки через "- " или
+// многоточия из emoji — здесь эти артефакты снимаются кодом, а не
+// просьбой в промпте, так что результат гарантированно одинаковый вне
+// зависимости от модели.
+function sanitizeAiText(text, maxLength) {
+
+    if (!text) return "";
+
+    let clean = String(text)
+        // **жирный**/__жирный__ -> жирный, *курсив*/_курсив_ -> курсив
+        .replace(/(\*\*|__)(.*?)\1/g, "$2")
+        .replace(/(\*|_)(.*?)\1/g, "$2")
+        // markdown-заголовки "# ", "## " и т.п. в начале строки
+        .replace(/^#{1,6}\s+/gm, "")
+        // маркеры списка "- "/"* "/"• " в начале строки
+        .replace(/^[\s]*[-*•]\s+/gm, "")
+        // переносы строк — в title их вообще не должно быть, в
+        // description сводим к пробелу (единый абзац, как просит промпт)
+        .replace(/\r?\n+/g, " ")
+        // несколько пробелов подряд -> один
+        .replace(/[ \t]{2,}/g, " ")
+        .trim();
+
+    if (maxLength && clean.length > maxLength) {
+        clean = clean.slice(0, maxLength).replace(/\s+\S*$/, "").trim() + "…";
+    }
+
+    return clean;
+}
+
 // Нормализуем amenities: у Gemini строгая JSON-схема (responseSchema)
 // гарантирует форму {ru,en,uz} для каждого пункта, а у остальных
 // провайдеров в цепочке (Groq/OpenRouter/Mistral/SambaNova/Cloudflare)
@@ -706,14 +741,14 @@ function normalizeAmenities(rawAmenities) {
         .map((item) => {
 
             if (typeof item === "string") {
-                const text = item.trim();
+                const text = sanitizeAiText(item, 60);
                 return text ? { ru: text, en: text, uz: text } : null;
             }
 
             if (item && typeof item === "object") {
-                const ru = String(item.ru || item.text || item.name || "").trim();
-                const en = String(item.en || "").trim();
-                const uz = String(item.uz || "").trim();
+                const ru = sanitizeAiText(item.ru || item.text || item.name, 60);
+                const en = sanitizeAiText(item.en, 60);
+                const uz = sanitizeAiText(item.uz, 60);
                 if (!ru && !en && !uz) return null;
                 return {
                     ru: ru || en || uz,
@@ -748,7 +783,27 @@ function reconcilePriceNumber(priceRaw, aiPriceNumber) {
     return aiPriceNumber;
 }
 
-function mapAiResultToParsed(ai) {
+// Числовые факты (этаж, этажность, площадь, спальни, санузлы) — та же
+// логика защиты, что и у reconcilePriceNumber для цены: если ИИ вернул
+// число, которого физически нет нигде в исходном тексте поста, это
+// почти наверняка галлюцинация (даже несмотря на явный запрет в
+// промпте — у моделей без строгой схемы такое всё равно изредка
+// проскакивает). В этом случае поле обнуляется — на сайте лучше "—",
+// чем выдуманная цифра.
+function verifyNumberInText(rawText, value) {
+
+    if (value == null) return null;
+
+    const num = String(value).trim();
+    if (!num || !/^\d+([.,]\d+)?$/.test(num)) return value;
+
+    const escaped = num.replace(".", "[.,]");
+    const re = new RegExp(`(?<!\\d)${escaped}(?!\\d)`);
+
+    return re.test(rawText) ? value : null;
+}
+
+function mapAiResultToParsed(ai, sourceText) {
 
     const isCommercial = Boolean(ai.is_commercial);
 
@@ -757,6 +812,19 @@ function mapAiResultToParsed(ai) {
         en: ai.type_en || "Apartment",
         uz: ai.type_uz || "Kvartira"
     };
+
+    // Проверяем числовые факты на реальное наличие в исходном тексте
+    // ДО того, как раскладывать их по полям — если sourceText не
+    // передан (на всякий случай, чтобы не уронить старые вызовы) —
+    // verifyNumberInText просто ничего не отбрасывает.
+    const verify = (value) => (sourceText ? verifyNumberInText(sourceText, value) : value);
+
+    const vFloor = verify(ai.floor);
+    const vCeiling = verify(ai.ceiling_height);
+    const vArea = verify(ai.area);
+    const vBedrooms = verify(ai.bedrooms);
+    const vBathrooms = verify(ai.bathrooms);
+    const vTotalFloors = verify(ai.total_floors);
 
     const commercialFields = {
         district_ru: ai.district || "",
@@ -768,18 +836,18 @@ function mapAiResultToParsed(ai) {
         landmark_ru: ai.landmark || "",
         landmark_en: "",
         landmark_uz: "",
-        floor: ai.floor != null ? String(ai.floor) : "",
-        ceiling: ai.ceiling_height != null ? String(ai.ceiling_height) : "",
-        area: ai.area != null ? String(ai.area) : ""
+        floor: vFloor != null ? String(vFloor) : "",
+        ceiling: vCeiling != null ? String(vCeiling) : "",
+        area: vArea != null ? String(vArea) : ""
     };
 
     const missing = [];
     if (!ai.title_ru) missing.push("название");
     if (!ai.price_raw) missing.push("цена");
     if (isCommercial) {
-        if (ai.area == null) missing.push("площадь");
+        if (vArea == null) missing.push("площадь");
     } else {
-        if (ai.bedrooms == null) missing.push("кол-во комнат");
+        if (vBedrooms == null) missing.push("кол-во комнат");
     }
 
     return {
@@ -787,19 +855,19 @@ function mapAiResultToParsed(ai) {
         isSold: Boolean(ai.is_sold),
         isRent: Boolean(ai.is_rent),
         missing,
-        title_ru: ai.title_ru || "Квартира",
-        title_en: ai.title_en || "",
-        title_uz: ai.title_uz || "",
-        description_ru: ai.description_ru || "",
-        description_en: ai.description_en || "",
-        description_uz: ai.description_uz || "",
+        title_ru: sanitizeAiText(ai.title_ru, 90) || "Квартира",
+        title_en: sanitizeAiText(ai.title_en, 90),
+        title_uz: sanitizeAiText(ai.title_uz, 90),
+        description_ru: sanitizeAiText(ai.description_ru, 900),
+        description_en: sanitizeAiText(ai.description_en, 900),
+        description_uz: sanitizeAiText(ai.description_uz, 900),
         price: ai.price_raw || "",
         priceNumber: reconcilePriceNumber(ai.price_raw, ai.price_number),
-        bedrooms: ai.bedrooms != null ? String(ai.bedrooms) : "",
-        bathrooms: ai.bathrooms != null ? String(ai.bathrooms) : "",
-        area: ai.area != null ? String(ai.area) : "",
-        floor: ai.floor != null ? String(ai.floor) : "",
-        totalFloors: ai.total_floors != null ? String(ai.total_floors) : "",
+        bedrooms: vBedrooms != null ? String(vBedrooms) : "",
+        bathrooms: vBathrooms != null ? String(vBathrooms) : "",
+        area: vArea != null ? String(vArea) : "",
+        floor: vFloor != null ? String(vFloor) : "",
+        totalFloors: vTotalFloors != null ? String(vTotalFloors) : "",
         locationLine: ai.district || ai.address || "",
         type,
         amenities: normalizeAmenities(ai.amenities),
@@ -824,7 +892,7 @@ export async function parseWithAI(text) {
 
     console.log(`AI PARSE: сработал провайдер "${result.provider}"`);
 
-    return mapAiResultToParsed(result.data);
+    return mapAiResultToParsed(result.data, text);
 }
 
 
