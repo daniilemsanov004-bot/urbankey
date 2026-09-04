@@ -124,35 +124,47 @@ const AiSearchBar = ({ className = "" }) => {
                     ) : (
 
                         <>
-                            {results.map((item) => (
-                                <Link
-                                    key={`${item.category}-${item.id}`}
-                                    to={localizedPath(item.link, i18n.language)}
-                                    className={s.resultItem}
-                                    onClick={() => setResults(null)}
-                                >
+                            <div className={s.panelHeader}>
+                                {t("aiSearchBar.foundCount", { count: results.length })}
+                            </div>
 
-                                    {item.image
-                                        ? <img src={item.image} alt="" className={s.resultImg} />
-                                        : (
-                                            <div className={s.resultImgPlaceholder}>
-                                                {item.category === "commercial"
-                                                    ? <Building2 size={18} />
-                                                    : <HomeIcon size={18} />}
-                                            </div>
-                                        )}
+                            <div className={s.grid}>
+                                {results.map((item) => (
+                                    <Link
+                                        key={`${item.category}-${item.id}`}
+                                        to={localizedPath(item.link, i18n.language)}
+                                        className={s.card}
+                                        onClick={() => setResults(null)}
+                                    >
 
-                                    <div className={s.resultInfo}>
-                                        <span className={s.resultTitle}>{item.title}</span>
-                                        <span className={s.resultMeta}>
-                                            {formatPriceIn(item.price, currency)}
-                                            {" · "}
-                                            {item.isRent ? t("dealType.rent") : t("dealType.sale")}
-                                        </span>
-                                    </div>
+                                        <div className={s.cardImgBox}>
 
-                                </Link>
-                            ))}
+                                            {item.image
+                                                ? <img src={item.image} alt="" className={s.cardImg} />
+                                                : (
+                                                    <div className={s.cardImgPlaceholder}>
+                                                        {item.category === "commercial"
+                                                            ? <Building2 size={22} />
+                                                            : <HomeIcon size={22} />}
+                                                    </div>
+                                                )}
+
+                                            <span className={s.cardBadge}>
+                                                {item.isRent ? t("dealType.rent") : t("dealType.sale")}
+                                            </span>
+
+                                        </div>
+
+                                        <div className={s.cardInfo}>
+                                            <span className={s.cardPrice}>
+                                                {formatPriceIn(item.price, currency)}
+                                            </span>
+                                            <span className={s.cardTitle}>{item.title}</span>
+                                        </div>
+
+                                    </Link>
+                                ))}
+                            </div>
 
                             <button
                                 type="button"

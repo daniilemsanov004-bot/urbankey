@@ -1001,6 +1001,7 @@
     "button": "Search",
     "noResults": "Nothing found for this request",
     "browseAll": "Browse full catalog",
-    "viewAll": "See all results"
+    "viewAll": "See all results",
+    "foundCount": "Found: {{count}}"
   }
 }

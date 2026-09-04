@@ -1076,6 +1076,7 @@
     "button": "Qidirish",
     "noResults": "Bu so'rov bo'yicha hech narsa topilmadi",
     "browseAll": "Butun katalogni ko'rish",
-    "viewAll": "Barcha natijalarni ko'rish"
+    "viewAll": "Barcha natijalarni ko'rish",
+    "foundCount": "Topildi: {{count}}"
   }
 }
