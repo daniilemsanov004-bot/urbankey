@@ -1,6 +1,7 @@
 import s from './Find.module.css'
 import { motion } from "framer-motion"
 import { useTranslation } from 'react-i18next'
+import AiSearchBar from './AiSearchBar'
 
 const Find = () => {
 
@@ -25,6 +26,8 @@ const Find = () => {
                 <p>
                     {t("findDescription")}
                 </p>
+
+                <AiSearchBar className={s.aiSearchBar} />
 
             </div>
 

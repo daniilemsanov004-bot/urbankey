@@ -135,6 +135,12 @@
 
 
 
+.aiSearchBar {
+    margin-top: 35px;
+    margin-left: 40px;
+}
+
+
 .btns {
 
 
@@ -541,6 +547,10 @@ margin-left:0;
 }
 
 
+.aiSearchBar{
+
+margin-left:0;
+}
 
 
 .btns{

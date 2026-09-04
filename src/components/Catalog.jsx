@@ -1,9 +1,9 @@
 import { useContext, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { toast } from "react-toastify";
-import { MapPin, Building2, Ruler, BedDouble, Bath, SlidersHorizontal, X, Trash2, Sparkles } from "lucide-react";
+import { MapPin, Building2, Ruler, BedDouble, Bath, SlidersHorizontal, X, Trash2 } from "lucide-react";
 
 import { MyContext } from "../Context";
 import { localizedPath } from "../utils/lang";
@@ -71,6 +71,7 @@ const Catalog = () => {
     const [deletingId, setDeletingId] = useState(null);
 
     const { t, i18n } = useTranslation();
+    const [searchParams, setSearchParams] = useSearchParams();
 
     const handleDelete = async (item) => {
 
@@ -329,20 +330,23 @@ const Catalog = () => {
     };
 
 
-    // ИИ-поиск: человек пишет запрос свободным текстом в то же поле
-    // поиска (Enter или кнопка со звёздочкой) — эндпоинт /api/ai-search
-    // разбирает его в структурные фильтры (category/type/dealType/
-    // price/bedrooms) через ту же цепочку провайдеров, что и разбор
-    // объявлений бота, и мы применяем их к уже существующим ручным
-    // фильтрам. Остаток текста (keywords) уходит в обычный текстовый
-    // search — та же fuzzy-логика, что и при ручном наборе. Если ИИ не
-    // смог разобрать (нет ключей/сеть легла) — просто продолжаем
-    // работать как обычный текстовый поиск, без ошибок в интерфейсе.
-    const runAiSearch = async () => {
+    // ИИ-поиск: человек пишет запрос свободным текстом в БОЛЬШУЮ строку
+    // поиска на главной (Hero) или над каталогом (Find) — она переходит
+    // сюда через URL-параметр ?q=, эффект ниже его подхватывает.
+    // Эндпоинт /api/ai-search разбирает запрос в структурные фильтры
+    // (category/type/dealType/price/bedrooms) через ту же цепочку
+    // провайдеров, что и разбор объявлений бота, и мы применяем их к
+    // уже существующим ручным фильтрам. Остаток текста (keywords)
+    // уходит в обычный текстовый search — та же fuzzy-логика, что и
+    // при ручном наборе. Если ИИ не смог разобрать (нет ключей/сеть
+    // легла) — просто продолжаем работать как обычный текстовый поиск,
+    // без ошибок в интерфейсе.
+    const runAiSearch = async (queryOverride) => {
 
-        const query = search.trim();
+        const query = (queryOverride ?? search).trim();
         if (!query || aiSearchLoading) return;
 
+        setSearch(query);
         setAiSearchLoading(true);
         setSuggestionsOpen(false);
 
@@ -375,6 +379,26 @@ const Catalog = () => {
         }
 
     };
+
+
+    // Большая строка поиска на главной (Hero) и над каталогом (Find)
+    // передаёт запрос через URL: /Properties?q=.... Подхватываем его
+    // здесь один раз и сразу чистим параметр, чтобы повторный переход
+    // на эту же страницу (например, по логотипу) не запускал поиск
+    // заново. Эффект перезапускается при каждом изменении searchParams
+    // — значит сработает и повторно, если Find-бар уже на этой же
+    // странице выставит новый ?q= без полного перехода.
+    useEffect(() => {
+
+        const q = searchParams.get("q");
+
+        if (q && q.trim()) {
+            runAiSearch(q);
+            setSearchParams({}, { replace: true });
+        }
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams]);
 
 
     return (
@@ -431,27 +455,8 @@ const Catalog = () => {
                                 }}
                                 onFocus={() => setSuggestionsOpen(true)}
                                 onBlur={() => setTimeout(() => setSuggestionsOpen(false), 150)}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter") runAiSearch();
-                                }}
                                 autoComplete="off"
                             />
-
-                            <button
-                                type="button"
-                                className={s.aiSearchBtn}
-                                onClick={runAiSearch}
-                                disabled={aiSearchLoading || !search.trim()}
-                                title={t("catalog.aiSearchHint")}
-                            >
-                                <Sparkles size={16} className={aiSearchLoading ? s.spin : undefined} />
-                            </button>
-
-                            {aiSearchApplied && (
-                                <span className={s.aiSearchBadge}>
-                                    {t("catalog.aiSearchApplied")}
-                                </span>
-                            )}
 
                             {suggestionsOpen && search.trim() && (
 
@@ -585,6 +590,11 @@ const Catalog = () => {
 
                 <p className={s.resultsCount}>
                     {t("catalog.resultsCount", { count: filtered.length })}
+                    {aiSearchApplied && (
+                        <span className={s.aiSearchBadge}>
+                            {t("catalog.aiSearchApplied")}
+                        </span>
+                    )}
                 </p>
 
 

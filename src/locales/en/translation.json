@@ -924,7 +924,6 @@
     "resetFilters": "Reset filters",
     "filtersTitle": "Filters",
     "loadMore": "Show more",
-    "aiSearchHint": "AI search: describe what you're looking for",
     "aiSearchApplied": "✨ AI matched filters to your request"
   },
   "edit": "Edit",
@@ -996,5 +995,12 @@
     "rent": "For rent",
     "sale": "For sale"
   },
-  "photo": "Photo"
+  "photo": "Photo",
+  "aiSearchBar": {
+    "placeholder": "Describe what you're looking for: \"2-bedroom under $60k in Yunusabad\"",
+    "button": "Search",
+    "noResults": "Nothing found for this request",
+    "browseAll": "Browse full catalog",
+    "viewAll": "See all results"
+  }
 }

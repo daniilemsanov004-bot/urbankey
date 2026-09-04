@@ -999,7 +999,6 @@
     "resetFilters": "Filtrlarni tozalash",
     "filtersTitle": "Filtrlar",
     "loadMore": "Ko'proq ko'rsatish",
-    "aiSearchHint": "AI qidiruv: nima izlayotganingizni yozing",
     "aiSearchApplied": "✨ AI so'rovga mos filtrlarni tanladi"
   },
   "edit": "Tahrirlash",
@@ -1071,5 +1070,12 @@
     "rent": "Ijaraga",
     "sale": "Sotuvda"
   },
-  "photo": "Surat"
+  "photo": "Surat",
+  "aiSearchBar": {
+    "placeholder": "Nima izlayotganingizni yozing: «Yunusobodda $60k gacha 2 xonali»",
+    "button": "Qidirish",
+    "noResults": "Bu so'rov bo'yicha hech narsa topilmadi",
+    "browseAll": "Butun katalogni ko'rish",
+    "viewAll": "Barcha natijalarni ko'rish"
+  }
 }

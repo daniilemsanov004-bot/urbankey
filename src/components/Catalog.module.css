@@ -176,61 +176,10 @@
 }
 
 
-.searchBox input {
-    padding-right: 46px;
-}
-
-
-.aiSearchBtn {
-
-    position: absolute;
-    top: 50%;
-    right: 8px;
-    transform: translateY(-50%);
-
-    width: 30px;
-    height: 30px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    background: rgba(214, 168, 58, .12);
-    color: var(--violet);
-
-    cursor: pointer;
-    transition: .2s;
-}
-
-
-.aiSearchBtn:hover:not(:disabled) {
-    background: rgba(214, 168, 58, .22);
-}
-
-
-.aiSearchBtn:disabled {
-    opacity: .4;
-    cursor: default;
-}
-
-
-.spin {
-    animation: aiSearchSpin 1s linear infinite;
-}
-
-
-@keyframes aiSearchSpin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
-
-
 .aiSearchBadge {
-    display: block;
-    margin-top: 8px;
-    font-size: 12px;
+    display: inline-block;
+    margin-left: 10px;
+    font-size: 13px;
     color: var(--violet);
 }
 

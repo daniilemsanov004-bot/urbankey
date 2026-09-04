@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabase'
 import { localizedPath } from '../utils/lang'
+import AiSearchBar from './AiSearchBar'
 
 const Hero = () => {
 
@@ -90,6 +91,15 @@ const Hero = () => {
                     </motion.h3>
 
                 </div>
+
+                <motion.div
+                    initial={{ opacity: 0, y: 40 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.7, delay: 0.4 }}
+                    viewport={{ amount: 0.2 }}
+                >
+                    <AiSearchBar className={s.aiSearchBar} />
+                </motion.div>
 
                 <motion.div
                     className={s.btns}

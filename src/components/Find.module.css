@@ -156,4 +156,9 @@
 
         width: 100%;
     }
+
+
+    .aiSearchBar {
+        margin-top: 32px;
+    }
 }

@@ -4,18 +4,164 @@
 // "сниму офис в центре с ремонтом") — этот эндпоинт разбирает запрос
 // через ту же цепочку провайдеров (api/aiProviders.js), что и разбор
 // объявлений бота, в СТРУКТУРИРОВАННЫЕ фильтры (категория/тип/сделка/
-// цена/спальни) + остаток текста как ключевые слова. Дальше
-// src/components/Catalog.jsx применяет их к уже существующим ручным
-// фильтрам и штатному fuzzy-поиску (src/utils/search.js) по ключевым
-// словам — новой логики поиска/фильтрации не изобретаем, ИИ только
-// заполняет то, что человек обычно выставляет через селекты руками.
+// цена/спальни), САМ подтягивает подходящие объявления из Supabase
+// (cardss_public/commercials_public — те же view и колонки, что
+// использует src/Context.jsx) и возвращает готовый превью-список
+// (до 6 карточек), чтобы src/components/AiSearchBar.jsx могло
+// показать их прямо под строкой поиска, "а-ля Uzum" — без перехода на
+// страницу каталога. Остаток текста, который не разложился в
+// структурные фильтры (keywords), используется как мягкий ранжирующий
+// сигнал (не жёсткий фильтр — иначе неточная формулировка могла бы
+// давать "ничего не найдено" вместо ближайших вариантов).
+//
+// Полный список (не только превью) человек всё равно получает переходом
+// на /Properties?q=... — та же логика фильтрации там продублирована на
+// клиенте (src/components/Catalog.jsx), это осознанный компромисс:
+// сама цепочка ИИ-провайдеров не дублируется (общий api/aiProviders.js),
+// а вот процедура "применить готовые фильтры к списку объявлений"
+// достаточно простая, чтобы недорого держать в двух местах (сервер —
+// для быстрого превью, клиент — для полного списка с сортировкой/
+// пагинацией/избранным, которые тут не нужны).
 //
 // Если ни один провайдер не ответил — возвращаем ok:false, фронт в
-// этом случае просто использует исходный текст запроса как обычный
-// текстовый fuzzy-поиск (никакого падения UX, ИИ тут — бонус, а не
+// этом случае просто переходит на каталог с исходным текстом как
+// обычный текстовый поиск (никакого падения UX, ИИ тут — бонус, а не
 // обязательное звено).
 
+import { createClient } from "@supabase/supabase-js";
 import { runListingAiChain } from "./aiProviders.js";
+
+const supabase = createClient(
+    process.env.VITE_SUPABASE_URL,
+    process.env.VITE_SUPABASE_KEY
+);
+
+const CARD_COLUMNS =
+    "id, title_ru, title_en, title_uz, description_ru, description_en, description_uz, " +
+    "bedrooms_ru, type_ru, type_en, type_uz, price, image, link, is_rent";
+
+const COMMERCIAL_COLUMNS =
+    "id, title_ru, title_en, title_uz, description_ru, description_en, description_uz, " +
+    "district_ru, class_ru, class_en, class_uz, price, image, is_rent";
+
+const PREVIEW_LIMIT = 6;
+
+const parsePriceValue = (price) => {
+    if (!price) return null;
+    const digits = String(price).replace(/[^\d]/g, "");
+    return digits ? Number(digits) : null;
+};
+
+const parseFirstNumber = (text) => {
+    if (!text) return null;
+    const match = String(text).match(/\d+/);
+    return match ? Number(match[0]) : null;
+};
+
+const RESIDENTIAL_TYPE_LABELS = {
+    ru: ["Квартира", "Дом", "Новостройка"],
+    en: ["Apartment", "House", "New building"],
+    uz: ["Kvartira", "Uy", "Yangi qurilish"]
+};
+
+// AI возвращает "type" уже на языке запроса — для сравнения с БД
+// (type_ru всегда заполнен, в отличие от type_en/type_uz, которые
+// иногда пустые у старых объявлений) приводим обратно к русскому
+// варианту по индексу в словаре.
+const toRussianType = (label, lang) => {
+    if (!label) return null;
+    const dict = RESIDENTIAL_TYPE_LABELS[lang] || RESIDENTIAL_TYPE_LABELS.ru;
+    const idx = dict.findIndex((l) => l.toLowerCase() === label.toLowerCase());
+    return idx >= 0 ? RESIDENTIAL_TYPE_LABELS.ru[idx] : label;
+};
+
+// Мягкое ранжирование по keywords — не фильтр, а сортировочный вес:
+// сколько раз слова из keywords встретились в title/description. Само
+// по себе отсутствие совпадения не выкидывает объявление из списка
+// (структурные фильтры уже сузили список достаточно) — просто у
+// совпавших приоритет выше.
+const keywordScore = (item, keywordsLower) => {
+    if (!keywordsLower) return 0;
+    const haystack = [
+        item.title_ru, item.title_en, item.title_uz,
+        item.description_ru, item.description_en, item.description_uz,
+        item.district_ru
+    ].filter(Boolean).join(" ").toLowerCase();
+
+    return keywordsLower
+        .split(/\s+/)
+        .filter((w) => w.length > 1)
+        .reduce((acc, word) => acc + (haystack.includes(word) ? 1 : 0), 0);
+};
+
+async function fetchPreviewResults(filters, lang) {
+
+    const wantResidential = filters.category !== "commercial";
+    const wantCommercial = filters.category !== "residential";
+
+    const [cardsRes, commercialsRes] = await Promise.all([
+        wantResidential
+            ? supabase.from("cardss_public").select(CARD_COLUMNS).order("id", { ascending: false }).limit(200)
+            : Promise.resolve({ data: [] }),
+        wantCommercial
+            ? supabase.from("commercials_public").select(COMMERCIAL_COLUMNS).order("id", { ascending: false }).limit(200)
+            : Promise.resolve({ data: [] })
+    ]);
+
+    const russianType = toRussianType(filters.type, lang);
+    const keywordsLower = (filters.keywords || "").trim().toLowerCase();
+
+    let residential = (cardsRes.data || [])
+        .filter((item) => !russianType || item.type_ru === russianType)
+        .filter((item) => filters.dealType !== "rent" || item.is_rent === true)
+        .filter((item) => filters.dealType !== "sale" || item.is_rent !== true)
+        .filter((item) => {
+            const p = parsePriceValue(item.price);
+            if (filters.minPrice != null && (p == null || p < filters.minPrice)) return false;
+            if (filters.maxPrice != null && (p == null || p > filters.maxPrice)) return false;
+            return true;
+        })
+        .filter((item) => {
+            if (filters.minBedrooms == null) return true;
+            const beds = parseFirstNumber(item.bedrooms_ru);
+            return beds != null && beds >= filters.minBedrooms;
+        })
+        .map((item) => ({
+            id: item.id,
+            category: "residential",
+            title: item[`title_${lang}`] || item.title_ru,
+            price: item.price,
+            image: item.image,
+            link: item.link || `/property/${item.id}`,
+            isRent: item.is_rent === true,
+            score: keywordScore(item, keywordsLower)
+        }));
+
+    let commercial = (commercialsRes.data || [])
+        .filter((item) => filters.dealType !== "rent" || item.is_rent === true)
+        .filter((item) => filters.dealType !== "sale" || item.is_rent !== true)
+        .filter((item) => {
+            const p = parsePriceValue(item.price);
+            if (filters.minPrice != null && (p == null || p < filters.minPrice)) return false;
+            if (filters.maxPrice != null && (p == null || p > filters.maxPrice)) return false;
+            return true;
+        })
+        .map((item) => ({
+            id: item.id,
+            category: "commercial",
+            title: item[`title_${lang}`] || item.title_ru,
+            price: item.price,
+            image: item.image,
+            link: `/commercial/${item.id}`,
+            isRent: item.is_rent === true,
+            score: keywordScore(item, keywordsLower)
+        }));
+
+    return [...residential, ...commercial]
+        .sort((a, b) => (b.score - a.score) || (b.id - a.id))
+        .slice(0, PREVIEW_LIMIT)
+        .map(({ score, ...rest }) => rest);
+}
 
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const RATE_LIMIT_MAX = 15; // запросов в минуту с одного IP — поиск не
@@ -62,15 +208,10 @@ const isAllowedOrigin = (req) => {
 const SUPPORTED_LANGS = ["ru", "en", "uz"];
 const MAX_QUERY_LENGTH = 300;
 
-// Тот же словарь типов жилья, что и в api/listingParser.js (TYPE_DICT)
-// и в src/components/Catalog.jsx (RESIDENTIAL_TYPE_LABELS) — Вилла/
+// Тот же словарь типов жилья используется чуть выше (toRussianType) и
+// в src/components/Catalog.jsx (RESIDENTIAL_TYPE_LABELS) — Вилла/
 // Коттедж/Резиденция/Пентхаус сознательно нет, в Ташкенте такого
 // жилья у агентства не бывает.
-const RESIDENTIAL_TYPE_LABELS = {
-    ru: ["Квартира", "Дом", "Новостройка"],
-    en: ["Apartment", "House", "New building"],
-    uz: ["Kvartira", "Uy", "Yangi qurilish"]
-};
 
 const LANG_NAME = { ru: "русском", en: "английском", uz: "узбекском" };
 
@@ -184,18 +325,31 @@ export default async function handler(req, res) {
             normalizedType = canonical.find((label) => label.toLowerCase() === lower) || null;
         }
 
+        const filters = {
+            category: data.category === "residential" || data.category === "commercial" ? data.category : null,
+            type: normalizedType,
+            dealType: data.deal_type === "rent" || data.deal_type === "sale" ? data.deal_type : null,
+            minPrice: typeof data.min_price === "number" && data.min_price >= 0 ? data.min_price : null,
+            maxPrice: typeof data.max_price === "number" && data.max_price >= 0 ? data.max_price : null,
+            minBedrooms: typeof data.min_bedrooms === "number" && data.min_bedrooms > 0 ? data.min_bedrooms : null,
+            keywords: typeof data.keywords === "string" ? data.keywords.trim().slice(0, 200) : ""
+        };
+
+        let results = [];
+        try {
+            results = await fetchPreviewResults(filters, safeLang);
+        } catch (e) {
+            // Превью — бонус, а не обязательная часть ответа: если
+            // Supabase недоступна/упала, всё равно отдаём фильтры, фронт
+            // сможет применить их на странице каталога через ?q=.
+            console.log("AI SEARCH: fetchPreviewResults failed:", e.message);
+        }
+
         return res.status(200).json({
             ok: true,
             provider: result.provider,
-            filters: {
-                category: data.category === "residential" || data.category === "commercial" ? data.category : null,
-                type: normalizedType,
-                dealType: data.deal_type === "rent" || data.deal_type === "sale" ? data.deal_type : null,
-                minPrice: typeof data.min_price === "number" && data.min_price >= 0 ? data.min_price : null,
-                maxPrice: typeof data.max_price === "number" && data.max_price >= 0 ? data.max_price : null,
-                minBedrooms: typeof data.min_bedrooms === "number" && data.min_bedrooms > 0 ? data.min_bedrooms : null,
-                keywords: typeof data.keywords === "string" ? data.keywords.trim().slice(0, 200) : ""
-            }
+            filters,
+            results
         });
 
     } catch (e) {
