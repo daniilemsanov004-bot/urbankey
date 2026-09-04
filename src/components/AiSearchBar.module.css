@@ -1,19 +1,14 @@
-.wrap {
-    position: relative;
-    z-index: 5;
-
-    width: 100%;
-    max-width: 720px;
-}
-
-
 .bar {
+
+    position: relative;
+    z-index: 2;
 
     display: flex;
     align-items: center;
     gap: 12px;
 
     width: 100%;
+    max-width: 720px;
 
     padding: 10px 10px 10px 22px;
 
@@ -63,10 +58,8 @@
 
     display: flex;
     align-items: center;
-    justify-content: center;
     gap: 8px;
 
-    min-width: 64px;
     padding: 14px 24px;
     border: none;
     border-radius: 999px;
@@ -82,220 +75,13 @@
 }
 
 
-.submit:hover:not(:disabled) {
+.submit:hover {
     transform: scale(1.03);
 }
 
 
-.submit:active:not(:disabled) {
+.submit:active {
     transform: scale(.98);
-}
-
-
-.submit:disabled {
-    opacity: .7;
-    cursor: default;
-}
-
-
-.spin {
-    animation: aiSearchSpin 1s linear infinite;
-}
-
-
-@keyframes aiSearchSpin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
-
-
-/* ----- Панель превью-результатов, "а-ля Uzum" ----- */
-
-.panel {
-
-    position: absolute;
-    top: calc(100% + 10px);
-    left: 0;
-    right: 0;
-
-    max-height: 75vh;
-    overflow-y: auto;
-
-    padding: 18px;
-    border-radius: 20px;
-    border: 1px solid var(--border);
-    background: var(--card);
-
-    box-shadow: 0 25px 60px rgba(0, 0, 0, .45);
-}
-
-
-.panelHeader {
-    margin-bottom: 14px;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--gray);
-}
-
-
-.grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 14px;
-}
-
-
-.card {
-
-    display: flex;
-    flex-direction: column;
-
-    border-radius: 16px;
-    overflow: hidden;
-
-    background: rgba(255, 255, 255, .03);
-    border: 1px solid var(--border);
-
-    text-decoration: none;
-    color: var(--white);
-
-    transition: transform .2s, border-color .2s;
-}
-
-
-.card:hover {
-    transform: translateY(-3px);
-    border-color: var(--violet);
-}
-
-
-.cardImgBox {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 4 / 3;
-    background: rgba(255, 255, 255, .05);
-}
-
-
-.cardImg {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-
-.cardImgPlaceholder {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--gray);
-}
-
-
-.cardBadge {
-
-    position: absolute;
-    top: 8px;
-    left: 8px;
-
-    padding: 4px 10px;
-    border-radius: 999px;
-
-    background: rgba(0, 0, 0, .55);
-    color: var(--violet);
-
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .02em;
-}
-
-
-.cardInfo {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    padding: 10px 12px 12px;
-}
-
-
-.cardPrice {
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--violet);
-}
-
-
-.cardTitle {
-
-    font-size: 13px;
-    color: var(--gray);
-
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-
-.viewAll {
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-
-    width: 100%;
-    margin-top: 16px;
-    padding: 12px;
-    border: none;
-    border-radius: 12px;
-
-    background: rgba(214, 168, 58, .1);
-    color: var(--violet);
-
-    font-size: 14px;
-    font-weight: 600;
-
-    cursor: pointer;
-    transition: background .2s;
-}
-
-
-.viewAll:hover {
-    background: rgba(214, 168, 58, .18);
-}
-
-
-.empty {
-    padding: 20px 10px;
-    text-align: center;
-}
-
-
-.empty p {
-    margin-bottom: 12px;
-    color: var(--gray);
-    font-size: 14px;
-}
-
-
-.emptyLink {
-
-    padding: 10px 20px;
-    border: 1px solid var(--border);
-    border-radius: 999px;
-
-    background: none;
-    color: var(--violet);
-
-    font-size: 14px;
-    font-weight: 600;
-
-    cursor: pointer;
 }
 
 
@@ -320,10 +106,5 @@
         order: 2;
         width: 100%;
         justify-content: center;
-    }
-
-    .grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
     }
 }

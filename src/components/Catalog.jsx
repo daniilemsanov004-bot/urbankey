@@ -588,14 +588,22 @@ const Catalog = () => {
                 </div>
 
 
-                <p className={s.resultsCount}>
-                    {t("catalog.resultsCount", { count: filtered.length })}
-                    {aiSearchApplied && (
+                {aiSearchLoading ? (
+                    <p className={s.resultsCount}>
                         <span className={s.aiSearchBadge}>
-                            {t("catalog.aiSearchApplied")}
+                            {t("catalog.aiSearchLoading")}
                         </span>
-                    )}
-                </p>
+                    </p>
+                ) : (
+                    <p className={s.resultsCount}>
+                        {t("catalog.resultsCount", { count: filtered.length })}
+                        {aiSearchApplied && (
+                            <span className={s.aiSearchBadge}>
+                                {t("catalog.aiSearchApplied")}
+                            </span>
+                        )}
+                    </p>
+                )}
 
 
                 {loading ? (
